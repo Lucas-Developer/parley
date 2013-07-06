@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+    <head>
+	<link rel="stylesheet" type="text/css" href="style/html5-doctor-reset-stylesheet.min.css">
+	<link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.10.3.custom/css/humanity/jquery-ui.min.css">
+	<link rel="stylesheet" type="text/css" href="style/client.css">
+	<link rel="stylesheet" type="text/css" href="style/autoSuggest.css">
+	
+	<script type="text/javascript" src="lib/jquery-2.0.2.min.js"></script>
+
+	<title>Parley - myemail@parley.com</title>
+    </head>
+    <body class="loggedout">
+	    <header class="loggedin"></header>
+	    <section id="inbox" class="loggedin"><table cellspacing=2><tbody></tbody></table></section>
+        <div id="dialogWrapper"></div>
+	
+<script id="setupDialogTemplate" type="text/template">
+	<div class="page page-splash page-active">
+        <p>Welcome to a magical world of mystery.<br>The mystery is a mystery but you'll find your own, I'm sure. Oh, what a mystery!</p>
+        <p>DEBUG: Type 'a@a.a' to see login, anything else for register.</p>
+	    <form name="emailVerify">
+			<div class="row">
+	        	<label for="email">Enter your email
+	        		<input type="email" name="email">
+				</label>
+			</div>
+
+	        <button id="emailVerify">Submit</button>
+	    </form>
+	</div>
+    <div class="page page-login">
+        <p>That email is registered with Parley!</p>
+        <form name="loginAction">
+            <div class="row">
+                <label for="email" class="half">Email
+                    <input type="email" name="email" readonly>
+                </label>
+                <label for="password" class="half">Password
+                    <input type="password" name="password">
+                </label>
+                <a href="#" class="extra-link">Forgot password?</a>
+            </div>
+
+            <button id="loginAction">Log in</button>
+        </form>
+    </div>
+    <div class="page page-register">
+        <p>Register for Parley</p>
+        <form name="registerAction">
+            <div class="row">
+                <label class="tab tab-active" for="email">Email
+                    <div class="full-width"><input type="email" name="email" id="registerEmailField" readonly>
+                        <div class="status">
+                            <img src="img/ajax-loader.gif" class="loader">
+                            <img src="img/icon-success.png" class="status-success">
+                            <img src="img/icon-error.png" class="status-error">
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="row">
+                <label for="name">Name
+                    <input type="text" name="name">
+                </label>
+            </div>
+            <div class="row" id="passwordInfo">
+                <label for="password_one" class="half">Choose a password
+                    <input type="password" name="password_one">
+                </label>
+                <label for="password_two" class="half">Confirm password
+                    <input type="password" name="password_two">
+                </label>
+            </div>
+            <div class="row" id="paymentInfo">
+                <div class="tab message tab-active">
+                    <p>You are set up to use the <a class="account-type" href="#">consumer account</a><span class="provided-by"> provided by thisguy@email.com.</span></p>
+                    <a href="#" class="extra-link">See upgrade options</a>
+                </div>
+            </div>
+
+            <button id="registerAction">Register</button>
+        </form>
+    </div>
+</script>
+
+<script type="text/template" id="settingsDialogTemplate">
+	<form name="settings">
+	    <h4>Personal information</h4>
+	    <div class="row">
+	        <label for="fName">Name
+	        	<input type="text" value="{{name}}" name="fName">
+			</label>
+	    </div>
+	    <h4></h4>
+	    <div class="row">
+	    </div>
+	    <h4>Password</h4>
+	    <div class="row">
+			<label for="cur_password">Current password
+				<input type="text" name="cur_password">
+			</label>
+
+			<label for="new_password_1">New password
+				<input type="text" name="new_password_1">
+			</label>
+
+			<label for="new_password_2">Confirm new password
+				<input type="text" name="new_password_2">
+			</label>
+	    </div>
+
+	    <button id="saveSettings">Save settings</button>
+	</form>
+</script>
+
+<script type="text/template" id="contactsDialogTemplate">
+    <div id="singleContact">
+        {{#single}}
+            <p>{{name}}</p>
+            <p>{{email}}</p>
+        {{/single}}
+    </div>
+	<input type="search" placeholder="Search..." name="contactSearch">
+	<table class="sortable">
+	    <thead>
+		<tr><th class="thumbnail"></th><th>Name</th><th>Email</th><th class="buttons"></th></tr>
+	    </thead>
+	    <tbody id="contactsList">
+            {{#contacts}}
+                <tr>
+                    <td class="thumbnail">{{thumbnail}}</td>
+                    <td>{{name}}</td>
+                    <td>{{email}}</td>
+                    <td class="buttons"></td>
+                </tr>
+            {{/contacts}}
+	    </tbody>
+	</table>
+</script>
+
+    <script type="text/template" id="nokeyDialogTemplate">
+        <p>We can not send encrypted emails to the following address. This is because we were not able to find the public keys associated with them. The email will still be sent to all other addresses.</p>
+        <p>If you like, send access passes to the selected users. If you have insufficient access passes, we will send invitations to the remaining users.</p>
+        <p>You have <strong>6</strong> more access passes.</p>
+        <table class="sortable">
+        <thead>
+            <tr><th class="selector sorttable_nosort"><a class="clicked"></th><th>Email</th><th class="buttons"></th></tr>
+        </thead>
+        <tbody id="noKeyEmailsList">
+            {{#emails}}
+                <tr><td class="selector"><a></a></td><td>{{email}}</td><td></td></tr>
+            {{/emails}}
+        </tbody>
+        </table>
+    </script>
+    
+    <script type="text/template" id="headerTemplate">
+	    <h1><span>Parley</span></h1>
+	    <span class="email loggedin">myemail@parley.com</span>
+
+        <section id="inbox-utilities" class="no-sel loggedin">
+            <button id="composeAction" class="no-sel" name="compose">compose</button>
+            <button id="replyAction" class="has-sel" name="reply">reply</button>
+            <button id="forwardAction" class="has-sel" name="forward">forward</button>
+            <button id="deleteAction" class="has-sel multi-sel" name="delete">delete</button>
+            <button id="maliceAction" class="has-sel multi-sel" name="report-malice">report malice</button>
+        </section>
+	    <nav>
+            <button class="loggedin" name="open-contacts" id="contactsAction">contacts</button>
+            <button class="loggedin" name="settings" id="settingsAction">settings</button>
+	    </nav>
+    </script>
+	<script type="text/template" id="composeDialogTemplate">
+	    <form>
+		<div class="row" id="recipients">
+			<label for="to">To
+				<input type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
+			</label>
+			<label {{^cc}}class="hidden" {{/cc}}for="cc">Cc
+				<input type="text" name="cc"{{#cc}} value="{{email}}"{{/cc}}>
+			</label>
+			<label {{^bcc}}class="hidden" {{/bcc}}for="bcc">Bcc
+				<input type="text" name="bcc">
+			</label>
+        </div>
+        <div class="row">
+			<label for="subject">Subject
+				<input type="text" name="subject" value="{{subject}}">
+			</label>
+            <label for="body">
+		        <textarea rows="6" name="body"></textarea>
+            </label>
+        </div>
+
+	    <button id="sendAction">Send</button>
+
+	    </form>
+	</script>
+
+	<script type="text/template" id="messageTemplate">
+        <td class="selector"><a {{#selected}}class="clicked"{{/selected}}></a></td>
+		<td class="from">{{#from}}{{email}}{{/from}}</td>
+		<td class="subject">{{subject}}</td>
+		<td class="date"></td>
+	</script>
+	<script type="text/template" id="contactTemplate">
+		<td class="thumbnail"><img src="http://www.gravatar.com/avatar/000?s=32"></td>
+	    <td>{{name}}</td>
+	    <td>{{email}}</td>
+		<td class="buttons"></td>
+	</script>
+	
+	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="lib/parley.utility.js"></script>
+	<script type="text/javascript" src="lib/underscore-min.js"></script>
+	<script type="text/javascript" src="lib/backbone-min.js"></script>
+	<script type="text/javascript" src="lib/mustache.js"></script>
+	<script type="text/javascript" src="lib/moment.min.js"></script>
+	<script type="text/javascript" src="lib/sorttable.js"></script>
+	<script type="text/javascript" src="lib/jquery.autoSuggest.js"></script>
+	<!--<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>-->
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/webfont/1.4.2/webfont.js"></script>
+	<script type="text/javascript" src="client.js"></script>
+    </body>
+</html>

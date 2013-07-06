@@ -1,0 +1,187 @@
+* {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
+    body {
+		font-size: 100%;
+		font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+		color: #191208;
+		background: url(../img/cartographer.png) 0 0 repeat;
+    }
+	p, input { font-family: "PT Sans",Helvetica,Arial,sans-serif; }
+
+	h2 {font-size:1.2em;}
+    h3 {text-align: left; font-size: 1.3em; }
+	p { font-size: 0.8em; line-height: 1.3em; }
+	.svg-icon path { fill: #191208; }
+	    .svg-icon:hover path { fill: #000; }
+
+    form .row {
+	    display: table;
+		width: 100%;
+		padding: 10px 0;
+	    border-top: 1px solid #ccc;
+	    /*background-color: #eee;*/
+	}
+		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
+			color: #191208;
+			padding: 4px 8px 4px 4px;
+            border: 1px inset #ccc;
+            background-color: #fdf8f8;
+		}
+            .as-selections, input[type=text], input[type=search], input[type=email], input[type=password] {
+                height: 2em;
+            }
+
+        textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
+			outline: none;
+			border-color: #f5ad66;
+	    	background-color: #fff;
+		}
+            input[readonly] { border: none; font-weight: bold; background: none; }
+
+		form .row .half { width: 48%; margin-right: 4%; }
+            form .row .half:nth-child(even) { margin-right: 0; }
+		form .row .quarter { width: 20%; margin-right: 5%; }
+
+	    form .row label {
+            font-size:0.9em;
+            display:block;
+            width:100%;
+            float:left;
+            margin-bottom: 10px;
+        }
+			form .row label input, input[type=search] {
+				display: block;
+				margin-top:5px;
+			}
+            form .row textarea { width: 100%; }
+
+            form .row .hidden { display: inline; width: auto; margin-right: 10px; }
+            form .row .hidden * { display: none; }
+            form .row .hidden:after { content: "\0025BE"; }
+			
+	    form .row span {width:100%;padding:0 10px;}
+	input[type=search] {
+		background: url(../img/icon_search.png) 4px 4px no-repeat;
+		padding: 4px 4px 4px 24px;
+		margin-bottom: 8px;
+	}
+    form .inset-text { position: relative; }
+    form .full-width { padding: 0 !important; }
+        form .full-width .status { position: relative; top: -1.8em; float: right; right: .2em; }
+        form .full-width .status img { display: none; height: 16px; width: 16px; }
+    form .extra-link { float: right; font-size: 0.7em; }
+
+	table td, table th { margin: 1px 0; padding: 4px; text-align: left; cursor: default; }
+	table thead tr { background-color: #191208; color: #eee; }
+	table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.1); }
+		table tbody tr:hover { background-color: #eee; }
+
+    .ui-widget { font-family: "PT Sans",Helvetica,Arial,sans-serif; }
+    .ui-state-default { background-color: transparent; background-image: none; }
+    .ui-dialog { background-color: #fff; border: 1px solid #eee; }
+    .ui-dialog .section { width: 100%; border-bottom: 1px solid #eee; }
+    .no-close .ui-dialog-titlebar-close { display: none; }
+    .hidetext { display: block; text-indent: -9999px; }
+
+    body.loggedout .loggedin { display: none; }
+    body.loggedin .loggedout { display: none; }
+
+    header {
+		width: 100%;
+		padding: 0 10px;
+		height: 62px;
+		overflow: hidden;
+		line-height: 58px;
+		background-color: #fff;
+		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
+		border-bottom: 1px solid rgba(16,20,0,0.35);
+    }
+    header h1 { display: inline-block; vertical-align: top; width: 136px; margin-right: 30px; height: 60px; background: url(../img/logo.png) no-repeat 0 0; }
+	header h1 span { display: block; text-indent: -9999px; overflow: hidden; }
+
+	header .email { display: inline-block; font-weight: bold; }
+
+    header nav { float: right; }
+	header nav, header nav li { height: 100px; display: inline-block; }
+
+    #inbox-utilities,
+    #inbox .header-info,
+    #inbox { margin: 10px; }
+
+        #inbox-utilities { height: 40px; display: inline-block; }
+            #inbox-utilities.has-sel .no-sel,
+            #inbox-utilities.has-sel .multi-sel,
+            #inbox-utilities.no-sel .multi-sel,
+            #inbox-utilities.no-sel .has-sel,
+            #inbox-utilities.multi-sel .no-sel,
+            #inbox-utilities.multi-sel .has-sel { display: none; }
+            #inbox-utilities.has-sel .has-sel, 
+            #inbox-utilities.multi-sel .multi-sel, 
+            #inbox-utilities.no-sel .no-sel { display: inline-block; }
+        #inbox-utilities .button-set button {
+            float: left;
+        }
+
+        #inbox-utilities .button-set button[name=compose] { float: right; }
+
+        #inbox .header-info { display:none; font-size:.8em; line-height:1.2em; }
+
+    #inbox table { width: 100%; }
+	
+    #inbox tr {
+		width: 100%;
+        min-width: 500px;
+		padding: 5px 10px;
+		margin-bottom: 2px;
+		border-top: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-bottom: 1px solid #aaa;
+		border-right: 1px solid #aaa;
+		background-color: #fff;
+	}
+        #inbox tr td { vertical-align: middle; white-space: nowrap; }
+
+        table .selector { width: 18px; }
+            table .selector a { display: block; width: 14px; height: 14px; border: 1px solid #191208; }
+                table thead .selector a { border-color: #f4f0ec; }
+            table .selector a.clicked { background-color: #191208; box-shadow: 0 0 -10px 1px #f4f0ec inset; }
+                table thead .selector a.clicked { background-color: #f4f0ec; box-shadow: 0 0 -10px 1px #191208 inset; }
+        #inbox .from { min-width: 250px; width: 22%; }
+        #inbox .date { min-width: 110px; width: 10%; }
+
+        #inbox .message { background-color: transparent; }
+        #inbox .message td { white-space: normal; background-color: rgba(255, 255, 255, 0.8); }
+            #inbox .message .details { margin: 0 5px; }
+
+            #inbox .message .body { margin: 5px; background: rgba(255, 250, 240, 1); padding: 10px 10px 5px; line-height: 1.2em; }
+            #inbox .message .body p { margin-bottom: 10px; }
+
+            #inbox .message .message-utilities { float: right; }
+                #inbox .message .message-utilities li { display: inline-block; }
+
+        #inbox tr.unread { font-weight: bold; }
+
+    .ui-dialog .page, .ui-dialog .tab { display: none; clear; both; }
+        .ui-dialog .page-active, .ui-dialog .tab-active { display: block; }
+
+    .ui-dialog button { margin: auto; display: block; }
+
+        .ui-dialog p { text-align: center; margin: 5px 0 10px; }
+        .ui-dialog input[type=text],
+        .ui-dialog input[type=password],
+        .ui-dialog input[type=email]
+        { width: 100%; }
+
+	.ui-dialog table { width: 100%; background-color: #fff; }
+		.ui-dialog table td { vertical-align: top; }
+		.ui-dialog input[type=search] { width: 100%; }
+
+		.ui-dialog table .thumbnail { padding: 2px; width: 32px; height: 32px; }
+
+	#settingsDialog form { max-width: 550px; margin: auto; }
+
+    /* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
+    .as-selections input { margin-top: 0 !important; }
+    .as-selections input { background-color: transparent !important; }
+/* Gonna start putting responsive stuff here */
+@media screen and (max-width: 9000px) and (min-width: 0px) {
+}

@@ -1,0 +1,335 @@
+/*
+
+   Here are some newer miscellaneous notes about Parley while they're on my mind:
+   
+   -we need to think about what data, if any, we'll persist between uses
+     -ie. does a user stay logged in if they open/close the app? Are contacts
+     stored in localStorage or regenerated from the keyring every time?
+     -I'm tempted to err towards the least storage possible until we consider
+     the usability/security tradeoffs at hand
+     -Note that the keyring itself will generally stay on the clients as a separate (encrypted) file, as per gpg's typical behaviour
+   -I added parley.listKeys() to list every public key in a keyring--we could
+   easily use that to build a contact list every time the user logs in. Here's
+   some sample output for a single key:
+     
+     [
+       {
+         "dummy": "",
+         "keyid": "5CA687A5B91D848E",
+         "expires": "1372256185",
+         "subkeys": [
+           [ "E45C139F7291E0F6", "e" ]
+         ],
+         "length": "2048",
+         "ownertrust": "-",
+         "algo": "1",
+         "fingerprint": "B1E44BDDB11E03815D9CEE435CA687A5B91D848E",
+         "date": "1371651385",
+         "trust": "-",
+         "type": "pub",
+         "uids": [ "Jim John <test@example.com>" ]
+       }
+     ]
+
+     -uids take the form "First Name (Optional comment here) <email@example.com>"
+       -it probably makes sense to pull names and email addresses from the uid with a regex in order to build the Contact model
+
+   -I've taken some care to make these functions accept email addresses and Contact objects interchangeably, but it probably makes sense to build Contact objects from email addresses before calling the functions (see note on Parley.requestPublicKey)
+
+   ---------------Older Note:--------------------
+Methods and data models
+Parley.setup (stores IMAP credentials and downloads encrypted keyring from Parley server)
+Parley.contacts (collection)
+Parley.inbox (collection)
+  .fetch retrieves paginated list of PGP encrypted mail (and unencrypted messages from Parley, ie. for
+  verification), both sent and received, ordered by time via IMAP (using context.io)
+
+The client should walk the user through a setup process on initial use (or after logging out) that
+involves getting the user's email address and checking to see if it is registered with Parley. If so,
+the program should accept the user's password and retrieve the keyring from the Parley server. Otherwise,
+the program should create a new account for the user and generate a keypair.
+
+The setup process also needs to collect and store (locally) the user's IMAP credentials.
+
+There should be a settings panel where the user can change their password, IMAP credentials or log out.
+
+There should be a "Contacts" panel (separate from the one that pops up while composing a message) where
+the user can manage their contacts and invite new users to Parley.
+
+--------------General docstring:--------------
+
+The following utilities will encapsulate any external Python calls (ie. for crypto/key management) and
+remote API calls (IMAP/SMTP/Parley).
+
+*/
+
+(function (Parley) {
+
+  Parley.BASE_URL = "http://parley.co:5000"; //Test server
+  //Parley.BASE_URL = "https://api.parley.co"; //Production server
+
+  //This is just a shim in case Parley.Contact isn't defined elsewhere
+  Parley.Contact = Parley.Contact || function () {
+    return {
+      'set': function (key, val) {
+        return this[key] = val;
+      },
+      'get': function (key) {
+        return this[key];
+      }
+    }
+  }
+
+  /* Sign Parley API request--identical to Amazon API signing method,
+  but timestamped and using password hash as the secret key. */
+  Parley.signAPIRequest = function (url, method, data) {
+    return window.PYsignAPIRequest(url, method, data);
+  }
+
+  Parley.pbkdf2 = function (data) {
+    return window.PYpbkdf2(data);
+  }
+  
+  /* Check if a user is already registered with Parley.
+  Accepts email address, success callback */
+  Parley.requestUser = function (email, success) {
+    $.getJSON(Parley.BASE_URL+'/u/'+email, success);
+  }
+  
+  /* Generate a new keypair and hashed system password for Parley, then register with the given
+  email. This function will take some time to execute, and may block during the key-gen phase, so
+  decorate the UI accordingly.
+  Accepts email, cleartext password, success callback */
+  Parley.registerUser = function (name, email, clearTextPassword, success) {
+    Parley.currentUser = Parley.currentUser || new Parley.Contact();
+    Parley.currentUser.set('name', name);
+    Parley.currentUser.set('email', email);
+    var passwords = Parley.currentUser.get('passwords') || {};
+    passwords.local = Parley.pbkdf2(clearTextPassword);
+    passwords.remote = Parley.pbkdf2(passwords.local);
+    Parley.currentUser.set('passwords', passwords);
+    window.PYgenKey(); //this is super slow
+    $.post(Parley.BASE_URL+'/u/'+email,
+        {
+            'name':name,
+            'p':Parley.currentUser.get('passwords').remote,
+            'keyring':window.PYgetZippedKeyring()
+        },
+        success);
+  }
+
+  Parley.authenticateUser = function(email, clearTextPassword, success) {
+    Parley.currentUser = Parley.currentUser || new Parley.Contact();
+    Parley.currentUser.set('email', email);
+    var passwords = Parley.currentUser.get('passwords') || {};
+    passwords.local = Parley.pbkdf2(clearTextPassword);
+    passwords.remote = Parley.pbkdf2(passwords.local);
+    Parley.currentUser.set('passwords', passwords);
+    Parley.requestKeyring(success);
+  }
+  
+  /* Requests keyring of currrently authenticated user.
+  Accepts success callback */
+  Parley.requestKeyring = function(success) {
+    if (!Parley.currentUser) {
+      throw "Error: There is no currently authenticated user.";
+    } else {
+      var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
+      var time = Math.floor((new Date())/1000);
+      var sig = Parley.signAPIRequest(url,'GET',{'time':time});
+      $.getJSON(url,{'time':time,'sig':sig},function(data, textStatus, jqXHR) {
+        if (data.keyring) window.PYunpackKeyring(data.keyring);
+        success(data, textStatus, jqXHR);
+      });
+    }
+  }
+  
+  /* Stores (encrypted) local keyring on the server.
+  Accepts success callback. */
+  Parley.storeKeyring = function(success) {
+    if (!Parley.currentUser) {
+      throw "Error: There is no currently authenticated user.";
+    } else {
+      var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
+      var keyring = window.PYgetZippedKeyring();
+      var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring};
+      var sig = Parley.signAPIRequest(url,'POST',data);
+      data.sig = sig;
+      $.post(url,data,success);
+    }
+  }
+  
+  /* Requests the public key corresponding to an email address from public keyservers.
+  This function can take a bit of time to execute.
+  Accepts email address, returns key fingerprint on success or null on failure. */
+  //NB. Although this function is called by several others to allow strings to
+  //be used in place of Contact objects (ie. the encrypt and decrypt functions)
+  //it is probably better to create Contact objects using this function first
+  //and then pass the entire object to encrypt/decrypt/etc. (See Parley.AFIS)
+  Parley.requestPublicKey = function(email) {
+    return window.PYimportKey(email);
+  }
+
+  //This function could be used to build Parley.Contacts from a keyring
+  //after importing it or adding a new key.
+  Parley.listKeys = function() {
+    return window.PYlistKeys();
+  }
+
+  /*This function returns key meta data belonging to a given fingerprint.
+    Could be used in tandem with requestPublicKey to create a new Contact
+    ie.
+
+      Contact.init = function(email) {
+        var fingerprint = Parley.requestPublicKey(email);
+        var userinfo = Parley.AFIS(fingerprint);
+        var parsed = Parley.parseUID(userinfo.uids[0]);
+        userinfo.name = parsed.name;
+        userinfo.email = parsed.email;
+        this.set(userinfo);
+      }
+
+  */
+  Parley.AFIS = function(fingerprint) {
+    var keys = Parley.listKeys();
+    return _(keys).where({'fingerprint':fingerprint});
+  }
+
+  //Split a UID into name and email address
+  Parley.parseUID = function(UIDString) {
+    return {
+      'name': UIDString.split(" <")[0].split(" (")[0],
+      'email': UIDString.split(" <")[1].split(">")[0]
+    }
+  }
+
+  /* Sign, encrypt and send message to recipient(s).
+  Accepts clearTextMessage as a String and recipients as an array of Contacts. */
+  Parley.encryptAndSend = function(clearTextSubject, clearTextMessage, recipients) {
+    var recipientKeys = _(recipients).map(function(recipient) {
+      if (_.isString(recipient)) {
+        return Parley.requestPublicKey(recipient);
+      } else {
+        return recipient.get('keyid') || recipient.get('fingerprint');
+      }
+    });
+    var recipientEmails = _(recipients).map(function(recipient) {
+      if (_.isString(recipient)) {
+        return recipient;
+      } else {
+        return recipient.get('email');
+      }
+    });
+    var messageText = window.PYencryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('keyid') || Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
+    var message = {
+      'from':null,
+      'to':recipientEmails,
+      'subject':clearTextSubject,
+      'text':messageText
+    };
+    var url = Parley.BASE_URL+'/smtp/send';
+    var data = {
+      'time': Math.floor((new Date())/1000),
+      'user': Parley.currentUser.get('email'),
+      'message': message
+    };
+    var sig = Parley.signAPIRequest(url,'POST',data);
+    data.sig = sig;
+    $.post(url, data);
+  }
+  
+  /* Decrypt a message from sender.
+  Accepts the encrypted message body and sender as either an email address or Contact object
+  */
+  Parley.decryptAndVerify = function(encryptedMessage, sender) {
+    var keyid, email;
+    if (_.isString(sender)) {
+      email = sender;
+      keyid = Parley.requestPublicKey(email);
+    } else if (sender.get('keyid') || sender.get('fingerprint')) {
+      keyid = sender.get('keyid') || sender.get('fingerprint');
+    } else if (sender.get('email')) {
+      keyid = Parley.requestPublicKey(sender.get('email'));
+      sender.set('fingerprint',keyid)
+    } else {
+      throw "Error: Sender is illegible."
+    }
+    var decryptedMessage = window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
+    return window.linkify ? linkify(decryptedMessage) : decryptedMessage;
+  }
+  
+  /* Send Parley invitation from current user to email address
+  via the Parley API's invite method.
+  Accepts email as string, success callback, and optional "gift" boolean. */
+  Parley.invite = function(email, success, gift) {
+    if (!Parley.currentUser) {
+      throw "Error: There is no currently authenticated user.";
+    } else {
+      var url = Parley.BASE_URL+'/invite/'+email;
+      var data = { 'user': Parley.currentUser.email };
+      if (!!gift) {
+        //if signature is defined, server will try to share a paid account
+        data.time = Math.floor((new Date())/1000);
+        var sig = Parley.signAPIRequest(url,'POST',data);
+        data.sig = sig;
+      }
+      $.post(Parley.BASE_URL+'/invite/'+email,data,success);
+    }
+  }
+
+  Parley.registerInbox = function(email) {
+    var url = Parley.BASE_URL+'/imap/connect/' + email;
+    var data = { 'time': Math.floor((new Date())/1000) };
+    var sig = Parley.signAPIRequest(url,'GET',data);
+    data.sig = sig;
+    $.getJSON(url, data, function(data) {
+      window.open(data.browser_redirect_url);
+    });
+  }
+
+  /* This function pulls down 50 messages at a time from the user's IMAP
+  server, but only returns the ones with the "BEGIN PGP" section (ie. the
+  encrypted ones). Therefore the client should expect anywhere between 0
+  and 50 messages to be returned per request, and could continue calling
+  this function until the UI is populated.
+
+  eg.
+
+    var inboxFiller = function (targetNumber, lastOffset) {
+      Parley.requestInbox(lastOffset, function(data, status, jqXHR) {
+        if (data.messages.length < targetNumber) {
+          inboxFiller(targetNumber-data.messages.length, lastOffset+50)
+          Parley.Inbox.add(data.messages)
+          //probably also makes sense to store lastOffset somewhere for later
+          //if the user scrolls down or next page or whatever
+        }
+      }
+    }
+
+  Note that the response format is:
+    {
+      "messages": [
+        {
+          "body": {
+            "content": <body content as string--this can get passed to decryptAndVerify>,
+            ...<other body attributes such as type and charset (see CIO docs)>
+          },
+          ...<other message attributes such as IDs and what-not (see CIO docs)>
+        },
+        ...<other messages>
+      ]
+    }
+  */
+  Parley.requestInbox = function(offset, success) {
+    var url = Parley.BASE_URL+'/imap/get';
+    var data = {
+      'user' : Parley.currentUser.get('email'),
+      'offset' : offset || 0,
+      'time' : Math.floor((new Date())/1000)
+    }
+    var sig = Parley.signAPIRequest(url,'GET',data);
+    data.sig = sig;
+    $.getJSON(url, data, success);
+  }
+
+}(window.Parley = window.Parley || {}));
