@@ -82,6 +82,7 @@ def PYsignAPIRequest(url, method, data):
   keys.sort()
   values = [getattr(data,key) for key in keys]
   url_string = urlencode(zip(keys,values))
+  window.console.log(method,url,url_string,window.Parley.currentUser.attributes.passwords.remote)
   sig = hmac.new(
       key=window.Parley.currentUser.attributes.passwords.remote,
       msg=method+'|'+url+'?'+url_string,
