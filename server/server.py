@@ -19,7 +19,7 @@ Besides the dependencies listed below, this file requires the python-oauth2 modu
 from flask import Flask, request, json, jsonify, abort
 import requests as HTTP
 import contextio
-import base64, hmac
+import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
 import time
 import psycopg2
@@ -56,7 +56,7 @@ def verifySignature(url, method, formData, secret):
   new_sig = hmac.new(
       key=secret,
       msg=method+'|'+url+'?'+url_string,
-      digestmost=hashlib.sha256).digest()
+      digestmod=hashlib.sha256).digest()
   new_sig = quote_plus(base64.encodestring(sig).strip())
   return compare_hashes(old_sig, new_sig) and t < 30
 

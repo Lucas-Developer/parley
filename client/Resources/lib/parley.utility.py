@@ -5,7 +5,7 @@ crypto stuff and calls to PGP keyservers.
 
 import gnupg
 import pbkdf2
-import base64, hmac
+import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
 import os, platform, subprocess, zipfile
 from io import StringIO
@@ -77,14 +77,14 @@ window.PYunpackKeyring = PYunpackKeyring
 
 
 def PYsignAPIRequest(url, method, data):
-  keys = data.keys()
+  keys = window.Object.keys(data)
   keys.sort()
-  values = map(data.get, keys)
+  values = [data[key] for key in keys]
   url_string = urlencode(zip(keys,values))
   sig = hmac.new(
       key=window.Parley.currentUser.attributes.passwords.remote,
       msg=method+'|'+url+'?'+url_string,
-      digestmost=hashlib.sha256).digest()
+      digestmod=hashlib.sha256).digest()
   sig = quote_plus(base64.encodestring(sig).strip())
   return sig
 

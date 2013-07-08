@@ -65,17 +65,24 @@ remote API calls (IMAP/SMTP/Parley).
 
 (function (Parley) {
 
+  //TODO:change the ajax functions--they don't work or it's impossible to tell if they do because the success callbacks aren't getting reached
+  //the POSTs definitely don't seem to work
+  //genKey doesnt work, is it broken or just really slow? would be nice to get some feedback from that function
+
+
+
   Parley.BASE_URL = "http://parley.co:5000"; //Test server
   //Parley.BASE_URL = "https://api.parley.co"; //Production server
 
   //This is just a shim in case Parley.Contact isn't defined elsewhere
   Parley.Contact = Parley.Contact || function () {
+    this.attributes = this.attributes || {};
     return {
       'set': function (key, val) {
-        return this[key] = val;
+        return this.attributes[key] = val;
       },
       'get': function (key) {
-        return this[key];
+        return this.attributes[key];
       }
     }
   }
