@@ -55,11 +55,17 @@ def verifySignature(url, method, formData, secret):
   keys.sort()
   values = map(formData.get, keys)
   url_string = urlencode(zip(keys,values))
+  print method
+  print url
+  print url_string
+  print secret
   new_sig = hmac.new(
       key=secret,
       msg=method+'|'+url+'?'+url_string,
       digestmod=hashlib.sha256).digest()
-  new_sig = quote_plus(base64.encodestring(sig).strip())
+  new_sig = quote_plus(base64.encodestring(new_sig).strip())
+  print old_sig
+  print new_sig
   return compare_hashes(old_sig, new_sig) and t < 30
 
 def getUser(email):
@@ -200,10 +206,13 @@ def imap_connect(email):
         msg=email+'|'+time,
         digestmost=hashlib.sha256).digest()
     sig = quote_plus(base64.encodestring(sig).strip())
-    return context_io.post_connect_token(
+    resp = context_io.post_connect_token(
         callback_url="https://api.parley.co/imap/new/%s/%s/%s" % (email, time, sig),
         email=email
         )
+    return jsonify(**resp), 200
+  else:
+    abort(403)
 
 @app.route("/imap/new/<email>/<time>/<sig>", methods=['GET'])
 def imap_new(email, time, sig):
