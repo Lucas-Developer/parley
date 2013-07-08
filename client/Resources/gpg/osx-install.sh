@@ -6,7 +6,7 @@
 
 cd gpg
 
-TARGET_DIR=$(cd osxx; pwd)
+TARGET_DIR=$(cd osx; pwd)
 
 cd gnupg-1.4.13
 

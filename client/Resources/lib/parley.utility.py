@@ -3,7 +3,7 @@ These utilities are called from parley.utility.js, and deal with
 crypto stuff and calls to PGP keyservers.
 '''
 
-import gnugpg
+import gnupg
 import pbkdf2
 import base64, hmac
 from urllib import urlencode, quote_plus
@@ -11,24 +11,25 @@ import os, platform, subprocess, zipfile
 from io import StringIO
 
 
-resource_dir = window.Ti.Filesystem.getResourcesDirectory()
+resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
 os.chdir(resource_dir)
 
 def platform_path():
   if 'Darwin' in platform.platform():
-    return '/osx/bin/gpg'
+    return 'osx/bin/gpg'
   elif 'Windows' in platform.platform():
-    return '\win32\gpg.exe'
+    return 'win32\gpg.exe'
   elif 'Linux' in platform.platform():
-    return '/linux/bin/gpg'
+    return 'linux/bin/gpg'
 
 gpg_binary = os.path.join("gpg", platform_path())
-gpg_home = os.path.join(resource_dir,"gpg","keyring")
+gpg_home = os.path.join("gpg","keyring")
 
 #if Tide's version of GPG isn't installed yet, install it
-#(this only applies to linux, because others get pre-compiled binaries)
-if not os.path.isfile(gpg_path):
-  subprocess.call(['gpg/linux-install.sh'])
+#(This approach only works on Linux and Mac with gcc pre-installed))
+if not os.path.isfile(gpg_binary):
+  #TODO: make this cross-platform (windows is fine, pre-compiled bins)
+  subprocess.call(['gpg/osx-install.sh'])
 
 gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
 
@@ -43,6 +44,8 @@ def PYgenKey():
       expire_date=0,
       passphrase=window.Parley.currentUser.attributes.passwords.local)
 
+window.PYgenKey = PYgenKey
+
 
 def PYgetZippedKeyring():
   zip = zipfile.ZipFile('keyring.zip','w')
@@ -53,6 +56,8 @@ def PYgetZippedKeyring():
   with open("keyring.zip", "rb") as zipped_keyring:
     b64_keyring = base64.b64encode(zipped_keyring.read())
   return b64_keyring
+
+window.PYgetZippedKeyring = PYgetZippedKeyring
 
 
 def PYunpackKeyring(b64_keyring):
@@ -68,6 +73,8 @@ def PYunpackKeyring(b64_keyring):
     fd.write(zfile.read(name))
     fd.close()
 
+window.PYunpackKeyring = PYunpackKeyring
+
 
 def PYsignAPIRequest(url, method, data):
   keys = data.keys()
@@ -81,10 +88,14 @@ def PYsignAPIRequest(url, method, data):
   sig = quote_plus(base64.encodestring(sig).strip())
   return sig
 
+window.PYsignAPIRequest = PYsignAPIRequest
+
 
 def PYpbkdf2(data):
-  salt = window.currentUser.attributes.email + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db'
+  salt = window.Parley.currentUser.attributes.email + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db'
   return pbkdf2.pbkdf2_hex(data, salt, 2048, 32)
+
+window.PYpbkdf2 = PYpbkdf2
 
 
 def PYimportKey(email):
@@ -95,14 +106,20 @@ def PYimportKey(email):
     imported = gpg.recv_keys('pgp.mit.edu',keys[0]['keyid'])
     return imported.fingerprints[0]
 
+window.PYimportKey = PYimportKey
+
 
 def PYlistKeys():
   return gpg.list_keys()
+
+window.PYlistKeys = PYlistKeys
 
 
 def PYencryptAndSign(data, recipients, signer, passphrase):
   data = gpg.encrypt(data, recipients, sign=signer, passphrase=passphrase)
   return data.data
+
+window.PYencryptAndSign = PYencryptAndSign
 
 
 def PYdecryptAndVerify(data, passphrase, sender_id):
@@ -111,3 +128,6 @@ def PYdecryptAndVerify(data, passphrase, sender_id):
     return decrypted_data.data
   else:
     return "Parley Exception: The signature on this message was no good."
+
+window.PYdecryptAndVerify = PYdecryptAndVerify
+

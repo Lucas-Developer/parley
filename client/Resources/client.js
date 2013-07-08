@@ -583,7 +583,7 @@ $.get('./fakemessages.json', function (data) {
 }(window.Parley = window.Parley || {}, jQuery));
 
 // DEV STUFF FOLLOWS:
-window.PYpbkdf2 = window.PYpbkdf2 || function (data) { return data+'i'; }
+/*window.PYpbkdf2 = window.PYpbkdf2 || function (data) { return data+'i'; }
 window.PYgenKey = window.PYgenKey || function (data) { return 'this-is-a-key-motherfucker'; }
 window.PYgetZippedKeyring = window.PYgetZippedKeyring || function (data) { return 'this-is-a-zipped-keyring'; }
 window.PYunpackKeyring = window.PYunpackKeyring || function (data) { return 'this-is-an-unpacked-keyring'; }
@@ -593,3 +593,4 @@ window.PYsignAPIRequest = window.PYsignAPIRequest || function (url,data) { retur
 window.PYdecryptAndVerify = window.PYdecryptAndVerify || function (url,data) { return 'decrypted message stuff here'; }
 window.PYencryptAndSign = window.PYencryptAndSign || function () { return 'ENCRYPTED MESSAGE YO!'; }
 // END DEV STUFF
+*/
