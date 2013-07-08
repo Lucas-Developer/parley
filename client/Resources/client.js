@@ -581,16 +581,3 @@ $.get('./fakemessages.json', function (data) {
 
 	$('button').button();
 }(window.Parley = window.Parley || {}, jQuery));
-
-// DEV STUFF FOLLOWS:
-/*window.PYpbkdf2 = window.PYpbkdf2 || function (data) { return data+'i'; }
-window.PYgenKey = window.PYgenKey || function (data) { return 'this-is-a-key-motherfucker'; }
-window.PYgetZippedKeyring = window.PYgetZippedKeyring || function (data) { return 'this-is-a-zipped-keyring'; }
-window.PYunpackKeyring = window.PYunpackKeyring || function (data) { return 'this-is-an-unpacked-keyring'; }
-window.PYimportKey = window.PYimportKey || function (email) { return 'testz'; }
-window.PYlistKeys = window.PYlistKeys || function () { return [{uids:['Dave Noel <dave@blackchair.net>'],fingerprint:'dave'},{uids:['Danny O`Sullivan <danny@blackchair.net>'],fingerprint:'danny'},{uids:['Matthew Poirier <bearsandaeroplanes@gmail.com>'],fingerprint:'matt'}]; }
-window.PYsignAPIRequest = window.PYsignAPIRequest || function (url,data) { return 'signed-api-request'; }
-window.PYdecryptAndVerify = window.PYdecryptAndVerify || function (url,data) { return 'decrypted message stuff here'; }
-window.PYencryptAndSign = window.PYencryptAndSign || function () { return 'ENCRYPTED MESSAGE YO!'; }
-// END DEV STUFF
-*/
