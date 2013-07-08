@@ -88,17 +88,13 @@
             };
         },
         parse: function (data, options) {
+                 console.log(data);
             var from_obj = Parley.contacts.findWhere({email:data.addresses.from.email});
             
             if (!from_obj) {
                 console.log('Creating contact from scratch.');
                 from_obj = new Parley.Contact({email:data.addresses.from.email},{parse:true});
 
-// DEV STUFF FOLLOWS
-// Once the 'from' address for this message has been parsed, this adds it to the main list
-// of contacts. This may not be ideal? Anyway, most sender will already be in the keychain.
-Parley.contacts.add(from_obj);
-// END DEV STUFF
             }
  
             return {
@@ -265,7 +261,8 @@ Parley.contacts.add(from_obj);
                     opts: {},
                     title: 'Compose',
                     init: function () {
-                        this.to = this.from.toJSON();
+                        //this.to = this.from.toJSON();
+                        this.to = {"email":"dave@example.com"}//this.from.toJSON();
                     },
                     loaded: function (view) {
                         var items = Parley.contacts.map(function (ele,i) {
@@ -374,17 +371,7 @@ Parley.contacts.add(from_obj);
                     console.log('User doesn\'t exists, showing registration form.');
                     _this.setPage('register', {email: form.email.value});
 		    	}
-			});
-
-            // DEV STUFF FOLLOWS:
-            if (form.email.value == 'a@a.a') {
-                console.log('User exists, setting up login form.');
-                _this.setPage('login', {email: form.email.value});
-            } else {
-                console.log('User doesn\'t exists, showing registration form.');
-                _this.setPage('register', {email: form.email.value});
-            }
-            // END DEV STUFF
+		});
 	    },
         register: function (e) {
             e.preventDefault();
@@ -393,40 +380,25 @@ Parley.contacts.add(from_obj);
                 // Passwords don't match
                 console.log('Passwords don\'t match.');
             } else {
-                Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
+                Parley.registerUser(form.name.value, form.email.value, form.password_two.value, _.bind(function (data, textStatus) {
                     console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
                     console.log('Registering new inbox with Context.io');
                     
-                    Parley.registerInbox(Parley.currentUser.get('email'));
+                    Parley.registerInbox();
 
                     Parley.app.loadUser();
                     this.hide();
-                });
+                },this));
             }
-
-            // DEV STUFF FOLLOWS:
-            console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
-            console.log('Registering new inbox with Context.io');
-            
-            Parley.registerInbox(Parley.currentUser.get('email'));
-
-            Parley.app.loadUser();
-            this.hide();
-            // END DEV STUFF
         },
         login: function (e) {
             e.preventDefault();
-            var _this = this, form = document.forms.loginAction;
-            Parley.authenticateUser(form.email.value, form.password.value, function (data, textStatus) {
+            var form = document.forms.loginAction;
+            Parley.authenticateUser(form.email.value, form.password.value, _.bind( function (data, textStatus) {
                 console.log('User successfully logged in.');
                 Parley.app.loadUser();
-                _this.hide();
-            });
-            
-            // DEV STUFF FOLLOWS:
-            Parley.app.loadUser();
-            _this.hide();
-            // END DEV STUFF
+                this.hide();
+            }, this));
         },    
 	    logout: function () {
 			console.log('Logging out');
@@ -552,12 +524,6 @@ Parley.contacts.add(from_obj);
             console.log('Populating contacts from keychain');
             Parley.contacts.set(Parley.listKeys(),{parse:true});
  
-// DEV STUFF FOLLOWS:
-$.get('./fakemessages.json', function (data) {
-    Parley.inbox = (Parley.inbox && Parley.inbox.set(data,opts)) || new MessageList(data,opts);
-});
-// END DEV STUFF
-            
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.header.$('.email').text(Parley.currentUser.get('email'));
 	    },

@@ -35,7 +35,7 @@ gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
 
 
 def PYgenKey():
-  return gpg.gen_key_input(
+  input_data = gpg.gen_key_input(
       key_type="RSA",
       key_length=2048,
       name_real=window.Parley.currentUser.attributes.name,
@@ -43,6 +43,7 @@ def PYgenKey():
       name_email=window.Parley.currentUser.attributes.email,
       expire_date=0,
       passphrase=window.Parley.currentUser.attributes.passwords.local)
+  return gpg.gen_key(input_data)
 
 window.PYgenKey = PYgenKey
 
@@ -79,7 +80,7 @@ window.PYunpackKeyring = PYunpackKeyring
 def PYsignAPIRequest(url, method, data):
   keys = window.Object.keys(data)
   keys.sort()
-  values = [data[key] for key in keys]
+  values = [getattr(data,key) for key in keys]
   url_string = urlencode(zip(keys,values))
   sig = hmac.new(
       key=window.Parley.currentUser.attributes.passwords.remote,

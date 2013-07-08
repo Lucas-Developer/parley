@@ -89,9 +89,9 @@ def setUser(email,info):
   meta_json = json.dumps(meta)
 
   if user:
-    cur.execute("UPDATE users SET name=%s, secret=%s, keyring=%s, pending=%s, account_type=%s, imap_account=%s, paid_invites=%s, meta=%s WHERE email=%s",[fields["name"], fields["secret"], fields["keyring"], fields["pending"], fields["account_type"], fields["imap_account"], meta_json, fields["email"]])
+    cur.execute("UPDATE users SET name=%s, secret=%s, keyring=%s, pending=%s, account_type=%s, imap_account=%s, paid_invites=%s, meta=%s WHERE email=%s",[fields["name"], fields["secret"], fields["keyring"], fields["pending"], fields["account_type"], fields["imap_account"], fields["paid_invites"], meta_json, fields["email"]])
   else:
-    cur.execute("INSERT INTO users (name,email,secret,keyring,pending,account_type,imap_account,meta) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",[fields["name"],fields["email"],fields["secret"],fields["keyring"],fields["pending"],fields["account_type"],fields["imap_account"],fields["paid_invites"],meta_json])
+    cur.execute("INSERT INTO users (name,email,secret,keyring,pending,account_type,imap_account,paid_invites,meta) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",[fields["name"],fields["email"],fields["secret"],fields["keyring"],fields["pending"],fields["account_type"],fields["imap_account"],fields["paid_invites"],meta_json])
   conn.commit()
   return getUser(email)
 
@@ -124,6 +124,8 @@ def user(email):
   else:
     abort(400)
     
+
+#TODO: think about how invites work really carefully. security, conversions, etc
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
   # this is both for free invites and paid ones
@@ -143,10 +145,7 @@ def invite(to):
         {
           "pending":True,
           "account_type":from_user["account_type"],
-          "meta":
-            {
-              "invited_by":from_user["email"]
-            }
+          "invited_by":from_user["email"]
         }
         )
     #TODO: SEND PAID INVITE
@@ -159,9 +158,7 @@ def invite(to):
           "pending":True,
           "account_type":0,
           "meta":
-            {
-              "invited_by":from_user["email"]
-            }
+          "invited_by":from_user["email"]
         }
         )
     #TODO: SEND FREE INVITE (with upgrade option)

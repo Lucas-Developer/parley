@@ -61,6 +61,10 @@ the user can manage their contacts and invite new users to Parley.
 The following utilities will encapsulate any external Python calls (ie. for crypto/key management) and
 remote API calls (IMAP/SMTP/Parley).
 
+NB. I've replaced jQuery's usual success and error callbacks with a single
+"finished" callback. It has the same signature as jQuery's success; errors
+are massaged to fit. The arguments to finished on ajax error look like:
+  {'error':ErrorString},textStatus,jqXHR
 */
 
 (function (Parley) {
@@ -68,7 +72,6 @@ remote API calls (IMAP/SMTP/Parley).
   //TODO:change the ajax functions--they don't work or it's impossible to tell if they do because the success callbacks aren't getting reached
   //the POSTs definitely don't seem to work
   //genKey doesnt work, is it broken or just really slow? would be nice to get some feedback from that function
-
 
 
   Parley.BASE_URL = "http://parley.co:5000"; //Test server
@@ -98,16 +101,22 @@ remote API calls (IMAP/SMTP/Parley).
   }
   
   /* Check if a user is already registered with Parley.
-  Accepts email address, success callback */
-  Parley.requestUser = function (email, success) {
-    $.getJSON(Parley.BASE_URL+'/u/'+email, success);
+  Accepts email address, finished callback */
+  Parley.requestUser = function (email, finished) {
+    $.ajax({
+      type:'GET',
+      url:Parley.BASE_URL+'/u/'+email,
+      success:finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
   }
   
   /* Generate a new keypair and hashed system password for Parley, then register with the given
   email. This function will take some time to execute, and may block during the key-gen phase, so
   decorate the UI accordingly.
-  Accepts email, cleartext password, success callback */
-  Parley.registerUser = function (name, email, clearTextPassword, success) {
+  Accepts email, cleartext password, finished callback */
+  Parley.registerUser = function (name, email, clearTextPassword, finished) {
     Parley.currentUser = Parley.currentUser || new Parley.Contact();
     Parley.currentUser.set('name', name);
     Parley.currentUser.set('email', email);
@@ -116,44 +125,56 @@ remote API calls (IMAP/SMTP/Parley).
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
     window.PYgenKey(); //this is super slow
-    $.post(Parley.BASE_URL+'/u/'+email,
-        {
-            'name':name,
-            'p':Parley.currentUser.get('passwords').remote,
-            'keyring':window.PYgetZippedKeyring()
-        },
-        success);
+    $.ajax({
+      type:'POST',
+      url:Parley.BASE_URL+'/u/'+email,
+      data:{
+        'name':name,
+        'p':Parley.currentUser.get('passwords').remote,
+        'keyring':window.PYgetZippedKeyring()
+      },
+      success:finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
   }
 
-  Parley.authenticateUser = function(email, clearTextPassword, success) {
+  Parley.authenticateUser = function(email, clearTextPassword, finished) {
     Parley.currentUser = Parley.currentUser || new Parley.Contact();
     Parley.currentUser.set('email', email);
     var passwords = Parley.currentUser.get('passwords') || {};
     passwords.local = Parley.pbkdf2(clearTextPassword);
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
-    Parley.requestKeyring(success);
+    Parley.requestKeyring(finished);
   }
   
   /* Requests keyring of currrently authenticated user.
-  Accepts success callback */
-  Parley.requestKeyring = function(success) {
+  Accepts finished callback */
+  Parley.requestKeyring = function(finished) {
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
       var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
       var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
-      $.getJSON(url,{'time':time,'sig':sig},function(data, textStatus, jqXHR) {
-        if (data.keyring) window.PYunpackKeyring(data.keyring);
-        success(data, textStatus, jqXHR);
+      $.ajax({
+        type:'GET',
+        url:url,
+        data:{'time':time,'sig':sig},
+        success:function(data, textStatus, jqXHR) {
+          if (data.keyring) window.PYunpackKeyring(data.keyring);
+          finished(data, textStatus, jqXHR);
+        },
+        error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+        dataType:'json'
       });
     }
   }
   
   /* Stores (encrypted) local keyring on the server.
-  Accepts success callback. */
-  Parley.storeKeyring = function(success) {
+  Accepts finished callback. */
+  Parley.storeKeyring = function(finished) {
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
@@ -162,7 +183,14 @@ remote API calls (IMAP/SMTP/Parley).
       var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring};
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
-      $.post(url,data,success);
+      $.ajax({
+        type:'POST',
+        url:url,
+        data:data,
+        success:finished,
+        error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+        dataType:'json'
+      });
     }
   }
   
@@ -211,8 +239,9 @@ remote API calls (IMAP/SMTP/Parley).
   }
 
   /* Sign, encrypt and send message to recipient(s).
-  Accepts clearTextMessage as a String and recipients as an array of Contacts. */
-  Parley.encryptAndSend = function(clearTextSubject, clearTextMessage, recipients) {
+  Accepts clearTextMessage as a String and recipients as an array of Contacts.
+  Also takes finished callback. */
+  Parley.encryptAndSend = function(clearTextSubject, clearTextMessage, recipients, finished) {
     var recipientKeys = _(recipients).map(function(recipient) {
       if (_.isString(recipient)) {
         return Parley.requestPublicKey(recipient);
@@ -242,7 +271,14 @@ remote API calls (IMAP/SMTP/Parley).
     };
     var sig = Parley.signAPIRequest(url,'POST',data);
     data.sig = sig;
-    $.post(url, data);
+    $.ajax({
+      type:'POST',
+      url:url,
+      data:data,
+      success:finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
   }
   
   /* Decrypt a message from sender.
@@ -267,8 +303,8 @@ remote API calls (IMAP/SMTP/Parley).
   
   /* Send Parley invitation from current user to email address
   via the Parley API's invite method.
-  Accepts email as string, success callback, and optional "gift" boolean. */
-  Parley.invite = function(email, success, gift) {
+  Accepts email as string, finished callback, and optional "gift" boolean. */
+  Parley.invite = function(email, finished, gift) {
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
@@ -280,12 +316,19 @@ remote API calls (IMAP/SMTP/Parley).
         var sig = Parley.signAPIRequest(url,'POST',data);
         data.sig = sig;
       }
-      $.post(Parley.BASE_URL+'/invite/'+email,data,success);
+      $.ajax({
+        type:'POST',
+        url:Parley.BASE_URL+'/invite/'+email,
+        data:data,
+        success:finished,
+        error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+        dataType:'json'
+      });
     }
   }
 
-  Parley.registerInbox = function(email) {
-    var url = Parley.BASE_URL+'/imap/connect/' + email;
+  Parley.registerInbox = function() {
+    var url = Parley.BASE_URL+'/imap/connect/' + Parley.currentUser.get('email');
     var data = { 'time': Math.floor((new Date())/1000) };
     var sig = Parley.signAPIRequest(url,'GET',data);
     data.sig = sig;
@@ -327,7 +370,7 @@ remote API calls (IMAP/SMTP/Parley).
       ]
     }
   */
-  Parley.requestInbox = function(offset, success) {
+  Parley.requestInbox = function(finished, offset) {
     var url = Parley.BASE_URL+'/imap/get';
     var data = {
       'user' : Parley.currentUser.get('email'),
@@ -336,7 +379,14 @@ remote API calls (IMAP/SMTP/Parley).
     }
     var sig = Parley.signAPIRequest(url,'GET',data);
     data.sig = sig;
-    $.getJSON(url, data, success);
+    $.ajax({
+      type:'GET',
+      url:url,
+      data:data,
+      success:finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
   }
 
 }(window.Parley = window.Parley || {}));
