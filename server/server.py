@@ -46,10 +46,12 @@ def compare_hashes(a, b):
   return rv == 0
 
 def verifySignature(url, method, formData, secret):
+  if not 'sig' in formData or not 'time' in formData:
+    return False
   t = abs(time.time() - int(formData['time']))
   old_sig = formData['sig']
-  del(formData['sig'])
   keys = formData.keys()
+  keys.remove('sig')
   keys.sort()
   values = map(formData.get, keys)
   url_string = urlencode(zip(keys,values))
@@ -100,7 +102,7 @@ def setUser(email,info):
 def user(email):
   user = getUser(email)
   if request.method == 'GET':
-    if user and not user["pending"] and request.args['sig'] and verifySignature(request.base_url, request.method, request.args, user["secret"]):
+    if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
       #authenticated. return all info
       return jsonify(**user), 200
     elif user and not user["pending"]:
@@ -109,16 +111,15 @@ def user(email):
     else:
       abort(404)
   elif request.method == 'POST':
-    if user and not user["pending"] and request.form['keyring'] and request.form['sig'] and verifySignature(request.base_url, request.method, request.form, user["secret"]):
+    if user and not user["pending"] and 'keyring' in request.form and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
       #create/update user's keyring
       user = setUser(email,{'keyring':request.form['keyring']})
       return jsonify(**user), 201
-    elif user["pending"] and request.form['p']:
-      new_user = {
-          "name":request.form['name'],
-          "secret":request.form['p'],
-          "keyring":request.form['keyring'],
-          "pending":False}
+    elif user["pending"] and 'p' in request.form:
+      new_user = {"pending":False,"secret":request.form['p']}
+      for key in ["name","keyring"]:
+        if key in request.form:
+          new_user[key] = request.form[key]
       user = setUser(email,new_user)
       return jsonify(**user), 201
   else:
@@ -129,17 +130,16 @@ def user(email):
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
   # this is both for free invites and paid ones
-
   from_user = getUser(request.form["user"])
 
   paid_invites = from_user["paid_invites"] or 0
-  if not paid_invites and request.form['sig']:
+  if not paid_invites and 'sig' in request.form:
     paid_invites = -1 #if the user is trying to send a paid invite but has none
 
   to_user = getUser(to)
 
   #TODO: modify the following if/else to accomodate for the situation where someone is trying to send a paid invite to an already pending user--if the account type is better than their current invite, it should send the new one. either way it should send a reminder
-  if from_user and not from_user["pending"] and request.form['sig'] and verifySignature(request.base_url, request.method, request.form, from_user["secret"]) and not to_user and paid_invites > 0:
+  if from_user and not from_user["pending"] and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, from_user["secret"]) and not to_user and paid_invites > 0:
     new_user = setUser(
         to,
         {
@@ -157,7 +157,6 @@ def invite(to):
         {
           "pending":True,
           "account_type":0,
-          "meta":
           "invited_by":from_user["email"]
         }
         )
@@ -174,7 +173,7 @@ MAILGUN_API_KEY = config["mailgun_api_key"]
 @app.route("/smtp/send", methods=['POST'])
 def smtp_send():
   user = getUser(request.form["user"])
-  if user and not user["pending"] and request.form['sig'] and verifySignature(request.base_url, request.method, request.form, user["secret"]):
+  if user and not user["pending"] and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
     message = json.loads(request.form['message'])
     message['from'] = "%s <%s>" % (user["name"], user["email"])
     response = HTTP.post(
@@ -194,7 +193,7 @@ context_io = contextio.ContextIO(
 @app.route("/imap/connect/<email>", methods=['GET'])
 def imap_connect(email):
   user = getUser(email)
-  if user and not user["pending"] and request.args['sig'] and verifySignature(request.base_url, request.method, request.args, user["secret"]):
+  if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     time = request.args["time"]
     sig = hmac.new(
         key=config["contextio_api_secret"],
@@ -220,14 +219,14 @@ def imap_new(email, time, sig):
     account = token.account.__dict__
     account["parley_type"] = "contextio"
     user = setUser(email,{"imap_account":json.dumps(account)})
-    return jsonify(**user)
+    return "<!doctype html><html><body onload=\"function(){window.opener.Parley.newInbox();window.close();}\"></body></html>"
   else:
     abort(403)
 
 @app.route("/imap/get", methods=['GET'])
 def imap_get():
   user = getUser(request.args["user"])
-  if user and not user["pending"] and user["imap_account"] and request.args['sig'] and verifySignature(request.base_url, request.method, request.args, user["secret"]):
+  if user and not user["pending"] and user["imap_account"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     account_dict = json.loads(user["imap_account"])
     params = {'id':account["id"]}
     account = contextio.Account(context_io, params)
@@ -245,4 +244,4 @@ def imap_get():
 
 
 if __name__ == "__main__":
-  app.run()
+  app.run(debug=True,host='0.0.0.0')

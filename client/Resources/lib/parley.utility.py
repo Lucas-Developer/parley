@@ -117,7 +117,7 @@ window.PYlistKeys = PYlistKeys
 
 
 def PYencryptAndSign(data, recipients, signer, passphrase):
-  data = gpg.encrypt(data, recipients, sign=signer, passphrase=passphrase)
+  data = gpg.encrypt(data, recipients, sign=signer, passphrase=passphrase, always_trust=True)
   return data.data
 
 window.PYencryptAndSign = PYencryptAndSign
