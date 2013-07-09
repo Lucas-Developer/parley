@@ -8,7 +8,7 @@ import pbkdf2
 import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
 import os, platform, subprocess, zipfile
-from io import StringIO
+from StringIO import StringIO
 
 
 resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
@@ -62,11 +62,11 @@ window.PYgetZippedKeyring = PYgetZippedKeyring
 
 
 def PYunpackKeyring(b64_keyring):
-  zipped_keyring = StringIO.StringIO(base64.b64decode(b64_keyring))
-  zip = zipfile.ZipFile(zipped_keyring)
+  zipped_keyring = StringIO(base64.b64decode(b64_keyring))
+  zfile = zipfile.ZipFile(zipped_keyring)
 
   #http://stackoverflow.com/questions/7806563/how-to-unzip-a-file-with-python-2-4
-  for name in zip.namelist():
+  for name in zfile.namelist():
     (dirname, filename) = os.path.split(name)
     if not os.path.exists(dirname):
       os.mkdir(dirname)

@@ -32,6 +32,9 @@ config = dict()
 with open('config.json') as config_file:
   config = json.load(config_file)
 
+BASE_URL = "http://parley.co:5000" #Test
+#BASE_URL = "https://api.parley.co" #Live
+
 #---- ACTUAL PARLEY STUFF ----#
 conn = psycopg2.connect("dbname=%s user=%s" % (config["dbname"], config["dbuser"]))
 cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -202,28 +205,45 @@ def imap_connect(email):
         digestmod=hashlib.sha256).digest()
     sig = quote_plus(base64.encodestring(sig).strip())
     resp = context_io.post_connect_token(
-        callback_url="https://api.parley.co/imap/new/%s/%s/%s" % (email, time, sig),
+        callback_url="%s/imap/new/%s/%s/%s" % (BASE_URL, email, time, sig),
         email=email
         )
     return jsonify(**resp), 200
   else:
     abort(403)
 
-@app.route("/imap/new/<email>/<time>/<sig>", methods=['GET'])
-def imap_new(email, time, sig):
-  t = abs(time.time() - int(time))
+@app.route("/imap/new/<email>/<timestamp>/<sig>", methods=['GET'])
+def imap_new(email, timestamp, sig):
+  user = getUser(email)
+  sig = quote_plus(sig)
+  t = abs(time.time() - int(timestamp))
   new_sig = hmac.new(
         key=config["contextio_api_secret"]+user["secret"],
-        msg=email+'|'+time,
+        msg=email+'|'+timestamp,
         digestmod=hashlib.sha256).digest()
-  if compare_hashes(sig, new_sig) and t < 30:
+  new_sig = quote_plus(base64.encodestring(new_sig).strip())
+  if compare_hashes(sig, new_sig) and t < 30*60:
     params = {'token':request.args['contextio_token']}
     token = contextio.ConnectToken(context_io,params)
     token.get()
-    account = token.account.__dict__
-    account["parley_type"] = "contextio"
-    user = setUser(email,{"imap_account":json.dumps(account)})
-    return "<!doctype html><html><body onload=\"function(){window.opener.Parley.newInbox();window.close();}\"></body></html>"
+    account = token.account
+    accountDict = {}
+    for key in contextio.Account.keys:
+      accountDict[key] = getattr(account,key)
+    accountDict["parley_imap_type"] = "contextio"
+    user = setUser(email,{"imap_account":json.dumps(accountDict)})
+    return """
+<!doctype html>
+<html>
+<meta charset=utf-8>
+<title>Parley OAuth Redirect</title>
+<body>
+<script type="text/javascript">
+window.close();
+</script>
+</body>
+</html>
+    """
   else:
     abort(403)
 
@@ -232,15 +252,21 @@ def imap_get():
   user = getUser(request.args["user"])
   if user and not user["pending"] and user["imap_account"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     account_dict = json.loads(user["imap_account"])
-    params = {'id':account["id"]}
+    params = {'id':account_dict["id"]}
     account = contextio.Account(context_io, params)
-    messages =  account.get_messages(include_body=1,body_type="text/plain",limit=50,offset=request.args["offset"])
+    messages =  account.get_messages(include_body=1,body_type='text/plain',limit=50,offset=request.args["offset"])
 
     #filter out unencrypted mail, and create an array of serialized messages
     serialized_messages = []
     for message in messages:
-      if "-----BEGIN PGP MESSAGE-----" in body[0]["content"]:
-        serialized_messages.append(message.__dict__)
+      #if "-----BEGIN PGP MESSAGE-----" in message.body[0]["content"]:
+      message_dict = {}
+      for key in contextio.Message.keys:
+        if key != 'files':
+          message_dict[key] = getattr(message,key)
+      message_dict['body'] = message.body
+      serialized_messages.append(message_dict)
+      #  serialized_messages.append(message_dict_)
     return jsonify(messages=serialized_messages)
 
   else:

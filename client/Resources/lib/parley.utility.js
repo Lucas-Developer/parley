@@ -314,7 +314,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       throw "Error: There is no currently authenticated user.";
     } else {
       var url = Parley.BASE_URL+'/invite/'+email;
-      var data = { 'user': Parley.currentUser.email };
+      var data = { 'user': Parley.currentUser.get('email') };
       if (!!gift) {
         //if signature is defined, server will try to share a paid account
         data.time = Math.floor((new Date())/1000);
@@ -338,7 +338,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
     var sig = Parley.signAPIRequest(url,'GET',data);
     data.sig = sig;
     $.getJSON(url, data, function(data) {
-      window.open(data.browser_redirect_url);
+      var newWin = window.open(data.browser_redirect_url);
+      $(newWin).on("close", console.log);
     });
   }
 
