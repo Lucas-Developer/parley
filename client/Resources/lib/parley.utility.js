@@ -93,6 +93,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* Sign Parley API request--identical to Amazon API signing method,
   but timestamped and using password hash as the secret key. */
   Parley.signAPIRequest = function (url, method, data) {
+    //cast all data values as strings, because tide's KObject transfer layer
+    //was changing ints to floats and breaking the signatures
+    for (var key in data) {
+      data[key] = ''+data[key];
+    }
     return window.PYsignAPIRequest(url, method, data);
   }
 
@@ -156,7 +161,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       throw "Error: There is no currently authenticated user.";
     } else {
       var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
-      var time = ~~Math.floor((new Date())/1000);
+      var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
       $.ajax({
         type:'GET',
@@ -180,7 +185,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     } else {
       var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
       var keyring = window.PYgetZippedKeyring();
-      var data = {'time': ~~Math.floor((new Date())/1000), 'keyring':keyring};
+      var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring};
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
       $.ajax({
@@ -265,7 +270,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     };
     var url = Parley.BASE_URL+'/smtp/send';
     var data = {
-      'time': ~~Math.floor((new Date())/1000),
+      'time': Math.floor((new Date())/1000),
       'user': Parley.currentUser.get('email'),
       'message': message
     };
@@ -312,7 +317,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var data = { 'user': Parley.currentUser.email };
       if (!!gift) {
         //if signature is defined, server will try to share a paid account
-        data.time = ~~Math.floor((new Date())/1000);
+        data.time = Math.floor((new Date())/1000);
         var sig = Parley.signAPIRequest(url,'POST',data);
         data.sig = sig;
       }
@@ -329,7 +334,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   Parley.registerInbox = function() {
     var url = Parley.BASE_URL+'/imap/connect/' + Parley.currentUser.get('email');
-    var data = { 'time': ~~Math.floor((new Date())/1000) };
+    var data = { 'time': Math.floor((new Date())/1000) };
     var sig = Parley.signAPIRequest(url,'GET',data);
     data.sig = sig;
     $.getJSON(url, data, function(data) {
@@ -375,7 +380,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     var data = {
       'user' : Parley.currentUser.get('email'),
       'offset' : offset || 0,
-      'time' : ~~Math.floor((new Date())/1000)
+      'time' : Math.floor((new Date())/1000)
     }
     var sig = Parley.signAPIRequest(url,'GET',data);
     data.sig = sig;

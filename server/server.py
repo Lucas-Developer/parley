@@ -24,6 +24,7 @@ from urllib import urlencode, quote_plus
 import time
 import psycopg2
 import psycopg2.extras
+from itertools import izip
 
 app = Flask(__name__)
 
@@ -55,17 +56,11 @@ def verifySignature(url, method, formData, secret):
   keys.sort()
   values = map(formData.get, keys)
   url_string = urlencode(zip(keys,values))
-  print method
-  print url
-  print url_string
-  print secret
   new_sig = hmac.new(
       key=secret,
       msg=method+'|'+url+'?'+url_string,
       digestmod=hashlib.sha256).digest()
   new_sig = quote_plus(base64.encodestring(new_sig).strip())
-  print old_sig
-  print new_sig
   return compare_hashes(old_sig, new_sig) and t < 30
 
 def getUser(email):
@@ -202,9 +197,9 @@ def imap_connect(email):
   if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     time = request.args["time"]
     sig = hmac.new(
-        key=config["contextio_api_secret"],
+        key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+time,
-        digestmost=hashlib.sha256).digest()
+        digestmod=hashlib.sha256).digest()
     sig = quote_plus(base64.encodestring(sig).strip())
     resp = context_io.post_connect_token(
         callback_url="https://api.parley.co/imap/new/%s/%s/%s" % (email, time, sig),
@@ -218,9 +213,9 @@ def imap_connect(email):
 def imap_new(email, time, sig):
   t = abs(time.time() - int(time))
   new_sig = hmac.new(
-        key=config["contextio_api_secret"],
+        key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+time,
-        digestmost=hashlib.sha256).digest()
+        digestmod=hashlib.sha256).digest()
   if compare_hashes(sig, new_sig) and t < 30:
     params = {'token':request.args['contextio_token']}
     token = contextio.ConnectToken(context_io,params)

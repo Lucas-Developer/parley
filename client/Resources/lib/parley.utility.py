@@ -78,7 +78,6 @@ window.PYunpackKeyring = PYunpackKeyring
 
 
 def PYsignAPIRequest(url, method, data):
-  data.time = int(data.time)
   keys = window.Object.keys(data)
   keys.sort()
   values = [getattr(data,key) for key in keys]
