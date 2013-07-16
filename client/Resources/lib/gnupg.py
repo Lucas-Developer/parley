@@ -326,6 +326,15 @@ BASIC_ESCAPES = {
     r'\0': '\0',
 }
 
+class SendResult(object):
+    def __init__(self, gpg):
+        self.gpg = gpg
+
+    def handle_status(self, key, value):
+        print key
+        print value
+        #pass
+
 class ListKeys(list):
     ''' Handle status messages for --list-keys.
 
@@ -562,6 +571,7 @@ class GPG(object):
         'delete': DeleteResult,
         'generate': GenKey,
         'import': ImportResult,
+        'send': SendResult,
         'list': ListKeys,
         'search': SearchKeys,
         'sign': Sign,
@@ -910,6 +920,23 @@ class GPG(object):
         args.extend(keyids)
         self._handle_io(args, data, result, binary=True)
         logger.debug('recv_keys result: %r', result.__dict__)
+        data.close()
+        return result
+
+    def send_keys(self, keyserver, *keyids):
+        """Send a key to a keyserver
+
+        (AFAIK, it's not practical to test this function without sending
+        arbitrary data to live keyservers.)
+        """
+        result = self.result_map['send'](self)
+        logger.debug('send_keys: %r', keyids)
+        data = _make_binary_stream("", self.encoding)
+        #data = ""
+        args = ['--keyserver', keyserver, '--send-keys']
+        args.extend(keyids)
+        self._handle_io(args, data, result, binary=True)
+        logger.debug('send_keys result: %r', result.__dict__)
         data.close()
         return result
 
