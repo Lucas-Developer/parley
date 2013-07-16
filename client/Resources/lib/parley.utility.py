@@ -49,7 +49,7 @@ window.PYgenKey = PYgenKey
 
 def PYgetEncryptedKeyring():
   keyring = dict(public=gpg.export_keys(),private=gpg.export_keys(True))
-  encrypted_keyring = aes.encrypt(window.Parley.currentUser.attributes.passwords.local[0:32],json.dumps(keyring))
+  encrypted_keyring = aes.encryptData(window.Parley.currentUser.attributes.passwords.local[0:32],json.dumps(keyring))
   return base64.b64encode(encrypted_keyring)
 
 window.PYgetEncryptedKeyring = PYgetEncryptedKeyring
@@ -57,7 +57,7 @@ window.PYgetEncryptedKeyring = PYgetEncryptedKeyring
 
 def PYimportEncryptedKeyring(b64_keyring):
   encrypted_keyring = base64.b64decode(b64_keyring)
-  keyring = json.loads(aes.decrypt(window.Parley.currentUser.attributes.passwords.local[0:32],encrypted_keyring))
+  keyring = json.loads(aes.decryptData(window.Parley.currentUser.attributes.passwords.local[0:32],encrypted_keyring))
   gpg.import_keys(keyring['private'])
   gpg.import_keys(keyring['public'])
   return True
