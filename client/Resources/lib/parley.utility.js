@@ -136,7 +136,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       data:{
         'name':name,
         'p':Parley.currentUser.get('passwords').remote,
-        'keyring':window.PYgetZippedKeyring()
+        'keyring':window.PYgetEncryptedKeyring()
       },
       success:finished,
       error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -168,7 +168,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         url:url,
         data:{'time':time,'sig':sig},
         success:function(data, textStatus, jqXHR) {
-          if (data.keyring) window.PYunpackKeyring(data.keyring);
+          if (data.keyring) window.PYimportEncryptedKeyring(data.keyring);
           finished(data, textStatus, jqXHR);
         },
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -184,7 +184,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       throw "Error: There is no currently authenticated user.";
     } else {
       var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
-      var keyring = window.PYgetZippedKeyring();
+      var keyring = window.PYgetEncryptededKeyring();
       var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring};
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;

@@ -4,11 +4,10 @@ crypto stuff and calls to PGP keyservers.
 '''
 
 import gnupg
-import pbkdf2
+import pbkdf2, aes
 import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
-import os, platform, subprocess, zipfile
-from StringIO import StringIO
+import os, platform, subprocess
 
 
 resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
@@ -48,33 +47,22 @@ def PYgenKey():
 window.PYgenKey = PYgenKey
 
 
-def PYgetZippedKeyring():
-  zip = zipfile.ZipFile('keyring.zip','w')
-  for root, dirs, files in os.walk(gpg_home):
-    for file in files:
-      zip.write(os.path.join(root, file))
-  zip.close()
-  with open("keyring.zip", "rb") as zipped_keyring:
-    b64_keyring = base64.b64encode(zipped_keyring.read())
-  return b64_keyring
+def PYgetEncryptedKeyring():
+  keyring = dict(public=gpg.export_keys(),private=gpg.export_keys(True))
+  encrypted_keyring = aes.encrypt(window.Parley.currentUser.attributes.passwords.local[0:32],json.dumps(keyring))
+  return base64.b64encode(encrypted_keyring)
 
-window.PYgetZippedKeyring = PYgetZippedKeyring
+window.PYgetEncryptedKeyring = PYgetEncryptedKeyring
 
 
-def PYunpackKeyring(b64_keyring):
-  zipped_keyring = StringIO(base64.b64decode(b64_keyring))
-  zfile = zipfile.ZipFile(zipped_keyring)
+def PYimportEncryptedKeyring(b64_keyring):
+  encrypted_keyring = base64.b64decode(b64_keyring)
+  keyring = json.loads(aes.decrypt(window.Parley.currentUser.attributes.passwords.local[0:32],encrypted_keyring))
+  gpg.import_keys(keyring['private'])
+  gpg.import_keys(keyring['public'])
+  return True
 
-  #http://stackoverflow.com/questions/7806563/how-to-unzip-a-file-with-python-2-4
-  for name in zfile.namelist():
-    (dirname, filename) = os.path.split(name)
-    if not os.path.exists(dirname):
-      os.mkdir(dirname)
-    fd = open(name,"w")
-    fd.write(zfile.read(name))
-    fd.close()
-
-window.PYunpackKeyring = PYunpackKeyring
+window.PYimportEncryptedKeyring = PYimportEncryptedKeyring
 
 
 def PYsignAPIRequest(url, method, data):
