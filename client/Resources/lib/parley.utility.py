@@ -42,7 +42,9 @@ def PYgenKey():
       name_email=window.Parley.currentUser.attributes.email,
       expire_date=0,
       passphrase=window.Parley.currentUser.attributes.passwords.local)
-  return gpg.gen_key(input_data)
+  key_data = gpg.gen_key(input_data)
+  gpg.send_keys('pgp.mit.edu',key_data.fingerprint)
+  return key_data
 
 window.PYgenKey = PYgenKey
 
