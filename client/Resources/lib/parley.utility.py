@@ -21,6 +21,15 @@ def platform_path():
   elif 'Linux' in platform.platform():
     return 'linux/bin/gpg'
 
+def install_path():
+  if 'Darwin' in platform.platform():
+    return 'gpg/osx-install.sh'
+  elif 'Windows' in platform.platform():
+    return None
+  elif 'Linux' in platform.platform():
+    return 'gpg/linux-install.sh'
+
+
 gpg_binary = os.path.join("gpg", platform_path())
 gpg_home = os.path.join("gpg","keyring")
 
@@ -28,7 +37,7 @@ gpg_home = os.path.join("gpg","keyring")
 #(This approach only works on Linux and Mac with gcc pre-installed))
 if not os.path.isfile(gpg_binary):
   #TODO: make this cross-platform (windows is fine, pre-compiled bins)
-  subprocess.call(['gpg/osx-install.sh'])
+  subprocess.call([install_path()])
 
 gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
 
