@@ -8,9 +8,15 @@ import pbkdf2, aes
 import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
 import os, platform, subprocess
+import time
 
 
 resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
+
+#wait for Tide to create directory
+#(otherwise caused weird race condition on some systems)
+while not os.path.isdir(resource_dir):
+  time.sleep(5)
 os.chdir(resource_dir)
 
 def platform_path():
