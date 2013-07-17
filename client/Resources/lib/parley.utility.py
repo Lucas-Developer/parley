@@ -36,7 +36,6 @@ gpg_home = os.path.join("gpg","keyring")
 #if Tide's version of GPG isn't installed yet, install it
 #(This approach only works on Linux and Mac with gcc pre-installed))
 if not os.path.isfile(gpg_binary):
-  #TODO: make this cross-platform (windows is fine, pre-compiled bins)
   subprocess.call([install_path()])
 
 gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
