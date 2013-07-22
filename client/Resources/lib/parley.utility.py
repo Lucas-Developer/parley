@@ -7,18 +7,25 @@ import gnupg
 import pbkdf2, aes
 import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
-import os, platform, subprocess
+import os, platform, subprocess, shutil
 import json
 import time
 
 
 resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
+home_dir = window.Ti.Filesystem.getUserDirectory().toString()
 
 #wait for Tide to create directory
 #(otherwise caused weird race condition on some systems)
 while not os.path.isdir(resource_dir):
   time.sleep(5)
-os.chdir(resource_dir)
+
+#copy Resources/gpg to ~/.parley
+parley_dir = os.join(home_dir,'.parley')
+gpg_dir = os.join(resource_dir,'gpg')
+shutil.copytree(gpg_dir,parley_dir)
+
+os.chdir(home_dir)
 
 def platform_path():
   if 'Darwin' in platform.platform():
@@ -30,15 +37,15 @@ def platform_path():
 
 def install_path():
   if 'Darwin' in platform.platform():
-    return 'gpg/osx-install.sh'
+    return '.parley/osx-install.sh'
   elif 'Windows' in platform.platform():
     return None
   elif 'Linux' in platform.platform():
-    return 'gpg/linux-install.sh'
+    return '.parley/linux-install.sh'
 
 
-gpg_binary = os.path.join("gpg", platform_path())
-gpg_home = os.path.join("gpg","keyring")
+gpg_binary = os.path.join(parley_dir, platform_path())
+gpg_home = os.path.join(parley_dir,"keyring")
 
 #if Tide's version of GPG isn't installed yet, install it
 #(This approach only works on Linux and Mac with gcc pre-installed))
