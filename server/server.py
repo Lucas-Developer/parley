@@ -85,7 +85,7 @@ def setUser(email,info):
 
   #extract separated fields from meta
   fields = dict()
-  for key in ["name","secret","keyring","pending","email","account_type","imap_account","paid_invites"]:
+  for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites"]:
     if key in meta.keys():
       fields[key] = meta[key]
       del meta[key]
@@ -95,9 +95,9 @@ def setUser(email,info):
   meta_json = json.dumps(meta)
 
   if user:
-    cur.execute("UPDATE users SET name=%s, secret=%s, keyring=%s, pending=%s, account_type=%s, imap_account=%s, paid_invites=%s, meta=%s WHERE email=%s",[fields["name"], fields["secret"], fields["keyring"], fields["pending"], fields["account_type"], fields["imap_account"], fields["paid_invites"], meta_json, fields["email"]])
+    cur.execute("UPDATE users SET name=%s, secret=%s, keyring=%s, public_key=%s, pending=%s, account_type=%s, imap_account=%s, paid_invites=%s, meta=%s WHERE email=%s",[fields["name"], fields["secret"], fields["keyring"], fields["public_key"], fields["pending"], fields["account_type"], fields["imap_account"], fields["paid_invites"], meta_json, fields["email"]])
   else:
-    cur.execute("INSERT INTO users (name,email,secret,keyring,pending,account_type,imap_account,paid_invites,meta) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",[fields["name"],fields["email"],fields["secret"],fields["keyring"],fields["pending"],fields["account_type"],fields["imap_account"],fields["paid_invites"],meta_json])
+    cur.execute("INSERT INTO users (name,email,secret,keyring,public_key,pending,account_type,imap_account,paid_invites,meta) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",[fields["name"],fields["email"],fields["secret"],fields["keyring"],fields["public_key"],fields["pending"],fields["account_type"],fields["imap_account"],fields["paid_invites"],meta_json])
   conn.commit()
   return getUser(email)
 
@@ -111,7 +111,7 @@ def user(email):
       return jsonify(**user), 200
     elif user and not user["pending"]:
       #only return public info
-      return jsonify(name=user["name"], email=user["email"]), 200
+      return jsonify(name=user["name"], email=user["email"], public_key=user["public_key"]), 200
     else:
       abort(404)
   elif request.method == 'POST':

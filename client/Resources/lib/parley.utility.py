@@ -65,7 +65,9 @@ window.PYgenKey = PYgenKey
 
 
 def PYgetEncryptedKeyring():
-  keyring = dict(public=gpg.export_keys(),private=gpg.export_keys(True))
+  public_keys = [key['keyid'] for key in gpg.list_keys()]
+  private_keys = [key['keyid'] for key in gpg.list_keys(True)]
+  keyring = dict(public=gpg.export_keys(public_keys),private=gpg.export_keys(private_keys,True))
   encrypted_keyring = aes.encryptData(window.Parley.currentUser.attributes.passwords.local[0:32],json.dumps(keyring))
   return base64.b64encode(encrypted_keyring)
 
@@ -80,6 +82,17 @@ def PYimportEncryptedKeyring(b64_keyring):
   return True
 
 window.PYimportEncryptedKeyring = PYimportEncryptedKeyring
+
+
+def PYgetPublicKey():
+  #assume that there is a single private key per user, and use that to
+  #get the keyid for the pair
+  private_key = gpg.list_keys(True)
+  keyid = private_key[0]['keyid']
+  public_key = gpg.export_keys(keyid)
+  return public_key
+
+window.PYgetPublicKey = PYgetPublicKey
 
 
 def PYsignAPIRequest(url, method, data):
@@ -104,13 +117,19 @@ def PYpbkdf2(data):
 window.PYpbkdf2 = PYpbkdf2
 
 
-def PYimportKey(email):
+def PYfetchKey(email):
   keys = gpg.search_keys("<%s>" % email)
   if keys == []:
     return None
   else:
     imported = gpg.recv_keys('pgp.mit.edu',keys[0]['keyid'])
     return imported.fingerprints[0]
+
+window.PYfetchKey = PYfetchKey
+
+
+def PYimportKey(key):
+  return gpg.import_keys(key)
 
 window.PYimportKey = PYimportKey
 

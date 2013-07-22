@@ -69,11 +69,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
 (function (Parley) {
 
-  //TODO:change the ajax functions--they don't work or it's impossible to tell if they do because the success callbacks aren't getting reached
-  //the POSTs definitely don't seem to work
-  //genKey doesnt work, is it broken or just really slow? would be nice to get some feedback from that function
-
-
   Parley.BASE_URL = "http://parley.co:5000"; //Test server
   //Parley.BASE_URL = "https://api.parley.co"; //Production server
 
@@ -108,7 +103,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* Check if a user is already registered with Parley.
   Accepts email address, finished callback */
   Parley.requestUser = function (email, finished) {
-    $.ajax({
+    return $.ajax({
       type:'GET',
       url:Parley.BASE_URL+'/u/'+email,
       success:finished,
@@ -136,6 +131,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       data:{
         'name':name,
         'p':Parley.currentUser.get('passwords').remote,
+        'public_key':window.PYgetPublicKey(),
         'keyring':window.PYgetEncryptedKeyring()
       },
       success:finished,
@@ -207,7 +203,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //it is probably better to create Contact objects using this function first
   //and then pass the entire object to encrypt/decrypt/etc. (See Parley.AFIS)
   Parley.requestPublicKey = function(email) {
-    return window.PYimportKey(email);
+    return window.PYfetchKey(email);
+  }
+
+  Parley.importKey = function(key) {
+    return window.PYimportKey(key);
   }
 
   //This function could be used to build Parley.Contacts from a keyring
@@ -221,12 +221,25 @@ are massaged to fit. The arguments to finished on ajax error look like:
     ie.
 
       Contact.init = function(email) {
-        var fingerprint = Parley.requestPublicKey(email);
-        var userinfo = Parley.AFIS(fingerprint);
-        var parsed = Parley.parseUID(userinfo.uids[0]);
-        userinfo.name = parsed.name;
-        userinfo.email = parsed.email;
-        this.set(userinfo);
+        var contact = this;
+        var planA = function(userinfo) {
+          if (!userinfo.public_key) {
+            planB();
+          } else {
+            var key = Parley.importKey(userinfo.public_key);
+            var fingerprint = key.fingerprints[0];
+            _.extend(userinfo,Parley.AFIS(fingerprint));
+          }
+        }
+        var planB = function() {
+          var fingerprint = Parley.requestPublicKey(email);
+          var userinfo = Parley.AFIS(fingerprint);
+          var parsed = Parley.parseUID(userinfo.uids[0]);
+          userinfo.name = parsed.name;
+          userinfo.email = parsed.email;
+          contact.set(userinfo);
+        }
+        requestUser(email).success(planA).error(planB);
       }
 
   */
