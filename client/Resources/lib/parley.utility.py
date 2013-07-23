@@ -21,8 +21,8 @@ while not os.path.isdir(resource_dir):
   time.sleep(5)
 
 #copy Resources/gpg to ~/.parley
-parley_dir = os.join(home_dir,'.parley')
-gpg_dir = os.join(resource_dir,'gpg')
+parley_dir = os.path.join(home_dir,'.parley')
+gpg_dir = os.path.join(resource_dir,'gpg')
 shutil.copytree(gpg_dir,parley_dir)
 
 os.chdir(home_dir)
