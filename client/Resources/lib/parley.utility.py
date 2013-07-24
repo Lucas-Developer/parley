@@ -23,11 +23,13 @@ while not os.path.isdir(resource_dir):
 #copy Resources/gpg to ~/.parley
 parley_dir = os.path.join(home_dir,'.parley')
 gpg_dir = os.path.join(resource_dir,'gpg')
-shutil.copytree(gpg_dir,parley_dir)
+
+if not os.path.isdir(parley_dir):
+  shutil.copytree(gpg_dir,parley_dir)
 
 os.chdir(home_dir)
 
-def platform_path():
+def platform_path(): #from ~/.parley
   if 'Darwin' in platform.platform():
     return 'osx/bin/gpg'
   elif 'Windows' in platform.platform():
@@ -35,13 +37,13 @@ def platform_path():
   elif 'Linux' in platform.platform():
     return 'linux/bin/gpg'
 
-def install_path():
+def install_path(): # from ~/.parley
   if 'Darwin' in platform.platform():
-    return '.parley/osx-install.sh'
+    return 'osx-install.sh'
   elif 'Windows' in platform.platform():
     return None
   elif 'Linux' in platform.platform():
-    return '.parley/linux-install.sh'
+    return 'linux-install.sh'
 
 
 gpg_binary = os.path.join(parley_dir, platform_path())
@@ -50,7 +52,7 @@ gpg_home = os.path.join(parley_dir,"keyring")
 #if Tide's version of GPG isn't installed yet, install it
 #(This approach only works on Linux and Mac with gcc pre-installed))
 if not os.path.isfile(gpg_binary):
-  subprocess.call([install_path()])
+  subprocess.call([os.path.join(parley_dir,install_path())])
 
 gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
 
