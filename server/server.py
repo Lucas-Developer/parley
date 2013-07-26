@@ -70,24 +70,36 @@ def verifySignature(url, method, formData, secret):
 def getUser(email):
   cur.execute("SELECT * FROM users WHERE email=%s",[email])
   try:
-    return cur.fetchone()
+    u = cur.fetchone()
   except ProgrammingError:
+    u = None
+  if u and 'email' in u:
+    return u
+  else:
     return None
 
+#the usage for this is to pass an info dictionary along with the
+#email which acts as database key
+#the info dict can have anything in it--if the key of the dict
+#is a field on the users table, it will get inserted there.
+#otherwise, it gets merged into the "meta" json object (stored as text)
 def setUser(email,info):
   info["email"] = email
 
   user = getUser(email)
   if user:
     #merge info with existing stuff
-    meta = dict(user.items() + info.items())
+    user_meta = json.loads(user['meta'])
+    meta = dict(user_meta.items() + user.items() + info.items())
+    if 'meta' in meta:
+      del meta['meta']
   else:
     meta = info
 
   #extract separated fields from meta
   fields = dict()
   for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites"]:
-    if key in meta.keys():
+    if key in meta:
       fields[key] = meta[key]
       del meta[key]
     else:
@@ -122,7 +134,7 @@ def user(email):
       return jsonify(**user), 201
     elif user["pending"] and 'p' in request.form:
       meta = json.loads(user['meta'])
-      if 'verified' in meta.keys() and meta['verified'] == True:
+      if 'verified' in meta and meta['verified'] == True:
         new_user = {"pending":False,"secret":request.form['p']}
         for key in ["name","keyring"]:
           if key in request.form:
@@ -135,27 +147,47 @@ def user(email):
     abort(400)
     
 
+@app.route("/verify/<email>", methods=['POST'])
+def verify(email):
+  user = getUser(email)
+  meta = json.loads(user['meta'])
+  if user['pending'] and not 'verified' in meta:
+    if compare_hashes(request.form['token'], meta['verification_token']):
+      user = setUser(email,{'verified':True})
+      return jsonify(**user), 201
+    else:
+      abort(403)
+  else:
+    abort(400)
+ 
+
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
   #TODO: implement paid invites!
+  to_user = getUser(to)
 
   # if this is the result of a registration from the website
   if request.form["user"] == 'PARLEY.CO' and 'sig' in request.form:
-    if request.form["sig"] == config["parley_website_key"]:
+    if compare_hashes(request.form["sig"], config["parley_website_key"]):
       token = ''.join(random.choice(string.ascii_lowercase+string.digits) for x in range(20))
       if 'customer_id' in request.form:
-        new_user = setUser(
+        if to_user:
+          meta = json.loads(to_user['meta'])
+          token = meta['verification_token']
+          if "verified" in meta:
+            abort(400)
+        to_user = setUser(
             to,
             {
               "pending":True,
-              "account_type":0,
+              "account_type":2,
               "invited_by":"PARLEY.CO",
               "verification_token":token,
               "customer_id":request.form['customer_id']
             }
             )
         message = {"from": "Dave Noel <dave@blackchair.net>",
-            "to": [to],
+            "to": [to_user["email"]],
             "subject": "Parley.co Email Verification",
             "text": """Hello, and thanks for checking out Parley! Extra thanks for choosing to pre-purchase a paid account--your money will help us move forward more quickly, and your vote of confidence means the world to us. Please take Parley for a spin, tell your friends, and send us any feedback you might have--you can either reply to this email directly or reach me at dave@blackchair.net. (My company, Black Chair Studios, is the one building Parley.)
 
@@ -171,17 +203,23 @@ Black Chair Studios, Inc.
 www.blackchair.net
             """ % (to, token)}
       else:
-        new_user = setUser(
-            to,
-            {
-              "pending":True,
-              "account_type":0,
-              "invited_by":"PARLEY.CO",
-              "verification_token":token
-            }
-            )
+        if to_user:
+          meta = json.loads(to_user['meta'])
+          token = meta['verification_token']
+          if "verified" in meta:
+            abort(400)
+        else:
+          to_user = setUser(
+              to,
+              {
+                "pending":True,
+                "account_type":0,
+                "invited_by":"PARLEY.CO",
+                "verification_token":token
+              }
+              )
         message = {"from": "Dave Noel <dave@blackchair.net>",
-            "to": [to],
+            "to": [to_user["email"]],
             "subject": "Parley.co Email Verification",
             "text": """Hello, and thanks for checking out Parley!
 
@@ -208,7 +246,6 @@ www.blackchair.net
 
   #otherwise, this is a user-to-user invite
   from_user = getUser(request.form["user"])
-  to_user = getUser(to)
 
   '''
   paid_invites = from_user["paid_invites"] or 0
@@ -244,7 +281,7 @@ www.blackchair.net
         )
     #create invite message
     message = {"from": "%s <%s>" % (from_user['name'], from_user['email']),
-        "to": [to],
+        "to": [new_user["email"]],
         "subject": "I want to exchange encrypted mail with you via Parley.co",
         "text": """Hey,
 
@@ -252,14 +289,14 @@ I generated this invitation for you so that we can exchange encrypted email easi
 
 Hope to hear from you soon,
 %s
-        """ % (to, token, from_user['name'])}
+        """ % (new_user["email"], token, from_user['name'])}
 
   elif to_user and to_user["pending"]:
     #create reminder message
     meta = json.loads(to_user['meta'])
     token = meta['verification_token']
     message = {"from": "%s <%s>" % (from_user['name'], from_user['email']),
-        "to": [to],
+        "to": [to_user["email"]],
         "subject": "Another invitation to Parley.co",
         "text": """Hey,
 
@@ -267,7 +304,7 @@ I generated this reminder for you to sign up for Parley so that we can exchange 
 
 Talk soon,
 %s
-        """ % (to, token, from_user['name'])}
+        """ % (to_user["email"], token, from_user['name'])}
 
   #return jsonify(paidInvitesRemaining=paid_invites), 200
   response = HTTP.post(
