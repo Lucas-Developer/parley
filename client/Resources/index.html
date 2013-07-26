@@ -12,9 +12,16 @@
     </head>
     <body class="loggedout">
 	    <header class="loggedin"></header>
-	    <section id="inbox" class="loggedin"><table cellspacing=2><tbody></tbody></table></section>
+	    <section id="inbox" class="NOTloggedin"><table cellspacing=2><tbody></tbody></table></section>
         <div id="dialogWrapper"></div>
 	
+<script id="loadingDialogTemplate" type="text/template">
+    <div class="page page-active">
+        <h2>{{^header}}Patience is a virtue!{{/header}}{{header}}</h2>
+        <div class="loading-image"></div>
+        <p>{{message}}</p>
+    </div>
+</script>
 <script id="setupDialogTemplate" type="text/template">
 	<div class="page page-splash page-active">
         <p>Welcome to a magical world of mystery.<br>The mystery is a mystery but you'll find your own, I'm sure. Oh, what a mystery!</p>
@@ -141,25 +148,36 @@
 
     <script type="text/template" id="nokeyDialogTemplate">
         <p>We can not send encrypted emails to the following address. This is because we were not able to find the public keys associated with them. The email will still be sent to all other addresses.</p>
-        <p>If you like, send access passes to the selected users. If you have insufficient access passes, we will send invitations to the remaining users.</p>
-        <p>You have <strong>6</strong> more access passes.</p>
+        <p>If you like, send invites to the selected users.</p>
+        <!--<p>You have <strong>{{num_passes}}</strong> more access passes.</p>-->
         <table class="sortable">
         <thead>
             <tr><th class="selector sorttable_nosort"><a class="clicked"></th><th>Email</th><th class="buttons"></th></tr>
         </thead>
         <tbody id="noKeyEmailsList">
             {{#emails}}
-                <tr><td class="selector"><a></a></td><td>{{email}}</td><td></td></tr>
+                <tr><td class="selector"><a></a></td><td class="email">{{email}}</td><td></td></tr>
             {{/emails}}
         </tbody>
         </table>
+        <button id="inviteAction" name="invite">Send invite<span class="pl"></span> to selected user<span class="pl"></span>.</button>
     </script>
     
     <script type="text/template" id="headerTemplate">
 	    <h1><span>Parley</span></h1>
 	    <span class="email loggedin">myemail@parley.com</span>
 
-        <section id="inbox-utilities" class="no-sel loggedin">
+            <button id="composeAction" name="compose">compose</button>
+            <button id="replyAction" name="reply">reply</button>
+            <button id="forwardAction" name="forward">forward</button>
+            <button id="deleteAction" name="delete">delete</button>
+            <button id="maliceAction" name="report-malice">report malice</button>
+
+            <button name="open-contacts" id="contactsAction">contacts</button>
+            <button name="settings" id="settingsAction">settings</button>
+
+
+        <!--<section id="inbox-utilities" class="no-sel loggedin">
             <button id="composeAction" class="no-sel" name="compose">compose</button>
             <button id="replyAction" class="has-sel" name="reply">reply</button>
             <button id="forwardAction" class="has-sel" name="forward">forward</button>
@@ -169,7 +187,7 @@
 	    <nav>
             <button class="loggedin" name="open-contacts" id="contactsAction">contacts</button>
             <button class="loggedin" name="settings" id="settingsAction">settings</button>
-	    </nav>
+	    </nav>-->
     </script>
 	<script type="text/template" id="composeDialogTemplate">
 	    <form>
@@ -189,7 +207,7 @@
 				<input type="text" name="subject" value="{{subject}}">
 			</label>
             <label for="body">
-		        <textarea rows="6" name="body"></textarea>
+		        <textarea rows="6" name="body">{{#body}}{{content}}{{/body}}</textarea>
             </label>
         </div>
 
@@ -200,9 +218,12 @@
 
 	<script type="text/template" id="messageTemplate">
         <td class="selector"><a {{#selected}}class="clicked"{{/selected}}></a></td>
-		<td class="from">{{#from}}{{email}}{{/from}}</td>
+		<td class="from">{{#from}}{{name}}{{^name}}{{email}}{{/name}}{{/from}}</td>
 		<td class="subject">{{subject}}</td>
 		<td class="date"></td>
+	</script>
+	<script type="text/template" id="readMessageTemplate">
+        <td colspan="4"><button class="reply">Reply</button><p>{{message}}</p></td>
 	</script>
 	<script type="text/template" id="contactTemplate">
 		<td class="thumbnail"><img src="http://www.gravatar.com/avatar/000?s=32"></td>
