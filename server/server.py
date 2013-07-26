@@ -20,6 +20,7 @@ from flask import Flask, request, json, jsonify, abort
 import requests as HTTP
 import contextio
 import base64, hmac, hashlib
+import random, string
 from urllib import urlencode, quote_plus
 import time
 import psycopg2
@@ -120,27 +121,99 @@ def user(email):
       user = setUser(email,{'keyring':request.form['keyring']})
       return jsonify(**user), 201
     elif user["pending"] and 'p' in request.form:
-      new_user = {"pending":False,"secret":request.form['p']}
-      for key in ["name","keyring"]:
-        if key in request.form:
-          new_user[key] = request.form[key]
-      user = setUser(email,new_user)
-      return jsonify(**user), 201
+      meta = json.loads(user['meta'])
+      if 'verified' in meta.keys() and meta['verified'] == True:
+        new_user = {"pending":False,"secret":request.form['p']}
+        for key in ["name","keyring"]:
+          if key in request.form:
+            new_user[key] = request.form[key]
+        user = setUser(email,new_user)
+        return jsonify(**user), 201
+      else
+        abort(403)
   else:
     abort(400)
     
 
-#TODO: think about how invites work really carefully. security, conversions, etc
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
-  # this is both for free invites and paid ones
-  from_user = getUser(request.form["user"])
+  #TODO: implement paid invites!
 
+  # if this is the result of a registration from the website
+  if request.form["user"] == 'PARLEY.CO' and 'sig' in request.form:
+    if request.form["sig"] == config["parley_website_key"]:
+      token = ''.join(random.choice(string.ascii_lowercase+string.digits) for x in range(20))
+      if 'customer_id' in request.form:
+        new_user = setUser(
+            to,
+            {
+              "pending":True,
+              "account_type":0,
+              "invited_by":"PARLEY.CO",
+              "verification_token":token,
+              "customer_id":request.form['customer_id']
+            }
+            )
+        message = {"from": "Dave Noel <dave@blackchair.net>",
+            "to": [to],
+            "subject": "Parley.co Email Verification",
+            "text": """Hello, and thanks for checking out Parley! Extra thanks for choosing to pre-purchase a paid account--your money will help us move forward more quickly, and your vote of confidence means the world to us. Please take Parley for a spin, tell your friends, and send us any feedback you might have--you can either reply to this email directly or reach me at dave@blackchair.net. (My company, Black Chair Studios, is the one building Parley.)
+
+Your email verification link is here: https://parley.co/verify?user=%s&token=%s There will be instructions on that page for downloading the Parley app, but for your future reference the regular download link is here: https://parley.co/downloads (You won't be able to use the app without verifying your email address first.)
+
+Like I said above, please please please let me know if you have any questions or comments at all; I will be more than happy to hear from you.
+
+All the best,
+
+Dave Noel
+Co-Founder
+Black Chair Studios, Inc.
+www.blackchair.net
+            """ % (to, token)}
+      else:
+        new_user = setUser(
+            to,
+            {
+              "pending":True,
+              "account_type":0,
+              "invited_by":"PARLEY.CO",
+              "verification_token":token
+            }
+            )
+        message = {"from": "Dave Noel <dave@blackchair.net>",
+            "to": [to],
+            "subject": "Parley.co Email Verification",
+            "text": """Hello, and thanks for checking out Parley!
+
+We're really glad you decided to try out our pre-beta. Please take it for a spin, tell your friends, and send us any feedback you might have--you can either reply to this email directly or reach me at dave@blackchair.net. (My company, Black Chair Studios, is the one building Parley.)
+
+Your email verification link is here: https://parley.co/verify?user=%s&token=%s There will be instructions on that page for downloading the Parley app, but for your future reference the regular download link is here: https://parley.co/downloads (You won't be able to use the app without verifying your email address first.)
+
+Like I said above, please please please let me know if you have any questions or comments at all; I will be more than happy to hear from you.
+
+All the best,
+
+Dave Noel
+Co-Founder
+Black Chair Studios, Inc.
+www.blackchair.net
+            """ % (to, token)}
+      response = HTTP.post(
+          "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+          auth=("api", MAILGUN_API_KEY),
+          data=message)
+      response_dict = response.json()
+      return jsonify(**response_dict), 201
+
+
+  #otherwise, this is a user-to-user invite
+  from_user = getUser(request.form["user"])
+  to_user = getUser(to)
+
+  '''
   paid_invites = from_user["paid_invites"] or 0
   if not paid_invites and 'sig' in request.form:
     paid_invites = -1 #if the user is trying to send a paid invite but has none
-
-  to_user = getUser(to)
 
   #TODO: modify the following if/else to accomodate for the situation where someone is trying to send a paid invite to an already pending user--if the account type is better than their current invite, it should send the new one. either way it should send a reminder
   if from_user and not from_user["pending"] and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, from_user["secret"]) and not to_user and paid_invites > 0:
@@ -149,26 +222,60 @@ def invite(to):
         {
           "pending":True,
           "account_type":from_user["account_type"],
-          "invited_by":from_user["email"]
+          "invited_by":from_user["email"],
+          "verification_token":token
         }
         )
     #TODO: SEND PAID INVITE
     paid_invites = paid_invites - 1
     setUser(from_user["email"],{"paid_invites":paid_invites})
   elif not to_user: # if "to" is not already a user or pending user
+  '''
+  if not to_user: # if "to" is not already a user or pending user
+    token = ''.join(random.choice(string.ascii_lowercase+string.digits) for x in range(20))
     new_user = setUser(
         to,
         {
           "pending":True,
           "account_type":0,
-          "invited_by":from_user["email"]
+          "invited_by":from_user["email"],
+          "verification_token":token
         }
         )
-    #TODO: SEND FREE INVITE (with upgrade option)
+    #create invite message
+    message = {"from": "%s <%s>" % (from_user['name'], from_user['email']),
+        "to": [to],
+        "subject": "I want to exchange encrypted mail with you via Parley.co",
+        "text": """Hey,
+
+I generated this invitation for you so that we can exchange encrypted email easily using the Parley app: https://parley.co/verify?user=%s&token=%s
+
+Hope to hear from you soon,
+%s
+        """ % (to, token, from_user['name'])}
+
   elif to_user and to_user["pending"]:
-    #TODO: send reminder (and see note at top of if/else block)
-    pass
-  return jsonify(paidInvitesRemaining=paid_invites), 200
+    #create reminder message
+    meta = json.loads(to_user['meta'])
+    token = meta['verification_token']
+    message = {"from": "%s <%s>" % (from_user['name'], from_user['email']),
+        "to": [to],
+        "subject": "Another invitation to Parley.co",
+        "text": """Hey,
+
+I generated this reminder for you to sign up for Parley so that we can exchange encrypted emails: https://parley.co/verify?user=%s&token=%s
+
+Talk soon,
+%s
+        """ % (to, token, from_user['name'])}
+
+  #return jsonify(paidInvitesRemaining=paid_invites), 200
+  response = HTTP.post(
+      "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+      auth=("api", MAILGUN_API_KEY),
+      data=message)
+  response_dict = response.json()
+  return jsonify(**response_dict), 201
 
 
 #---- MAILGUN STUFF ----#
