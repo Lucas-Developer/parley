@@ -81,9 +81,11 @@
     .ui-dialog .section { width: 100%; border-bottom: 1px solid #eee; }
     .no-close .ui-dialog-titlebar-close { display: none; }
     .hidetext { display: block; text-indent: -9999px; }
-
+    
+    /*
     body.loggedout .loggedin { display: none; }
     body.loggedin .loggedout { display: none; }
+    */
 
     header {
 		width: 100%;
