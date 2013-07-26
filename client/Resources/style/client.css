@@ -1,11 +1,11 @@
 * {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
     body {
 		font-size: 100%;
-		font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+		font-family: "Source Sans Pro", "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 		color: #191208;
 		background: url(../img/cartographer.png) 0 0 repeat;
     }
-	p, input { font-family: "PT Sans",Helvetica,Arial,sans-serif; }
+	p, input { font-family: "Source Sans Pro", "PT Sans",Helvetica,Arial,sans-serif; }
 
 	h2 {font-size:1.2em;}
     h3 {text-align: left; font-size: 1.3em; }
@@ -105,9 +105,16 @@
 
     #inbox-utilities,
     #inbox .header-info,
-    #inbox { margin: 10px; }
+    #inbox {
+        width: 96%;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        margin-left: 2%;
+        margin-right: 2%;
+    }
 
         #inbox-utilities { height: 40px; display: inline-block; }
+/*
             #inbox-utilities.has-sel .no-sel,
             #inbox-utilities.has-sel .multi-sel,
             #inbox-utilities.no-sel .multi-sel,
@@ -117,6 +124,7 @@
             #inbox-utilities.has-sel .has-sel, 
             #inbox-utilities.multi-sel .multi-sel, 
             #inbox-utilities.no-sel .no-sel { display: inline-block; }
+*/
         #inbox-utilities .button-set button {
             float: left;
         }
@@ -139,6 +147,7 @@
 		background-color: #fff;
 	}
         #inbox tr td { vertical-align: middle; white-space: nowrap; }
+        #inbox tr.message-body td { white-space: normal; }
 
         table .selector { width: 18px; }
             table .selector a { display: block; width: 14px; height: 14px; border: 1px solid #191208; }
@@ -152,8 +161,13 @@
         #inbox .message td { white-space: normal; background-color: rgba(255, 255, 255, 0.8); }
             #inbox .message .details { margin: 0 5px; }
 
-            #inbox .message .body { margin: 5px; background: rgba(255, 250, 240, 1); padding: 10px 10px 5px; line-height: 1.2em; }
-            #inbox .message .body p { margin-bottom: 10px; }
+            #inbox .message-body {
+                margin: 5px;
+                background: rgba(255, 250, 240, 1);
+                padding: 10px 10px 5px;
+                line-height: 1.2em;
+            }
+            #inbox .message-body p { width: 100%; margin-bottom: 10px; }
 
             #inbox .message .message-utilities { float: right; }
                 #inbox .message .message-utilities li { display: inline-block; }

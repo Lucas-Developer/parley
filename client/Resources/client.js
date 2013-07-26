@@ -16,7 +16,7 @@
     };
 	WebFont.load({
 	    google: {
-		families: ['PT Sans', 'PT Serif']
+		families: ['Source Sans Pro', 'PT Sans', 'PT Serif']
 	    }
 	});
 
@@ -46,10 +46,12 @@
                     var fingerprint = Parley.requestPublicKey(data.email);
                     var userinfo = Parley.AFIS(fingerprint);
                     if (userinfo.length > 0) {
+                        userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
+
                         var parsed = Parley.parseUID(userinfo.uids[0]);
-                        return _.extend(data,{name:parsed.name,email:parsed.email})
+                        return _.extend(data, userinfo, {name:parsed.name,email:parsed.email})
                     } else {
-                        return _.extend(data,{email:data.email});
+                        return _.extend(data, {email:data.email});
                     }
                 } else {
                     console.log('Creating contact from OBJECT WITHOUT UIDS', data);
@@ -88,23 +90,21 @@
             };
         },
         parse: function (data, options) {
-                 console.log(data);
             var from_obj = Parley.contacts.findWhere({email:data.addresses.from.email});
             
             if (!from_obj) {
                 console.log('Creating contact from scratch.');
-                from_obj = new Parley.Contact({email:data.addresses.from.email},{parse:true});
-
+                var from_email = data.addresses.from.email;
+                from_obj = new Parley.Contact({
+                    email: from_email,
+                    thumbnail: data.person_info[from_email].thumbnail
+                }, {parse: true});
             }
- 
-            return {
-                from: from_obj,
-                subject: data.subject,
-                date: data.date
-            };
-        },
-        render: function () {
 
+            if (data.body[0].type == 'text/plain' && !~data.body[0].content.indexOf('-BEGIN PGP MESSAGE-'))
+                this.unencryptedMessage = data.body[0].content;
+
+            return _.extend(data, {from: from_obj, content: data.body[0].content});
         },
         readMessage: function () {
             if (this.unencryptedMessage) {
@@ -113,7 +113,7 @@
             } else {
                 console.log('Decrypting message.');
                 var sender = this.getSender();
-                this.unencryptedMessage = Parley.decryptAndVerify(this.get('encryptedContent'), this.getSender());
+                this.unencryptedMessage = Parley.decryptAndVerify(this.get('content'), this.getSender());
                 return this.unencryptedMessage;
             }
         },
@@ -135,10 +135,13 @@
 	    events: {
             'click .from':          'openCompose',
 			'click .subject':		'openMessage',
-            'click .selector':      'toggleSelect',
-            'click .reply':         'openCompose'
+            'click .selector':      'toggleSelect'
 	    },
-	    initialize: function () {
+	    initialize: function (options) {
+            this.vent = options.vent;
+
+			this.listenTo(this.model, 'add', this.render);
+
 			this.listenTo(this.model, 'change', this.render);
 			this.listenTo(this.model, 'destroy', this.remove);
 	    },
@@ -154,16 +157,31 @@
             Parley.app.dialog('contacts', {single: this.model.get('from').toJSON()});
         },
 	    openMessage: function () {
-            $('.message-body').remove();
-            this.$el.after($('<tr class="message-body"><td colspan="4"><p></p></td></tr>').find('p').text(this.model.readMessage()).end());
+            Parley.readMessageView = !!Parley.readMessageView ? (Parley.readMessageView.model.set(this.model.toJSON()) && Parley.readMessageView) :
+                new ReadMessageView({model:this.model,vent:this.vent});
+
+            this.$el.after(Parley.readMessageView.render().$el.detach());
 	    },
         toggleSelect: function () {
             this.model.toggleSelect();
         },
+	});
+
+    var ReadMessageView = Parley.BaseView.extend({
+	    tagName: 'tr',
+	    template: Mustache.compile($('#readMessageTemplate').html()),
+	    events: {
+            'click .reply':     'openCompose'
+	    },
+	    render: function () {
+			this.$el.addClass('message-body').html(this.template(this.model.toJSON()));
+			return this;
+	    },
+
         openCompose: function () {
             Parley.app.dialog('compose', this.model.toJSON());
         }
-	});
+    });
 
 	var User = Parley.Contact.extend({
 	    defaults: function () {
@@ -193,9 +211,13 @@
 
         compose: function (e) {
             console.log('Composing new message.');
+            Parley.app.dialog('compose');
         },
         reply: function (e) {
-            console.log('Replying to: ', Parley.inbox.where({selected:true}));
+            console.log('Replying to: ', Parley.inbox.findWhere({selected:true}));
+
+            var reply_to = Parley.inbox.findWhere({selected:true});
+            Parley.app.dialog('compose', reply_to.toJSON());
         },
         forward: function (e) {
             console.log('Forwarding: ', Parley.inbox.where({selected:true}));
@@ -217,10 +239,11 @@
             'click #registerAction':    'register',
 			'click #logoutAction':		'logout',
             'change input':             'update',
-            'click #sendAction':        'sendAction'
+            'click #sendAction':        'sendAction',
+            'click #inviteAction':      'inviteAction'
         },
 
-        initialize: function () {
+        initialize: function (options) {
             this.$el.dialog({autoOpen:false});
 
             /*
@@ -230,6 +253,11 @@
             will be invoked immediately before rendering.
             */
             this.dialogs = new Backbone.Collection([
+                {   slug: 'loading',
+                    template: Mustache.compile($('#loadingDialogTemplate').html()),
+                    opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
+                    title: 'Loading'
+                },
                 {   slug: 'setup',
                     template: Mustache.compile($('#setupDialogTemplate').html()),
                     opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
@@ -261,8 +289,10 @@
                     opts: {},
                     title: 'Compose',
                     init: function () {
-                        //this.to = this.from.toJSON();
-                        this.to = {"email":"dave@example.com"}//this.from.toJSON();
+                        this.to = this.from.toJSON();
+
+                        var prefix = /^(R|r)e:/g;
+                        this.subject = prefix.test(this.subject) ? this.subject : 're: ' + this.subject; 
                     },
                     loaded: function (view) {
                         var items = Parley.contacts.map(function (ele,i) {
@@ -285,15 +315,15 @@
 
         render: function () {
             console.log('Rendering dialog box');
+            var args = _.isObject(arguments[0]) ? arguments[0] : {};
             var isOpen = this.$el.dialog('isOpen');
             if (isOpen && !this.cur) {
                 this.$el.dialog('close');
             } else if (_.isObject(this.cur)) {
                 var template = this.cur.get('template');
                 var data = this.cur.toJSON();
-                var arg = _.isObject(arguments[0]) ? arguments[0] : {};
 
-                data = _.extend(arg, data);
+                data = _.extend(args, data);
                 if (_.has(data, 'init'))
                     data.init(this);
 
@@ -325,7 +355,7 @@
             }
         },
 
-        setPage: function (i) {
+        setPage: function (i, options) {
             var cur_page, pages = this.$('.page');
             if (_.isNumber(i) && (cur_page = pages.get(i) || pages.first())) {
                 pages.removeClass('page-active');
@@ -340,10 +370,9 @@
             if (pages.filter('.page-active').length == 0) {
                 pages.first().addClass('page-active');
             }
-            if (_.isObject(arguments[1])) {
-                var vals = arguments[1];
-                for (var val in vals) {
-                    cur_page.find('[name='+val+']').val(vals[val]);
+            if (_.isObject(options)) {
+                for (var val in options) {
+                    cur_page.find('[name='+val+']').val(options[val]);
                 }
             }
             this.$(':input').first().focus();
@@ -360,18 +389,20 @@
 
 	    emailVerify: function (e) {
             e.preventDefault();
-			var _this = this, form = document.forms.emailVerify;
+			var form = document.forms.emailVerify;
             if (_.isUndefined(form.email.value)) return false;
             console.log('Verifying email address: ' + form.email.value);
-			Parley.requestUser(form.email.value, function (data, textStatus) {
-		    	if (textStatus == 'success') {
+
+			Parley.requestUser(form.email.value, _.bind(function (data, textStatus) {
+                //console.log(JSON.stringify(data), textStatus, data.error);
+		    	if (_.isObject(data) && !_.has(data, 'error')) {
                     console.log('User exists, setting up login form.');
-                    _this.setPage('login', {email: form.email.value});
+                    this.setPage('login', {email: form.email.value});
 		    	} else {
                     console.log('User doesn\'t exists, showing registration form.');
-                    _this.setPage('register', {email: form.email.value});
+                    this.setPage('register', {email: form.email.value});
 		    	}
-		});
+		    }, this));
 	    },
         register: function (e) {
             e.preventDefault();
@@ -380,7 +411,10 @@
                 // Passwords don't match
                 console.log('Passwords don\'t match.');
             } else {
+                this.setDialog('loading', { message: 'It takes a while to register! Like, quite a while. This will be fixed, but for now you must wait. And wait you must. Minutes. Sometimes 5. 2 if you\'re lucky. 10 if not. But really. Give it some time, it will be totally worth it. I promise.' });
                 Parley.registerUser(form.name.value, form.email.value, form.password_two.value, _.bind(function (data, textStatus) {
+                    console.log(JSON.stringify(data), textStatus, data.error);
+
                     console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
                     console.log('Registering new inbox with Context.io');
                     
@@ -388,12 +422,14 @@
 
                     Parley.app.loadUser();
                     this.hide();
-                },this));
+                }, this));
             }
         },
         login: function (e) {
             e.preventDefault();
             var form = document.forms.loginAction;
+
+            this.setDialog('loading', { message: 'It takes a while to log in! We know that\'s totally "shitty" or, "the worst" but we are working on it. It might be 2 or 3 minutes. That\'s not so bad, right? Anyway, to pass the time, I will sing you a song: do do d\'do do DOO DOO. Have fun!' });
             Parley.authenticateUser(form.email.value, form.password.value, _.bind( function (data, textStatus) {
                 console.log('User successfully logged in.');
                 Parley.app.loadUser();
@@ -432,7 +468,15 @@
                 Parley.app.dialog('nokey', {emails:nokeyRecipients});
             } else { }
 
-            Parley.encryptAndSend(formdata.subject, formdata.body, recipients);
+            if (!_.isEmpty(recipients)) Parley.encryptAndSend(formdata.subject, formdata.body, recipients);
+        },
+        inviteAction: function (e) {
+            var email,selected = this.$('.selector a.clicked').parent();
+            selected.each(function (i,e) {
+                var $e = $(e);
+                email = $e.find('.email').text();
+                Parley.invite(email, function () {});
+            });
         }
     });
 
@@ -445,11 +489,13 @@
             'click .hidden':            'showHidden'
 	    },
 
+        vent: _.extend({}, Backbone.Events),
+
 	    initialize: function () {
 			console.log('Initializing Parley.');
 
-            this.header = new HeaderView;
-            this._dialog = new DialogView;
+            this.header = new HeaderView({vent:this.vent});
+            this._dialog = new DialogView({vent:this.vent});
 
 			this.inbox = $('#inbox tbody');
 			this.contactsList = $('#contactsList');
@@ -506,12 +552,12 @@
         },
 
 		addContact: function (contact) {
-			var view = new ContactView({model: contact});
+			var view = new ContactView({model: contact, vent:this.vent});
 			this.contactsList.append(view.render().el);
 		},
 
 	    addMessage: function (message) {
-			var view = new MessageView({model: message});
+			var view = new MessageView({model: message, vent:this.vent});
 			this.inbox.append(view.render().el);
 	    },
 
@@ -519,13 +565,20 @@
 			console.log('Setting up main view with logged in user info');
             var opts = {parse:true};
             Parley.requestInbox(function (data, textStatus) {
-                Parley.inbox = (Parley.inbox && Parley.inbox.set(data,opts)) || new MessageList(data,opts);
+                console.log('Inbox loaded', JSON.stringify(data.messages));
+                if (_.has(data, 'messages'))
+                    Parley.inbox = Parley.inbox || new MessageList({}, opts);
+                    for (var i = 0, t = data.messages.length; i<t; i++) {
+                        Parley.inbox.add(data.messages[i], opts);
+                    }
+                    //Parley.inbox = (Parley.inbox && Parley.inbox.set(data.messages, opts)) || new MessageList(data.messages, opts);
             });
             console.log('Populating contacts from keychain');
             Parley.contacts.set(Parley.listKeys(),{parse:true});
  
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.header.$('.email').text(Parley.currentUser.get('email'));
+
 	    },
 
         messageSelectedHandler: function () {
