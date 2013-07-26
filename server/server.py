@@ -70,24 +70,36 @@ def verifySignature(url, method, formData, secret):
 def getUser(email):
   cur.execute("SELECT * FROM users WHERE email=%s",[email])
   try:
-    return cur.fetchone()
+    u = cur.fetchone()
   except ProgrammingError:
+    u = None
+  if u and 'email' in u:
+    return u
+  else:
     return None
 
+#the usage for this is to pass an info dictionary along with the
+#email which acts as database key
+#the info dict can have anything in it--if the key of the dict
+#is a field on the users table, it will get inserted there.
+#otherwise, it gets merged into the "meta" json object (stored as text)
 def setUser(email,info):
   info["email"] = email
 
   user = getUser(email)
   if user:
     #merge info with existing stuff
-    meta = dict(user.items() + info.items())
+    user_meta = json.loads(user['meta'])
+    meta = dict(user_meta.items() + user.items() + info.items())
+    if 'meta' in meta:
+      del meta['meta']
   else:
     meta = info
 
   #extract separated fields from meta
   fields = dict()
   for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites"]:
-    if key in meta.keys():
+    if key in meta:
       fields[key] = meta[key]
       del meta[key]
     else:
@@ -122,7 +134,7 @@ def user(email):
       return jsonify(**user), 201
     elif user["pending"] and 'p' in request.form:
       meta = json.loads(user['meta'])
-      if 'verified' in meta.keys() and meta['verified'] == True:
+      if 'verified' in meta and meta['verified'] == True:
         new_user = {"pending":False,"secret":request.form['p']}
         for key in ["name","keyring"]:
           if key in request.form:
@@ -135,6 +147,20 @@ def user(email):
     abort(400)
     
 
+@app.route("/verify/<email>", methods=['POST'])
+def verify(email):
+  user = getUser(email)
+  meta = json.loads(user['meta'])
+  if user['pending'] and not 'verified' in meta:
+    if compare_hashes(request.form['token'], meta['verification_token']):
+      user = setUser(email,{'verified':True})
+      return jsonify(**user), 201
+    else:
+      abort(403)
+  else:
+    abort(400)
+ 
+
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
   #TODO: implement paid invites!
@@ -142,7 +168,7 @@ def invite(to):
 
   # if this is the result of a registration from the website
   if request.form["user"] == 'PARLEY.CO' and 'sig' in request.form:
-    if request.form["sig"] == config["parley_website_key"]:
+    if compare_hashes(request.form["sig"], config["parley_website_key"]):
       token = ''.join(random.choice(string.ascii_lowercase+string.digits) for x in range(20))
       if 'customer_id' in request.form:
         if to_user:
