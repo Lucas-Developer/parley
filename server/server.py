@@ -70,10 +70,19 @@ def verifySignature(url, method, formData, secret):
 def getUser(email):
   cur.execute("SELECT * FROM users WHERE email=%s",[email])
   try:
-    return cur.fetchone()
+    u = cur.fetchone()
   except ProgrammingError:
+    u = None
+  if u and 'email' in u:
+    return u
+  else:
     return None
 
+#the usage for this is to pass an info dictionary along with the
+#email which acts as database key
+#the info dict can have anything in it--if the key of the dict
+#is a field on the users table, it will get inserted there.
+#otherwise, it gets merged into the "meta" json object (stored as text)
 def setUser(email,info):
   info["email"] = email
 
@@ -81,8 +90,9 @@ def setUser(email,info):
   if user:
     #merge info with existing stuff
     user_meta = json.loads(user['meta'])
-    del user['meta']
     meta = dict(user_meta.items() + user.items() + info.items())
+    if 'meta' in meta:
+      del meta['meta']
   else:
     meta = info
 
