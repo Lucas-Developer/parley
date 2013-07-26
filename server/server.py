@@ -80,7 +80,9 @@ def setUser(email,info):
   user = getUser(email)
   if user:
     #merge info with existing stuff
-    meta = dict(user.items() + info.items())
+    user_meta = json.loads(user['meta'])
+    del user['meta']
+    meta = dict(user_meta.items() + user.items() + info.items())
   else:
     meta = info
 
