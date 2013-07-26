@@ -129,7 +129,7 @@ def user(email):
             new_user[key] = request.form[key]
         user = setUser(email,new_user)
         return jsonify(**user), 201
-      else
+      else:
         abort(403)
   else:
     abort(400)
