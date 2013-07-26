@@ -87,7 +87,7 @@ def setUser(email,info):
   #extract separated fields from meta
   fields = dict()
   for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites"]:
-    if key in meta.keys():
+    if key in meta:
       fields[key] = meta[key]
       del meta[key]
     else:
@@ -122,7 +122,7 @@ def user(email):
       return jsonify(**user), 201
     elif user["pending"] and 'p' in request.form:
       meta = json.loads(user['meta'])
-      if 'verified' in meta.keys() and meta['verified'] == True:
+      if 'verified' in meta and meta['verified'] == True:
         new_user = {"pending":False,"secret":request.form['p']}
         for key in ["name","keyring"]:
           if key in request.form:
@@ -135,6 +135,20 @@ def user(email):
     abort(400)
     
 
+@app.route("/verify/<email>", methods=['POST'])
+def verify(email):
+  user = getUser(email)
+  meta = json.loads(user['meta'])
+  if user['pending'] and not 'verified' in meta:
+    if compare_hashes(request.form['token'], meta['verification_token']):
+      user = setUser(email,{'verified':True})
+      return jsonify(**user), 201
+    else:
+      abort(403)
+  else:
+    abort(400)
+ 
+
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
   #TODO: implement paid invites!
@@ -142,7 +156,7 @@ def invite(to):
 
   # if this is the result of a registration from the website
   if request.form["user"] == 'PARLEY.CO' and 'sig' in request.form:
-    if request.form["sig"] == config["parley_website_key"]:
+    if compare_hashes(request.form["sig"], config["parley_website_key"]):
       token = ''.join(random.choice(string.ascii_lowercase+string.digits) for x in range(20))
       if 'customer_id' in request.form:
         if to_user:
