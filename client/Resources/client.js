@@ -41,6 +41,39 @@
 	    }
 	});
 
+    /** This should be moved to a new file or something
+        it's basically a bunch of events. EVENTually I think
+        all of the events can go through this in some way.
+    **/
+    Parley.vent = _.extend({}, Backbone.Events);
+
+    Parley.vent.on('contact:userinfo', function (contact) {
+        console.log('VENT: contact:userinfo');
+
+        // Gotta have either an email or a fingerprint.
+        // Will just fail silently if it gets neither
+        var email = contact.get('email'),
+            fingerprint = contact.get('fingerprint') || Parley.requestPublicKey(email);
+
+        var userinfo = Parley.AFIS(fingerprint);
+console.log(userinfo);
+        if (userinfo.length > 0) {
+            userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
+
+            // Go through and parse the info as needed
+            var UID = Parley.parseUID(userinfo.uids[0]);
+
+            contact.set(_.extend({email: UID.email, name: UID.name}, userinfo));
+
+            Parley.contacts.add(contact);
+        }
+    });
+
+    Parley.vent.on('message:send', function (message, callback) {
+        if (_.isFunction(callback)) callback();
+    });
+    /** END VENT CODE **/
+
 	Parley.BaseView = Backbone.View.extend({
 		assign: function (view, selector) {
 			view.setElement(this.$(selector)).render();
@@ -53,52 +86,27 @@
 				last_received: 0,
 				last_sent: 0,
 				thumbnail: false,
-				count: 0
+				count: 0,
+                messages: []
 			}
 	    },
-        parse: function (data, options) {
-            var userinfo={},parsed={};
-            if (_.isObject(data)) {
-                if (_.has(data,'uids')) {
-                    console.log('Creating contact from OBJECT WITH UIDS', data.uids);
-                    if (userinfo = this.getUserinfo(data)) {
-                        parsed = Parley.parseUID(userinfo.uids[0]);
-                        return _.extend(data, userinfo, {name:parsed.name,email:parsed.email})
-                    } else {
-                        return data;
-                    }
-                } else if (_.has(data,'email')) {
-                    console.log('Begin creating contact from: \'' + data.email + '\'');
-                    if (userinfo = this.getUserinfo(data)) {
-                        parsed = Parley.parseUID(userinfo.uids[0]);
-                        return _.extend(data, userinfo, {name:parsed.name,email:parsed.email})
-                    } else {
-                        return data;
-                    }
-                } else {
-                    console.log('Creating contact from OBJECT WITHOUT UIDS', data);
-                    return data;
-                }
-            } else {
-                console.log('Creating blank contact.');
-                return data;
-            }
+        initialize: function (attrs) {
+            console.log('Initializing contact.');
+
+            Parley.vent.trigger('contact:userinfo', this);
         },
-        getUserinfo: function (opts) {
-            if (!_.has(opts, 'fingerprint')) {
-                var fingerprint = Parley.requestPublicKey(opts.email);
-            } else {
-                var fingerprint = opts.fingerprint;
-            }
+        addMessage: function (message) {
+console.log('MESSAGE********');
+console.log(message.toJSON());
+console.log('***************');
+            message = message.toJSON ? message.toJSON() : message;
+            this.set({
+                last_received: this.attributes.last_received + 1,
+                count: this.attributes.count + 1
+            });
+            this.get('messages').push(message);
 
-            var userinfo = Parley.AFIS(fingerprint);
-            if (userinfo.length > 0) {
-                userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
-
-                return userinfo;
-            } else {
-                return false;
-            }
+            return this;
         }
 	});
 
@@ -109,10 +117,10 @@
 	    tagName: 'tr',
 	    template: Mustache.compile($('#contactTemplate').html()),
 	    events: {},
-	    initialize: function () {
-	    },
 		render: function () {
 			var data = this.model.toJSON();
+
+            
 			
 			this.$el.addClass('contact').html(this.template(data));
 			return this;
@@ -127,30 +135,30 @@
                 selected: false
             };
         },
-        parse: function (data, options) {
-            var from_obj = Parley.contacts.findWhere({email:data.addresses.from.email});
-            
+        initialize: function () {
+            var data = this.toJSON();
+            var from = data.addresses.from;
+            var from_obj = Parley.contacts.findWhere({email: from.email});
+
             if (!from_obj) {
                 console.log('Creating contact from scratch.');
-                var from_email = data.addresses.from.email;
-                from_obj = {
-                    email: from_email,
-                    thumbnail: data.person_info[from_email].thumbnail
-                };
-                Parley.contacts.add(from_obj, {parse:true});
+
+                from_obj = new Parley.Contact(from);
             }
+
+            if (_.has(data.person_info, from.email)) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
+
+            this.set('from', from_obj.addMessage(this));
 
             // If it's not encrypted, we can just populate the decrypted message array
             this.decryptedMessage = this.decryptedMessage || [];
             _.each(data.body, function (v,k) {
-                if (v.type == 'text/plain' && !~v.content.indexOf('-BEGIN PGP MESSAGE-'))
+                if (v.type == 'text/plain' && !!~v.content.indexOf('-----BEGIN PGP MESSAGE-----'))
                     this.decryptedMessage.push(v.content);
             }, this);
-
-            return _.extend(data, {from: from_obj});
         },
         readMessage: function () {
-            if (this.decryptedMessage) {
+            if (this.decryptedMessage.length > 0) {
                 console.log('Reading message from memory.');
                 return this.decryptedMessage;
             } else {
@@ -163,9 +171,6 @@
                 }, this));
                 return this.decryptedMessage;
             }
-        },
-        getSender: function () {
-            return this.attributes.from;
         },
         toggleSelect: function () {
             this.set({'selected': !this.get('selected')});
@@ -185,18 +190,13 @@
             'click .selector':      'toggleSelect'
 	    },
 	    initialize: function (options) {
-            this.vent = options.vent;
-
 			this.listenTo(this.model, 'add', this.render);
 
 			this.listenTo(this.model, 'change', this.render);
 			this.listenTo(this.model, 'destroy', this.remove);
 	    },
 	    render: function () {
-			var data = this.model.toJSON();
-            data = _.extend(data, data.from.toJSON());
-
-			this.$el.addClass('message').html(this.template(data));
+			this.$el.addClass('message').html(this.template(this.model.toJSON()));
 			return this;
 	    },
 
@@ -204,7 +204,7 @@
             Parley.app.dialog('contacts', {single: this.model.get('from').toJSON()});
         },
 	    openMessage: function () {
-            Parley.readMessageView = new ReadMessageView({model:this.model, vent:this.vent});
+            Parley.readMessageView = new ReadMessageView({model:this.model});
 
             this.$el.after(Parley.readMessageView.render().el);
 	    },
@@ -220,12 +220,8 @@
             'click .reply':     'openCompose'
 	    },
 	    render: function () {
-//console.log('***********************************************');
-//console.log( JSON.stringify(this.model.readMessage()) );
-//console.log('***********************************************');
             var message_body = _.reduce(this.model.readMessage(), function (memo, val) {
-console.log( JSON.stringify(val) );
-                return memo + '<p>' + val.text + '</p>';
+                return memo + '<p>' + val.replace('\\n', '<br>') + '</p>';
             }, '');
             
 			this.$el.addClass('message-body').html(this.template({body:message_body}));
@@ -268,16 +264,20 @@ console.log( JSON.stringify(val) );
             Parley.app.dialog('compose');
         },
         reply: function (e) {
-            console.log('Replying to: ', Parley.inbox.findWhere({selected:true}));
+            var sel = Parley.inbox.findWhere({selected:true});
+            console.log('Replying to: ', sel);
 
-            var reply_to = Parley.inbox.findWhere({selected:true});
             Parley.app.dialog('compose', reply_to.toJSON());
         },
         forward: function (e) {
-            console.log('Forwarding: ', Parley.inbox.where({selected:true}));
+            var sel = Parley.inbox.findWhere({selected:true});
+            console.log('Forwarding: ', sel);
         },
         "delete": function (e) {
-            console.log('Deleting: ', Parley.inbox.where({selected:true}));
+            var sel = Parley.inbox.where({selected:true});
+            console.log('Deleting: ', sel);
+
+            Parley.vent.trigger('message:delete', sel);
         },
         malice: function (e) {
             console.log('Malice detected in: ', Parley.inbox.where({selected:true}));
@@ -357,9 +357,13 @@ console.log( JSON.stringify(val) );
 
                             return {name: name, value: email, uid: name + ' <' + email + '>'}
                         });
+
+                        var preFill = _.findWhere(items, {value: this.to.email}) || {};
+
                         var opts = {
                             selectedItemProp: 'name',
-                            searchObjProps: 'name,value'
+                            searchObjProps: 'name,value',
+                            preFill: [preFill]
                         };
                         view.$('#recipients input[type=text]').each(function (){
                             $(this).autoSuggest(items, _.extend({asHtmlID: this.name}, opts));
@@ -505,7 +509,8 @@ console.log( JSON.stringify(val) );
             var formdata = this.$('form').serializeObject();
 
             var recipients = [], nokeyRecipients = [];
-            var recFields = ['as_values_to', 'as_values_cc', 'as_values_bcc'];
+            //var recFields = ['as_values_to', 'as_values_cc', 'as_values_bcc'];
+            var recFields = ['as_values_to'];
             // This can be done more efficiently, probably
             _.each(recFields, function (fName) {
                 if (!_.isEmpty(formdata[fName])) {
@@ -525,9 +530,12 @@ console.log( JSON.stringify(val) );
                 console.log('We have no keys for these recipients: ', nokeyRecipients);
                 Parley.app.dialog('nokey', {emails:nokeyRecipients});
             } else { }
-
-            if (!_.isEmpty(recipients)) Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, status) {
+console.log('formdata');
+console.log( JSON.stringify(recipients) );
+            if (!_.isEmpty(recipients)) Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, status, jqXHR) {
                 console.log( JSON.stringify(data) );
+console.log('jqXHR');
+console.log( JSON.stringify(jqXHR) );
             });
         },
         inviteAction: function (e) {
@@ -674,6 +682,7 @@ console.log( JSON.stringify(val) );
     Parley.inbox = new MessageList;
     Parley.contacts = new ContactList;
 	Parley.app = new AppView;
+
 
 	$('button').button();
 }(window.Parley = window.Parley || {}, jQuery));

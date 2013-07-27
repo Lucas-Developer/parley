@@ -143,7 +143,7 @@
                 <tr>
                     <td class="thumbnail"><button class="send">Send message</button></td>
                     <td>{{name}}</td>
-                    <td>{{email}}</td>
+                    <td>{{email}} {{fingerprint}}</td>
                     <td class="buttons"></td>
                 </tr>
             {{/contacts}}
@@ -171,6 +171,8 @@
     <script type="text/template" id="headerTemplate">
 	    <h1><span>Parley</span></h1>
 	    <span class="email loggedin">myemail@parley.com</span>
+
+        <button name="open-contacts" id="contactsAction">contacts</button>
 
         <section id="inbox-utilities" class="no-sel loggedin">
             <button id="composeAction" class="no-sel" name="compose">compose</button>
@@ -213,7 +215,7 @@
 
 	<script type="text/template" id="messageTemplate">
         <td class="selector"><a {{#selected}}class="clicked"{{/selected}}></a></td>
-		<td class="from">{{#from}}{{name}}{{^name}}{{email}}{{/name}}{{/from}}</td>
+		<td class="from">{{#addresses}}{{#from}}{{name}}{{^name}}{{email}}{{/name}}{{/from}}{{/addresses}}</td>
 		<td class="subject">{{subject}}</td>
 		<td class="date"></td>
 	</script>
@@ -221,9 +223,9 @@
         <td colspan="4"><div class="buttons"><button class="reply">Reply</button></div>{{body}}</td>
 	</script>
 	<script type="text/template" id="contactTemplate">
-		<td class="thumbnail"><img src="http://www.gravatar.com/avatar/000?s=32"></td>
+		<td class="thumbnail"><img src="{{thumbnail}}"></td>
 	    <td>{{name}}</td>
-	    <td>{{email}}</td>
+	    <td>{{email}} {{fingerprint}} <strong>count=({{count}})</strong></td>
 		<td class="buttons"></td>
 	</script>
 	
