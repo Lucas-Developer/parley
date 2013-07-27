@@ -403,14 +403,16 @@ def imap_get():
     #filter out unencrypted mail, and create an array of serialized messages
     serialized_messages = []
     for message in messages:
-      #if "-----BEGIN PGP MESSAGE-----" in message.body[0]["content"]:
-      message_dict = {}
-      for key in contextio.Message.keys:
-        if key != 'files':
-          message_dict[key] = getattr(message,key)
-      message_dict['body'] = message.body
-      serialized_messages.append(message_dict)
-      #  serialized_messages.append(message_dict_)
+      try:
+        if "-----BEGIN PGP MESSAGE-----" in message.body[0]["content"]:
+          message_dict = {}
+          for key in contextio.Message.keys:
+            if key != 'files':
+              message_dict[key] = getattr(message,key)
+          message_dict['body'] = message.body
+          serialized_messages.append(message_dict)
+      except:
+        pass
     return jsonify(messages=serialized_messages)
 
   else:
