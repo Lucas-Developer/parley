@@ -20,6 +20,11 @@
         <h2>{{^header}}Patience is a virtue!{{/header}}{{header}}</h2>
         <div class="loading-image"></div>
         <p>{{message}}</p>
+        <div class="buttons">
+        {{#buttons}}
+            <button id="{{id}}">{{text}}</button>
+        {{/buttons}}
+        </div>
     </div>
 </script>
 <script id="setupDialogTemplate" type="text/template">
@@ -136,7 +141,7 @@
 	    <tbody id="contactsList">
             {{#contacts}}
                 <tr>
-                    <td class="thumbnail">{{thumbnail}}</td>
+                    <td class="thumbnail"><button class="send">Send message</button></td>
                     <td>{{name}}</td>
                     <td>{{email}}</td>
                     <td class="buttons"></td>
@@ -167,17 +172,7 @@
 	    <h1><span>Parley</span></h1>
 	    <span class="email loggedin">myemail@parley.com</span>
 
-            <button id="composeAction" name="compose">compose</button>
-            <button id="replyAction" name="reply">reply</button>
-            <button id="forwardAction" name="forward">forward</button>
-            <button id="deleteAction" name="delete">delete</button>
-            <button id="maliceAction" name="report-malice">report malice</button>
-
-            <button name="open-contacts" id="contactsAction">contacts</button>
-            <button name="settings" id="settingsAction">settings</button>
-
-
-        <!--<section id="inbox-utilities" class="no-sel loggedin">
+        <section id="inbox-utilities" class="no-sel loggedin">
             <button id="composeAction" class="no-sel" name="compose">compose</button>
             <button id="replyAction" class="has-sel" name="reply">reply</button>
             <button id="forwardAction" class="has-sel" name="forward">forward</button>
@@ -187,7 +182,7 @@
 	    <nav>
             <button class="loggedin" name="open-contacts" id="contactsAction">contacts</button>
             <button class="loggedin" name="settings" id="settingsAction">settings</button>
-	    </nav>-->
+	    </nav>
     </script>
 	<script type="text/template" id="composeDialogTemplate">
 	    <form>
@@ -223,7 +218,7 @@
 		<td class="date"></td>
 	</script>
 	<script type="text/template" id="readMessageTemplate">
-        <td colspan="4"><button class="reply">Reply</button><p>{{message}}</p></td>
+        <td colspan="4"><div class="buttons"><button class="reply">Reply</button></div>{{body}}</td>
 	</script>
 	<script type="text/template" id="contactTemplate">
 		<td class="thumbnail"><img src="http://www.gravatar.com/avatar/000?s=32"></td>
