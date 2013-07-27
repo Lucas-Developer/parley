@@ -285,7 +285,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     var data = {
       'time': Math.floor((new Date())/1000),
       'user': Parley.currentUser.get('email'),
-      'message': message
+      'message': JSON.stringify(message)
     };
     var sig = Parley.signAPIRequest(url,'POST',data);
     data.sig = sig;
