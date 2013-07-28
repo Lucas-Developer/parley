@@ -17,6 +17,9 @@
     },
     "login-wait": {
         en_us: "It takes a while to log in! We know that\'s totally \"shitty\" or, \"the worst\" but we are working on it. It might be 2 or 3 minutes. That\'s not so bad, right? Anyway, to pass the time, I will sing you a song: do do d\'do do DOO DOO. Have fun!"
+    },
+    "saving-contacts": {
+        en_us: "Please wait while we save your contacts!"
     }
     });
 
@@ -55,11 +58,37 @@
 
         // Gotta have either an email or a fingerprint.
         // Will just fail silently if it gets neither
-        var email = contact.get('email'),
-            fingerprint = contact.get('fingerprint') || Parley.requestPublicKey(email);
+        var email = contact.get('email');
+        
+        var planA = function(userinfo) {
+            if (!_(userinfo).has('public_key')) {
+                planB();
+            } else {
+                var key = Parley.importKey(userinfo.public_key);
+                var fingerprint = key.fingerprints[0];
+                contact.set( _.extend(userinfo, Parley.AFIS(fingerprint)) );
+                if (Parley.currentUser.get('email') != email) Parley.contacts.add(contact);
+            }
+        }
+        var planB = function() {
+            var fingerprint = Parley.requestPublicKey(email) || contact.get('fingerprint');
+            var userinfo = Parley.AFIS(fingerprint);
 
-        var userinfo = Parley.AFIS(fingerprint);
+            userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
 
+            if (!_(userinfo).has('uids')) {
+
+            } else {
+                var parsed = Parley.parseUID(userinfo.uids[0]);
+                userinfo.name = parsed.name;
+                userinfo.email = parsed.email;
+                contact.set(userinfo);
+                if (Parley.currentUser.get('email') != email) Parley.contacts.add(contact);
+            }
+        }
+        Parley.requestUser(email, function(){}).success(planA).error(planB);
+
+/*
         if (userinfo.length > 0) {
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
 
@@ -68,18 +97,32 @@
 
             contact.set(_.extend({email: UID.email, name: UID.name}, userinfo));
 
-            /**
-            This is hacky, but the currentUser needs its own keyid or fingerprint
-            **/
             if (UID.email == Parley.currentUser.get('email'))
                 Parley.currentUser.set(_.extend({email: UID.email, name: UID.name}, userinfo));
         }
 
         Parley.contacts.add(contact);
+*/
     });
 
     Parley.vent.on('message:send', function (message, callback) {
         if (_.isFunction(callback)) callback();
+    });
+
+    Parley.vent.on('keyring:clear', function () {
+console.log('keyring:clear');
+        window.PYclearKeys();
+console.log('keyring:clear DONE');
+    });
+    Parley.vent.on('keyring:gen', function () {
+console.log('keyring:gen');
+        window.PYgenKey();
+console.log('keyring:gen DONE');
+    });
+    Parley.vent.on('keyring:store', function () {
+console.log('keyring:store');
+        Parley.storeKeyring();
+console.log('keyring:store DONE');
     });
     /** END VENT CODE **/
 
@@ -311,8 +354,15 @@
             'click #inviteAction':      'inviteAction',
             'click #retryInbox':        'retryInbox',
             'click #newContact':        'newContact',
-            'click #addContact':        'addContact'
+            'click #addContact':        'addContact',
+'click #clear': 'clearKey',
+'click #gen': 'genKey',
+'click #store': 'storeKey'
         },
+
+clearKey: function () { Parley.vent.trigger('keyring:clear'); },
+genKey: function () { Parley.vent.trigger('keyring:gen'); },
+storeKey: function () { Parley.vent.trigger('keyring:store'); },
 
         initialize: function (options) {
             this.$el.dialog({autoOpen:false});
@@ -331,7 +381,7 @@
                 },
                 {   slug: 'setup',
                     template: Mustache.compile($('#setupDialogTemplate').html()),
-                    opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
+                    opts: { width: 600, position: ['center', 80], dialogClass: 'no-no-close', draggable: false },
                     title: 'Welcome to Parley'
                 },
                 {   slug: 'settings',
@@ -578,8 +628,8 @@
             // Form validation should go here
             var formdata = $(document.forms.newcontact).serializeObject();
             var newContact = new Parley.Contact(formdata);
-            Parley.vent.trigger('contact:userinfo', newContact);
-            this.setDialog('waiting', {message:'saving-contacts'});
+            //Parley.vent.trigger('contact:userinfo', newContact);
+            this.setDialog('loading', {message:'saving-contacts'});
 
             Parley.storeKeyring(_.bind(function(){
                 this.setDialog('contacts');
@@ -671,6 +721,13 @@
 	    loadUser: function () {
 			console.log('Setting up main view with logged in user info');
             var opts = {parse:true};
+
+            console.log('Populating contacts from keychain');
+            for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
+                keychain.push(list[i]);
+            }
+            Parley.contacts.set(keychain, {parse:true});
+
             Parley.requestInbox(_.bind(function (data, textStatus) {
                 if (data.error == 'FORBIDDEN') {
                     this.dialog('loading', {message: Parley.i18n('inbox-forbidden'), buttons: [{id:'retryInbox',text:'Retry'},{id:'cancelLoad',text:'Cancel'}]});
@@ -686,14 +743,10 @@
                         Parley.inbox.add(data.messages[i], opts);
                     }
                 }
+
+                this.dialog('setup admin');
             }, this));
 
-            console.log('Populating contacts from keychain');
-            for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
-                keychain.push(list[i]);
-            }
-            Parley.contacts.set(keychain, {parse:true});
- 
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.header.$('.email').text(Parley.currentUser.get('email'));
 
