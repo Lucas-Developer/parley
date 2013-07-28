@@ -414,6 +414,7 @@ class SearchKeys(list):
         for i in range(len(vars)):
             self.curkey[vars[i]] = args[i]
         self.curkey['uids'] = []
+        self.fingerprints.append(self.curkey['keyid'])
         self.append(self.curkey)
 
     def uid(self, args):
