@@ -89,8 +89,10 @@ window.PYgetEncryptedKeyring = PYgetEncryptedKeyring
 def PYclearKeys():
   secret_fps = [key['fingerprint'] for key in gpg.list_keys(True)]
   fps = [key['fingerprint'] for key in gpg.list_keys()]
-  gpg.delete_keys(secret_fps, True)
-  gpg.delete_keys(fps)
+  for fp in secret_fps:
+    gpg.delete_keys(fp, True)
+  for fp in fps:
+    gpg.delete_keys(fp)
 
 window.PYclearKeys = PYclearKeys
 
