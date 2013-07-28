@@ -8,8 +8,11 @@ import pbkdf2, aes
 import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
 import os, platform, subprocess, shutil
-import json
 import time
+try:
+  import json
+except ImportError:
+  import simplejson as json
 
 
 resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
