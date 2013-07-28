@@ -83,7 +83,17 @@ def PYgetEncryptedKeyring():
 window.PYgetEncryptedKeyring = PYgetEncryptedKeyring
 
 
+def PYclearKeys():
+  secret_fps = [key['fingerprint'] for key in gpg.list_keys(True)]
+  fps = [key['fingerprint'] for key in gpg.list_keys()]
+  gpg.delete_keys(secret_fps, True)
+  gpg.delete_keys(fps)
+
+window.PYclearKeys = PYclearKeys
+
+
 def PYimportEncryptedKeyring(b64_keyring):
+  PYclearKeys()
   encrypted_keyring = base64.b64decode(b64_keyring)
   keyring = json.loads(aes.decryptData(window.Parley.currentUser.attributes.passwords.local[0:32],encrypted_keyring))
   gpg.import_keys(keyring['private'])

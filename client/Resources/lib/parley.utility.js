@@ -181,7 +181,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     } else {
       var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
       var keyring = window.PYgetEncryptedKeyring();
-      var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring};
+      var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring, 'public_key':window.PYgetPublicKey()};
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
       $.ajax({
