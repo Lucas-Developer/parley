@@ -14,6 +14,9 @@
     },
     "register-wait": {
         en_us: "It takes a while to register! Like, quite a while. This will be fixed, but for now you must wait. And wait you must. Minutes. Sometimes 5. 2 if you\'re lucky. 10 if not. But really. Give it some time, it will be totally worth it. I promise."
+    },
+    "login-wait": {
+        en_us: "It takes a while to log in! We know that\'s totally \"shitty\" or, \"the worst\" but we are working on it. It might be 2 or 3 minutes. That\'s not so bad, right? Anyway, to pass the time, I will sing you a song: do do d\'do do DOO DOO. Have fun!"
     }
     });
 
@@ -56,7 +59,7 @@
             fingerprint = contact.get('fingerprint') || Parley.requestPublicKey(email);
 
         var userinfo = Parley.AFIS(fingerprint);
-console.log(userinfo);
+
         if (userinfo.length > 0) {
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
 
@@ -65,8 +68,14 @@ console.log(userinfo);
 
             contact.set(_.extend({email: UID.email, name: UID.name}, userinfo));
 
-            Parley.contacts.add(contact);
+            /**
+            This is hacky, but the currentUser needs its own keyid or fingerprint
+            **/
+            if (UID.email == Parley.currentUser.get('email'))
+                Parley.currentUser.set(_.extend({email: UID.email, name: UID.name}, userinfo));
         }
+
+        Parley.contacts.add(contact);
     });
 
     Parley.vent.on('message:send', function (message, callback) {
@@ -96,9 +105,6 @@ console.log(userinfo);
             Parley.vent.trigger('contact:userinfo', this);
         },
         addMessage: function (message) {
-console.log('MESSAGE********');
-console.log(message.toJSON());
-console.log('***************');
             message = message.toJSON ? message.toJSON() : message;
             this.set({
                 last_received: this.attributes.last_received + 1,
@@ -116,15 +122,20 @@ console.log('***************');
 	var ContactView = Parley.BaseView.extend({
 	    tagName: 'tr',
 	    template: Mustache.compile($('#contactTemplate').html()),
-	    events: {},
+	    events: {
+            "click .send" :     "sendMessage"
+        },
 		render: function () {
 			var data = this.model.toJSON();
 
-            
-			
+            this.listenTo(this.model, 'change', this.render);
+
 			this.$el.addClass('contact').html(this.template(data));
 			return this;
 	    },
+        sendMessage: function () {
+            Parley.app.dialog('compose', {from:this.model});
+        }
 	});
 
 	Parley.Message = Backbone.Model.extend({
@@ -185,7 +196,7 @@ console.log('***************');
 	    tagName: 'tr',
 	    template: Mustache.compile($('#messageTemplate').html()),
 	    events: {
-            'click .from':          'openCompose',
+            'click .from':          'openContact',
 			'click .subject':		'openMessage',
             'click .selector':      'toggleSelect'
 	    },
@@ -287,15 +298,20 @@ console.log('***************');
     var DialogView = Parley.BaseView.extend({
         el: $('#dialogWrapper'),
 
+        /**
+        This will be handled through the fancy vent
+        but for now, it's like this...
+        **/
         events: {
 			'click #emailVerify':		'emailVerify',
             'click #loginAction':       'login',
             'click #registerAction':    'register',
 			'click #logoutAction':		'logout',
-            'change input':             'update',
             'click #sendAction':        'sendAction',
             'click #inviteAction':      'inviteAction',
-            'click #retryInbox':        'retryInbox'
+            'click #retryInbox':        'retryInbox',
+            'click #newContact':        'newContact',
+            'click #addContact':        'addContact'
         },
 
         initialize: function (options) {
@@ -332,6 +348,10 @@ console.log('***************');
                     title: 'Contacts',
                     init: function () {
                         this.contacts = Parley.contacts.toJSON();
+                    },
+                    loaded: function (view) {
+                        view.$('#contactsList').replaceWith(Parley.app.contactsList);
+                        //_.bind(view.assign(Parley.app.contactsList, '#contactsList'), this);
                     }
                 },
                 {   slug: 'nokey',
@@ -490,7 +510,7 @@ console.log('***************');
             e.preventDefault();
             var form = document.forms.loginAction;
 
-            this.setDialog('loading', { message: 'It takes a while to log in! We know that\'s totally "shitty" or, "the worst" but we are working on it. It might be 2 or 3 minutes. That\'s not so bad, right? Anyway, to pass the time, I will sing you a song: do do d\'do do DOO DOO. Have fun!' });
+            this.setDialog('loading', { message: Parley.i18n('login-wait') });
 
             Parley.authenticateUser(form.email.value, form.password.value, _.bind( function (data, textStatus) {
                 console.log('User successfully logged in.');
@@ -530,12 +550,9 @@ console.log('***************');
                 console.log('We have no keys for these recipients: ', nokeyRecipients);
                 Parley.app.dialog('nokey', {emails:nokeyRecipients});
             } else { }
-console.log('formdata');
-console.log( JSON.stringify(recipients) );
+
             if (!_.isEmpty(recipients)) Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, status, jqXHR) {
                 console.log( JSON.stringify(data) );
-console.log('jqXHR');
-console.log( JSON.stringify(jqXHR) );
             });
         },
         inviteAction: function (e) {
@@ -551,6 +568,22 @@ console.log( JSON.stringify(jqXHR) );
             This is another trace of poor event management. Must get this cleaned up.
             */
             Parley.app.loadUser();
+        },
+        newContact: function () {
+            this.setPage('newcontact');
+        },
+        addContact: function (e) {
+            e.preventDefault();
+
+            // Form validation should go here
+            var formdata = $(document.forms.newcontact).serializeObject();
+            var newContact = new Parley.Contact(formdata);
+            Parley.vent.trigger('contact:userinfo', newContact);
+            this.setDialog('waiting', {message:'saving-contacts'});
+
+            Parley.storeKeyring(_.bind(function(){
+                this.setDialog('contacts');
+            }, this));
         }
     });
 
@@ -568,11 +601,11 @@ console.log( JSON.stringify(jqXHR) );
 	    initialize: function () {
 			console.log('Initializing Parley.');
 
-            this.header = new HeaderView({vent:this.vent});
-            this._dialog = new DialogView({vent:this.vent});
+            this.header = new HeaderView;
+            this._dialog = new DialogView;
 
 			this.inbox = $('#inbox tbody');
-			this.contactsList = $('#contactsList');
+			this.contactsList = $('<div>');
 
 			this.listenTo(Parley.inbox, 'add', this.addMessage);
 			this.listenTo(Parley.contacts, 'add', this.addContact);
@@ -626,12 +659,12 @@ console.log( JSON.stringify(jqXHR) );
         },
 
 		addContact: function (contact) {
-			var view = new ContactView({model: contact, vent:this.vent});
+			var view = new ContactView({model: contact});
 			this.contactsList.append(view.render().el);
 		},
 
 	    addMessage: function (message) {
-			var view = new MessageView({model: message, vent:this.vent});
+			var view = new MessageView({model: message});
 			this.inbox.append(view.render().el);
 	    },
 
@@ -682,7 +715,6 @@ console.log( JSON.stringify(jqXHR) );
     Parley.inbox = new MessageList;
     Parley.contacts = new ContactList;
 	Parley.app = new AppView;
-
 
 	$('button').button();
 }(window.Parley = window.Parley || {}, jQuery));

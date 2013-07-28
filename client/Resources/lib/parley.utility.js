@@ -180,7 +180,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       throw "Error: There is no currently authenticated user.";
     } else {
       var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
-      var keyring = window.PYgetEncryptededKeyring();
+      var keyring = window.PYgetEncryptedKeyring();
       var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring};
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
@@ -274,7 +274,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
         return recipient.get('email');
       }
     });
+
     var messageText = window.PYencryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('keyid') || Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
+
     var message = {
       'from':null,
       'to':recipientEmails,

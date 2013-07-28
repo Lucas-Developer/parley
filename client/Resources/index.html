@@ -127,11 +127,13 @@
 </script>
 
 <script type="text/template" id="contactsDialogTemplate">
+    <div class="page page-contactlist page-active">
     <div id="singleContact">
-        {{#single}}
+        {{#selected}}
+            <img src="{{thumbnail}}" />
             <p>{{name}}</p>
             <p>{{email}}</p>
-        {{/single}}
+        {{/selected}}
     </div>
 	<input type="search" placeholder="Search..." name="contactSearch">
 	<table class="sortable">
@@ -141,14 +143,31 @@
 	    <tbody id="contactsList">
             {{#contacts}}
                 <tr>
-                    <td class="thumbnail"><button class="send">Send message</button></td>
+                    <td class="thumbnail"><img src="{{thumbnail}}"></td>
                     <td>{{name}}</td>
-                    <td>{{email}} {{fingerprint}}</td>
-                    <td class="buttons"></td>
+	                <td>{{email}} {{fingerprint}} <strong>count=({{count}})</strong></td>
+                    <td class="buttons"><button class="send">Send message</button></td>
                 </tr>
             {{/contacts}}
 	    </tbody>
 	</table>
+    <button id="newContact">New Contact</button>
+    </div>
+    <div class="page page-newcontact">
+    <form name="newcontact">
+        <h4>Add new contact</h4>
+	    <div class="row">
+			<label for="contact_email">Email
+				<input type="text" name="email">
+			</label>
+
+			<label for="contact_name">Name
+				<input type="text" name="name">
+			</label>
+	    </div>
+        <button id="addContact">Save Contact</button>
+    </form>
+    </div>
 </script>
 
     <script type="text/template" id="nokeyDialogTemplate">
@@ -226,7 +245,7 @@
 		<td class="thumbnail"><img src="{{thumbnail}}"></td>
 	    <td>{{name}}</td>
 	    <td>{{email}} {{fingerprint}} <strong>count=({{count}})</strong></td>
-		<td class="buttons"></td>
+		<td class="buttons"><button class="send">reply</button></td>
 	</script>
 	
 	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
