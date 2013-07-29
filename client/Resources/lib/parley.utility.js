@@ -259,7 +259,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     var keys = Parley.listKeys();
     keys = _(keys).filter(function (key) { return key.uids[0] === uid });
     keys = _(keys).sortBy('date');
-    return _(keys).last();
+    return _(keys).last().fingerprint;
   }
 
   //Split a UID into name and email address
