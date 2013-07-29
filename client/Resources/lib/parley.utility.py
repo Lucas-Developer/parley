@@ -160,7 +160,11 @@ window.PYlistKeys = PYlistKeys
 
 
 def PYencryptAndSign(data, recipients, signer, passphrase):
-  data = gpg.encrypt(data, recipients, sign=signer, passphrase=passphrase, always_trust=True)
+  #Because of the way Tide passes stuff around, recipients
+  #doesn't seem to arrive as a legitimate Python list, but
+  #it is an iterator. gpg.encrypt expects a nice list, so:
+  rlist = [fp for fp in recipients]
+  data = gpg.encrypt(data, rlist, sign=signer, passphrase=passphrase, always_trust=True)
   return data.data
 
 window.PYencryptAndSign = PYencryptAndSign
