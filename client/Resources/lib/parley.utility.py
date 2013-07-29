@@ -15,18 +15,14 @@ except ImportError:
   import simplejson as json
 
 
-def PYsetup(resource_dir,home_dir):
+def PYsetup(resource_dir,appdata_dir):
   global gpg
-  resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
-  home_dir = window.Ti.Filesystem.getUserDirectory().toString()
 
-  #copy Resources/gpg to ~/.parley
-  parley_dir = os.path.join(home_dir,'parley')
+  #copy Resources/gpg to application data dir
   gpg_dir = os.path.join(resource_dir,'gpg')
-
+  parley_dir = os.path.join(appdata_dir,'parley_gpg')
   if not os.path.isdir(parley_dir):
     shutil.copytree(gpg_dir,parley_dir)
-
   os.chdir(parley_dir)
 
   def platform_path(): #from ~/.parley
@@ -135,7 +131,7 @@ window.PYsignAPIRequest = PYsignAPIRequest
 
 def PYpbkdf2(data):
   salt = window.Parley.currentUser.attributes.email + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db'
-  return pbkdf2.pbkdf2_hex(data, salt, 2048, 32)
+  return pbkdf2.pbkdf2_hex(data, salt.lower(), 2048, 32)
 
 window.PYpbkdf2 = PYpbkdf2
 
