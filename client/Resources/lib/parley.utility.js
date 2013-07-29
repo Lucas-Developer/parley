@@ -268,7 +268,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       if (_.isString(recipient)) {
         return Parley.requestPublicKey(recipient);
       } else {
-        return recipient.get('keyid') || recipient.get('fingerprint');
+        return recipient.get('fingerprint');
       }
     });
     var recipientEmails = _(recipients).map(function(recipient) {
@@ -279,7 +279,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       }
     });
 
-    var messageText = window.PYencryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('keyid') || Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
+    var messageText = window.PYencryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
 
     var message = {
       'from':null,
@@ -313,8 +313,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
     if (_.isString(sender)) {
       email = sender;
       keyid = Parley.requestPublicKey(email);
-    } else if (sender.get('keyid') || sender.get('fingerprint')) {
-      keyid = sender.get('keyid') || sender.get('fingerprint');
+    } else if (sender.get('fingerprint')) {
+      keyid = sender.get('fingerprint');
     } else if (sender.get('email')) {
       keyid = Parley.requestPublicKey(sender.get('email'));
       sender.set('fingerprint',keyid)
