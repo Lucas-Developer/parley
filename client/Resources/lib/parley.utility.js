@@ -69,8 +69,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
 (function (Parley) {
 
-  Parley.BASE_URL = "http://parley.co:5000"; //Test server
-  //Parley.BASE_URL = "https://api.parley.co"; //Production server
+  Parley.BASE_URL = "https://api.parley.co";
 
   window.PYsetup(
     window.Ti.Filesystem.getResourcesDirectory().toString(),
