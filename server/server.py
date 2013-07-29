@@ -28,13 +28,18 @@ import psycopg2.extras
 from itertools import izip
 
 app = Flask(__name__)
+if app.debug is not True:
+  import logging
+  from logging.handlers import RotatingFileHandler
+  file_handler = RotatingFileHandler('python.log', maxBytes=1024 * 1024 * 100, backupCount=20)
+  file_handler.setLevel(logging.ERROR)
+  app.logger.addHandler(file_handler)
 
 config = dict()
 with open('config.json') as config_file:
   config = json.load(config_file)
 
-BASE_URL = "http://parley.co:5000" #Test
-#BASE_URL = "https://api.parley.co" #Live
+BASE_URL = "https://api.parley.co"
 
 #---- ACTUAL PARLEY STUFF ----#
 conn = psycopg2.connect("dbname=%s user=%s" % (config["dbname"], config["dbuser"]))
@@ -420,4 +425,4 @@ def imap_get():
 
 
 if __name__ == "__main__":
-  app.run(debug=True,host='0.0.0.0')
+  app.run()
