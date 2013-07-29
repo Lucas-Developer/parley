@@ -135,13 +135,13 @@ def user(email):
   elif request.method == 'POST':
     if user and not user["pending"] and 'keyring' in request.form and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
       #create/update user's keyring
-      user = setUser(email,{'keyring':request.form['keyring']})
+      user = setUser(email,{'keyring':request.form['keyring'],'public_key':request.form['public_key']})
       return jsonify(**user), 201
     elif user["pending"] and 'p' in request.form:
       meta = json.loads(user['meta'])
       if 'verified' in meta and meta['verified'] == True:
         new_user = {"pending":False,"secret":request.form['p']}
-        for key in ["name","keyring"]:
+        for key in ["name","public_key","keyring"]:
           if key in request.form:
             new_user[key] = request.form[key]
         user = setUser(email,new_user)
