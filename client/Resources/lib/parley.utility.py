@@ -143,10 +143,10 @@ window.PYpbkdf2 = PYpbkdf2
 
 def PYfetchKey(email):
   keys = gpg.search_keys("<%s>" % email)
-  if keys == []:
+  if keys.fingerprints == []:
     return None
   else:
-    imported = gpg.recv_keys('pgp.mit.edu',keys[0]['keyid'])
+    imported = gpg.recv_keys('pgp.mit.edu',keys.fingerprints[0])
     return imported.fingerprints[0]
 
 window.PYfetchKey = PYfetchKey
