@@ -72,6 +72,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Parley.BASE_URL = "http://parley.co:5000"; //Test server
   //Parley.BASE_URL = "https://api.parley.co"; //Production server
 
+  window.PYsetup(
+    window.Ti.Filesystem.getResourcesDirectory().toString(),
+    window.Ti.Filesystem.getApplicationDataDirectory().toString()
+  );
+
   //This is just a shim in case Parley.Contact isn't defined elsewhere
   Parley.Contact = Parley.Contact || function () {
     this.attributes = this.attributes || {};

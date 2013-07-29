@@ -15,49 +15,48 @@ except ImportError:
   import simplejson as json
 
 
-resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
-home_dir = window.Ti.Filesystem.getUserDirectory().toString()
+def PYsetup(resource_dir,home_dir):
+  global gpg
+  resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
+  home_dir = window.Ti.Filesystem.getUserDirectory().toString()
 
-#wait for Tide to create directory
-#(otherwise caused weird race condition on some systems)
-while not os.path.isdir(resource_dir):
-  time.sleep(5)
+  #copy Resources/gpg to ~/.parley
+  parley_dir = os.path.join(home_dir,'parley')
+  gpg_dir = os.path.join(resource_dir,'gpg')
 
-#copy Resources/gpg to ~/.parley
-parley_dir = os.path.join(home_dir,'.parley')
-gpg_dir = os.path.join(resource_dir,'gpg')
+  if not os.path.isdir(parley_dir):
+    shutil.copytree(gpg_dir,parley_dir)
 
-if not os.path.isdir(parley_dir):
-  shutil.copytree(gpg_dir,parley_dir)
+  os.chdir(parley_dir)
 
-os.chdir(home_dir)
+  def platform_path(): #from ~/.parley
+    if 'Darwin' in platform.platform():
+      return 'osx/bin/gpg'
+    elif 'Windows' in platform.platform():
+      return 'win32\gpg.exe'
+    elif 'Linux' in platform.platform():
+      return 'linux/bin/gpg'
 
-def platform_path(): #from ~/.parley
-  if 'Darwin' in platform.platform():
-    return 'osx/bin/gpg'
-  elif 'Windows' in platform.platform():
-    return 'win32\gpg.exe'
-  elif 'Linux' in platform.platform():
-    return 'linux/bin/gpg'
-
-def install_path(): # from ~/.parley
-  if 'Darwin' in platform.platform():
-    return 'osx-install.sh'
-  elif 'Windows' in platform.platform():
-    return None
-  elif 'Linux' in platform.platform():
-    return 'linux-install.sh'
+  def install_path(): # from ~/.parley
+    if 'Darwin' in platform.platform():
+      return 'osx-install.sh'
+    elif 'Windows' in platform.platform():
+      return None
+    elif 'Linux' in platform.platform():
+      return 'linux-install.sh'
 
 
-gpg_binary = os.path.join(parley_dir, platform_path())
-gpg_home = os.path.join(parley_dir,"keyring")
+  gpg_binary = platform_path()
+  gpg_home = "keyring"
 
-#if Tide's version of GPG isn't installed yet, install it
-#(This approach only works on Linux and Mac with gcc pre-installed))
-if not os.path.isfile(gpg_binary):
-  subprocess.call([os.path.join(parley_dir,install_path())])
+  #if Tide's version of GPG isn't installed yet, install it
+  #(This approach only works on Linux and Mac with gcc pre-installed))
+  if not os.path.isfile(gpg_binary):
+    subprocess.call([install_path()])
 
-gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
+  gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
+
+window.PYsetup = PYsetup
 
 
 def PYgenKey():
