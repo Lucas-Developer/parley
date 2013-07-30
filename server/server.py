@@ -153,7 +153,7 @@ def user(email):
     
 
 @app.route("/purchase/<email>", methods=['POST'])
-def verify(email):
+def purchase(email):
   if request.form['user'] == 'PARLEY.CO' and compare_hashes(request.form["sig"], config["parley_website_key"]):
     user = setUser(email,
         "account_type":2,
