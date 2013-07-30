@@ -69,7 +69,7 @@ def verifySignature(url, method, formData, secret):
       key=secret,
       msg=method+'|'+url+'?'+url_string,
       digestmod=hashlib.sha256).digest()
-  new_sig = quote_plus(base64.encodestring(new_sig).strip())
+  new_sig = base64.b64encode(new_sig)
   return compare_hashes(old_sig, new_sig) and t < 30
 
 def getUser(email):
@@ -352,7 +352,7 @@ def imap_connect(email):
         key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+time,
         digestmod=hashlib.sha256).digest()
-    sig = quote_plus(base64.encodestring(sig).strip())
+    sig = base64.b64encode(sig)
     resp = context_io.post_connect_token(
         callback_url="%s/imap/new/%s/%s/%s" % (BASE_URL, email, time, sig),
         email=email
@@ -370,7 +370,7 @@ def imap_new(email, timestamp, sig):
         key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+timestamp,
         digestmod=hashlib.sha256).digest()
-  new_sig = quote_plus(base64.encodestring(new_sig).strip())
+  new_sig = base64.b64encode(new_sig)
   if compare_hashes(sig, new_sig) and t < 30*60:
     params = {'token':request.args['contextio_token']}
     token = contextio.ConnectToken(context_io,params)
