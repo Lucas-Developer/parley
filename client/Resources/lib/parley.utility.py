@@ -164,18 +164,23 @@ def PYencryptAndSign(data, recipients, signer, passphrase):
   #doesn't seem to arrive as a legitimate Python list, but
   #it is an iterator. gpg.encrypt expects a nice list, so:
   rlist = [fp for fp in recipients]
+  #TODO:implement trust levels, think about how/when accounts should sign each other's keys
   data = gpg.encrypt(data, rlist, sign=signer, passphrase=passphrase, always_trust=True)
+  window.console.log(data)
   return data.data
 
 window.PYencryptAndSign = PYencryptAndSign
 
 
 def PYdecryptAndVerify(data, passphrase, sender_id):
-  decrypted_data =  gpg.decrypt(data, passphrase=passphrase)
-  if decrypted_data.key_id == sender_id or decrypted_data.fingerprint == sender_id:
+  #TODO:implement WoT validation
+  decrypted_data =  gpg.decrypt(data, passphrase=passphrase, always_trust=True)
+  window.console.log(decrypted_data)
+  #if decrypted_data.fingerprint == sender_id:
+  if decrypted_data.data:
     return decrypted_data.data
   else:
-    return "Parley Exception: The signature on this message was no good."
+    return "Parley Exception: Unable to decrypt this message with information given."
 
 window.PYdecryptAndVerify = PYdecryptAndVerify
 
