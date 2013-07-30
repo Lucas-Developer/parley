@@ -66,6 +66,14 @@
     **/
     Parley.vent = _.extend({}, Backbone.Events);
 
+    Parley.vent.on('contact:sync', function (e) {
+        console.log('Populating contacts from keychain');
+        for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
+            keychain.push(list[i]);
+        }
+        Parley.contacts.set(keychain, {parse:true});
+    });
+
     Parley.vent.on('contact:userinfo', function (contact) {
         console.log('VENT: contact:userinfo');
 
@@ -131,13 +139,17 @@
             Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
                 console.log(JSON.stringify(data), textStatus, data.error);
 
-                console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
-                console.log('Registering new inbox with Context.io');
+                if (textStatus != 'error') {
+                    console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
+                    console.log('Registering new inbox with Context.io');
                 
-                Parley.registerInbox();
+                    Parley.registerInbox();
 
-                Parley.app.loadUser();
-                Parley.app.dialog('hide');
+                    Parley.app.loadUser();
+                    Parley.app.dialog('hide');
+                } else {
+                    console.log(textStatus);
+                }
             });
         }
     });
@@ -160,6 +172,39 @@
             Parley.app.render();
 	    },
 */
+    Parley.vent.on('message:sync', function (e) {
+        console.log('VENT: message:sync');
+        Parley.requestInbox(function (data, textStatus) {
+            if (data.error == 'FORBIDDEN') {
+                console.log('error, forbidden inbox');
+                Parley.app.dialog('loading', {
+                    message: Parley.app.i18n._t('inbox-forbidden'),
+                    buttons: [
+                        {id:'retryInbox',text:'Retry'},
+                        {id:'cancelLoad',text:'Cancel'}
+                    ],
+                    events: {
+                        'click #retryInbox': function(e) { Parley.registerInbox(); Parley.vent.trigger('message:sync'); }
+                    }
+                });
+                //Parley.registerInbox();
+                return false;
+            } else {
+
+                console.log('Inbox loaded', data.messages);
+
+                Parley.inbox = Parley.inbox || new MessageList({}, opts);
+                if (_.has(data, 'messages')) {
+                    for (var i = 0, t = data.messages.length; i<t; i++) {
+                        Parley.inbox.add(data.messages[i], opts);
+                    }
+                }
+
+                Parley.app.dialog('setup admin');
+            }
+        });
+    });
+
     Parley.vent.on('message:send', function (e) {
         e.preventDefault();
 
@@ -440,7 +485,6 @@
         events: {
 			'click #logoutAction':		'logout',
             'click #inviteAction':      'inviteAction',
-            'click #retryInbox':        'retryInbox',
             'keydown': 'clickSubmit'
         },
 
@@ -559,8 +603,9 @@
                         title: this.cur.get('title')
                     }, data.opts));
                 this.$el.html(template(data));
-
-                this.delegateEvents(this.cur.get('events'));
+                
+                var events = _.extend(args.events, this.cur.get('events'));
+                this.delegateEvents(events);
 
                 if (_.has(data, 'loaded'))
                     data.loaded(this);
@@ -615,7 +660,13 @@
         },
 
         clickSubmit: function (e) {
-            if (e.keyCode == 13) { this.$('input[type=submit],button:visible').click(); }
+            switch (e.keyCode) {
+                case 13:
+                    this.$('input[type=submit],button:visible').click();
+                case 27:
+                    e.preventDefault();
+                    break;
+            }
         }
     });
 
@@ -708,30 +759,8 @@
             Parley.vent.trigger('contacts:sync');
 
 /*
-            console.log('Populating contacts from keychain');
-            for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
-                keychain.push(list[i]);
-            }
-            Parley.contacts.set(keychain, {parse:true});
 */
-            Parley.requestInbox(_.bind(function (data, textStatus) {
-                if (data.error == 'FORBIDDEN') {
-                    this.dialog('loading', {message: Parley.app.i18n._t('inbox-forbidden'), buttons: [{id:'retryInbox',text:'Retry'},{id:'cancelLoad',text:'Cancel'}]});
-                    Parley.registerInbox();
-                    return false;
-                }
-
-                console.log('Inbox loaded', data.messages);
-
-                Parley.inbox = Parley.inbox || new MessageList({}, opts);
-                if (_.has(data, 'messages')) {
-                    for (var i = 0, t = data.messages.length; i<t; i++) {
-                        Parley.inbox.add(data.messages[i], opts);
-                    }
-                }
-
-                this.dialog('setup admin');
-            }, this));
+            Parley.vent.trigger('message:sync');
 
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.header.$('.email').text(Parley.currentUser.get('email'));
