@@ -15,18 +15,14 @@ except ImportError:
   import simplejson as json
 
 
-def PYsetup(resource_dir,home_dir):
+def PYsetup(resource_dir,appdata_dir):
   global gpg
-  resource_dir = window.Ti.Filesystem.getResourcesDirectory().toString()
-  home_dir = window.Ti.Filesystem.getUserDirectory().toString()
 
-  #copy Resources/gpg to ~/.parley
-  parley_dir = os.path.join(home_dir,'parley')
+  #copy Resources/gpg to application data dir
   gpg_dir = os.path.join(resource_dir,'gpg')
-
+  parley_dir = os.path.join(appdata_dir,'parley_gpg')
   if not os.path.isdir(parley_dir):
     shutil.copytree(gpg_dir,parley_dir)
-
   os.chdir(parley_dir)
 
   def platform_path(): #from ~/.parley
@@ -135,7 +131,7 @@ window.PYsignAPIRequest = PYsignAPIRequest
 
 def PYpbkdf2(data):
   salt = window.Parley.currentUser.attributes.email + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db'
-  return pbkdf2.pbkdf2_hex(data, salt, 2048, 32)
+  return pbkdf2.pbkdf2_hex(data, salt.lower(), 2048, 32)
 
 window.PYpbkdf2 = PYpbkdf2
 
@@ -164,18 +160,27 @@ window.PYlistKeys = PYlistKeys
 
 
 def PYencryptAndSign(data, recipients, signer, passphrase):
-  data = gpg.encrypt(data, recipients, sign=signer, passphrase=passphrase, always_trust=True)
+  #Because of the way Tide passes stuff around, recipients
+  #doesn't seem to arrive as a legitimate Python list, but
+  #it is an iterator. gpg.encrypt expects a nice list, so:
+  rlist = [fp for fp in recipients]
+  #TODO:implement trust levels, think about how/when accounts should sign each other's keys
+  data = gpg.encrypt(data, rlist, sign=signer, passphrase=passphrase, always_trust=True)
+  window.console.log(data)
   return data.data
 
 window.PYencryptAndSign = PYencryptAndSign
 
 
 def PYdecryptAndVerify(data, passphrase, sender_id):
-  decrypted_data =  gpg.decrypt(data, passphrase=passphrase)
-  if decrypted_data.key_id == sender_id or decrypted_data.fingerprint == sender_id:
+  #TODO:implement WoT validation
+  decrypted_data =  gpg.decrypt(data, passphrase=passphrase, always_trust=True)
+  window.console.log(decrypted_data)
+  #if decrypted_data.fingerprint == sender_id:
+  if decrypted_data.data:
     return decrypted_data.data
   else:
-    return "Parley Exception: The signature on this message was no good."
+    return "Parley Exception: Unable to decrypt this message with information given."
 
 window.PYdecryptAndVerify = PYdecryptAndVerify
 

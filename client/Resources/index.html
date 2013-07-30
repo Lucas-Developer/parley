@@ -29,8 +29,7 @@
 </script>
 <script id="setupDialogTemplate" type="text/template">
 	<div class="page page-splash page-active">
-        <p>Welcome to a magical world of mystery.<br>The mystery is a mystery but you'll find your own, I'm sure. Oh, what a mystery!</p>
-        <p>DEBUG: Type 'a@a.a' to see login, anything else for register.</p>
+        <p id="text_message">{{message}}</p>
 	    <form name="emailVerify">
 			<div class="row">
 	        	<label for="email">Enter your email
@@ -63,7 +62,7 @@
         <form name="registerAction">
             <div class="row">
                 <label class="tab tab-active" for="email">Email
-                    <div class="full-width"><input type="email" name="email" id="registerEmailField" readonly>
+                    <div class="full-width"><input type="email" name="email" id="registerEmailField" value="{{email}}" readonly>
                         <div class="status">
                             <img src="img/ajax-loader.gif" class="loader">
                             <img src="img/icon-success.png" class="status-success">
@@ -212,7 +211,7 @@
 	    </nav>
     </script>
 	<script type="text/template" id="composeDialogTemplate">
-	    <form>
+	    <form id="composeForm">
 		<div class="row" id="recipients">
 			<label for="to">To
 				<input type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
@@ -263,6 +262,7 @@
 	<script type="text/javascript" src="lib/moment.min.js"></script>
 	<script type="text/javascript" src="lib/sorttable.js"></script>
 	<script type="text/javascript" src="lib/jquery.autoSuggest.js"></script>
+	<script type="text/javascript" src="lib/jquery.i18n.min.js"></script>
 	<!--<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>-->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/webfont/1.4.2/webfont.js"></script>
 	<script type="text/javascript" src="client.js"></script>

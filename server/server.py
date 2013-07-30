@@ -28,13 +28,18 @@ import psycopg2.extras
 from itertools import izip
 
 app = Flask(__name__)
+if app.debug is not True:
+  import logging
+  from logging.handlers import RotatingFileHandler
+  file_handler = RotatingFileHandler('python.log', maxBytes=1024 * 1024 * 100, backupCount=20)
+  file_handler.setLevel(logging.ERROR)
+  app.logger.addHandler(file_handler)
 
 config = dict()
 with open('config.json') as config_file:
   config = json.load(config_file)
 
-BASE_URL = "http://parley.co:5000" #Test
-#BASE_URL = "https://api.parley.co" #Live
+BASE_URL = "https://api.parley.co"
 
 #---- ACTUAL PARLEY STUFF ----#
 conn = psycopg2.connect("dbname=%s user=%s" % (config["dbname"], config["dbuser"]))
@@ -130,13 +135,13 @@ def user(email):
   elif request.method == 'POST':
     if user and not user["pending"] and 'keyring' in request.form and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
       #create/update user's keyring
-      user = setUser(email,{'keyring':request.form['keyring']})
+      user = setUser(email,{'keyring':request.form['keyring'],'public_key':request.form['public_key']})
       return jsonify(**user), 201
     elif user["pending"] and 'p' in request.form:
       meta = json.loads(user['meta'])
       if 'verified' in meta and meta['verified'] == True:
         new_user = {"pending":False,"secret":request.form['p']}
-        for key in ["name","keyring"]:
+        for key in ["name","public_key","keyring"]:
           if key in request.form:
             new_user[key] = request.form[key]
         user = setUser(email,new_user)
@@ -420,4 +425,4 @@ def imap_get():
 
 
 if __name__ == "__main__":
-  app.run(debug=True,host='0.0.0.0')
+  app.run()

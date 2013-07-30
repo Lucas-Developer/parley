@@ -1,29 +1,5 @@
 (function(Parley, $, undefined){
     /*
-    Not totally sure how we'll do i18n yet, but I have this here for now. Obviously not ideal.
-    */
-    (function(_ph){
-        Parley.i18n = function (id, alt) {
-            var lang = Parley.currentUser && Parley.currentUser.get('lang') || 'en_us';
-            alt = alt || 'No message found.';
-            return _.has(_ph,id) ? _ph[id][lang] : alt;
-        }
-    })({
-    "inbox-forbidden": {
-        en_us: "We can\'t access your account through context.io. We will try to reconnect you, please wait a minute while we do that!"
-    },
-    "register-wait": {
-        en_us: "It takes a while to register! Like, quite a while. This will be fixed, but for now you must wait. And wait you must. Minutes. Sometimes 5. 2 if you\'re lucky. 10 if not. But really. Give it some time, it will be totally worth it. I promise."
-    },
-    "login-wait": {
-        en_us: "It takes a while to log in! We know that\'s totally \"shitty\" or, \"the worst\" but we are working on it. It might be 2 or 3 minutes. That\'s not so bad, right? Anyway, to pass the time, I will sing you a song: do do d\'do do DOO DOO. Have fun!"
-    },
-    "saving-contacts": {
-        en_us: "Please wait while we save your contacts!"
-    }
-    });
-
-    /*
     These first two statements could be moved, but I put them here for now.
     */
     $.fn.serializeObject = function() {
@@ -46,6 +22,43 @@
 		families: ['Source Sans Pro', 'PT Sans', 'PT Serif']
 	    }
 	});
+
+    Parley.i18n = Backbone.Model.extend({
+        defaults: function () {
+            return {
+                lang: 'en'
+            }
+        },
+        dict_files: {
+            // Make sure the actual files are '.json'
+            en: 'dict.en',
+            fr: 'dict.fr'
+        },
+        dict_path: 'lang/',
+        initialize: function (l,p) {
+            // Freeze up the app for the split second it takes to load
+            // the first language files
+            this.loadDictionary({lang:'en',sync:true});
+        },
+        loadDictionary: function (opts) {
+            var lang = opts.lang || Parley.currentUser && Parley.currentUser.get('lang') || 'en';
+            var path = opts.path || this.dict_path + this.dict_files[lang] || dict_path + 'dict.en';
+            var model = this;
+
+            $.ajax({
+                type: 'GET',
+                async: !opts.sync,
+                url: path + '.json',
+                success: function (dict) {
+                    $.i18n.setDictionary(dict);
+                },
+                dataType: 'json'
+            });
+        },
+        _t: function (message) {
+            return $.i18n._(message);
+        }
+    });
 
     /** This should be moved to a new file or something
         it's basically a bunch of events. EVENTually I think
@@ -87,43 +100,128 @@
             }
         }
         Parley.requestUser(email, function(){}).success(planA).error(planB);
+    });
+
+    Parley.vent.on('setup:verify', function (e) {
+        e.preventDefault();
+        var form = document.forms.emailVerify;
+        if (_.isUndefined(form.email.value)) return false;
+        console.log('Verifying email address: ' + form.email.value);
+
+        Parley.requestUser(form.email.value, function (data, textStatus) {
+            if (_.isObject(data) && !_.has(data, 'error')) {
+                console.log('User exists, setting up login form.');
+                Parley.app.dialog('setup login', {email: form.email.value});
+            } else {
+                console.log('User doesn\'t exists, showing registration form.');
+                Parley.app.dialog('setup register', {email: form.email.value});
+            }
+        });
+    });
+    Parley.vent.on('setup:register', function (e) {
+        e.preventDefault();
+        var form = document.forms.registerAction;
+        if (form.password_one.value != form.password_two.value) {
+            // Passwords don't match
+            console.log('Passwords don\'t match.');
+        } else {
+            console.log('About to register user: ' + form.email.value);
+            Parley.app.dialog('loading', { message: Parley.app.i18n._t('register-wait') });
+
+            Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
+                console.log(JSON.stringify(data), textStatus, data.error);
+
+                console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
+                console.log('Registering new inbox with Context.io');
+                
+                Parley.registerInbox();
+
+                Parley.app.loadUser();
+                Parley.app.dialog('hide');
+            });
+        }
+    });
+    Parley.vent.on('setup:login', function (e) {
+        e.preventDefault();
+        var form = document.forms.loginAction;
+
+        Parley.app.dialog('loading', { message: Parley.app.i18n._t('login-wait') });
+
+        Parley.authenticateUser(form.email.value, form.password.value, function (data, textStatus) {
+            console.log('User successfully logged in.');
+            Parley.app.loadUser();
+            Parley.app.dialog('hide');
+        });
+    });
+/*
+	    logout: function () {
+			console.log('Logging out');
+			Parley.currentUser.destroy();
+            Parley.app.render();
+	    },
+*/
+    Parley.vent.on('message:send', function (e) {
+        e.preventDefault();
+
+        var formdata = $('#composeForm').serializeObject();
+
+        var recipients = [], nokeyRecipients = [];
+        //var recFields = ['as_values_to', 'as_values_cc', 'as_values_bcc'];
+        var recFields = ['as_values_to'];
+        // This can be done more efficiently, probably
+        _.each(recFields, function (fName) {
+            if (!_.isEmpty(formdata[fName])) {
+                _.each(formdata[fName].split(','), function (ele, i) {
+                    var recipient = Parley.contacts.findWhere({email:ele});
+                    if (recipient)
+                        recipients.push(recipient);
+                    else if (!_.isEmpty(ele))
+                        nokeyRecipients.push({email:ele});
+                });
+            }
+        });
+
+        console.log('Sending email to: ', recipients);
+        
+        if (nokeyRecipients.length > 0) {
+            console.log('We have no keys for these recipients: ', nokeyRecipients);
+            Parley.app.dialog('setup nokey', {emails:nokeyRecipients});
+        } else { }
+
+        if (!_.isEmpty(recipients)) Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, status, jqXHR) {
+            console.log( JSON.stringify(data) );
+        });
+    });
 
 /*
-        if (userinfo.length > 0) {
-            userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
+        inviteAction: function (e) {
+            var email,selected = this.$('.selector a.clicked').parent();
+            selected.each(function (i,e) {
+                var $e = $(e);
+                email = $e.find('.email').text();
+                Parley.invite(email, function () {});
+            });
+        },
+        retryInbox: function (e) {
+            Parley.app.loadUser();
+        },
+        newContact: function () {
+            this.setPage('newcontact');
+        },
+        addContact: function (e) {
+            e.preventDefault();
 
-            // Go through and parse the info as needed
-            var UID = Parley.parseUID(userinfo.uids[0]);
+            // Form validation should go here
+            var formdata = $(document.forms.newcontact).serializeObject();
+            var newContact = new Parley.Contact(formdata);
+            //Parley.vent.trigger('contact:userinfo', newContact);
+            this.setDialog('loading', {message:'saving-contacts'});
 
-            contact.set(_.extend({email: UID.email, name: UID.name}, userinfo));
-
-            if (UID.email == Parley.currentUser.get('email'))
-                Parley.currentUser.set(_.extend({email: UID.email, name: UID.name}, userinfo));
+            Parley.storeKeyring(_.bind(function(){
+                this.setDialog('contacts');
+            }, this));
         }
-
-        Parley.contacts.add(contact);
 */
-    });
-
-    Parley.vent.on('message:send', function (message, callback) {
-        if (_.isFunction(callback)) callback();
-    });
-
-    Parley.vent.on('keyring:clear', function () {
-console.log('keyring:clear');
-        window.PYclearKeys();
-console.log('keyring:clear DONE');
-    });
-    Parley.vent.on('keyring:gen', function () {
-console.log('keyring:gen');
-        window.PYgenKey();
-console.log('keyring:gen DONE');
-    });
-    Parley.vent.on('keyring:store', function () {
-console.log('keyring:store');
-        Parley.storeKeyring();
-console.log('keyring:store DONE');
-    });
     /** END VENT CODE **/
 
 	Parley.BaseView = Backbone.View.extend({
@@ -300,41 +398,35 @@ console.log('keyring:store DONE');
 	    template: Mustache.compile($('#headerTemplate').html()),
 
         events: {
-            'click #composeAction':     'compose',
-            'click #replyAction':       'reply',
-            'click #forwardAction':     'forward',
-            'click #deleteAction':      'delete',
-            'click #maliceAction':      'malice'
+            'click #composeAction': function (e) {
+                console.log('Composing new message.');
+                Parley.app.dialog('compose');
+            },
+            'click #replyAction': function (e) {
+                var sel = Parley.inbox.findWhere({selected:true});
+                console.log('Replying to: ', sel);
+
+                Parley.app.dialog('compose', reply_to.toJSON());
+            },
+            'click #forwardAction': function (e) {
+                var sel = Parley.inbox.findWhere({selected:true});
+                console.log('Forwarding: ', sel);
+            },
+            'click #deleteAction': function (e) {
+                var sel = Parley.inbox.where({selected:true});
+                console.log('Deleting: ', sel);
+
+                Parley.vent.trigger('message:delete', sel);
+            },
+            'click #maliceAction': function (e) {
+                console.log('Malice detected in: ', Parley.inbox.where({selected:true}));
+            }
         },
 
         render: function () {
             this.$el.html(this.template());
 
             return this;
-        },
-
-        compose: function (e) {
-            console.log('Composing new message.');
-            Parley.app.dialog('compose');
-        },
-        reply: function (e) {
-            var sel = Parley.inbox.findWhere({selected:true});
-            console.log('Replying to: ', sel);
-
-            Parley.app.dialog('compose', reply_to.toJSON());
-        },
-        forward: function (e) {
-            var sel = Parley.inbox.findWhere({selected:true});
-            console.log('Forwarding: ', sel);
-        },
-        "delete": function (e) {
-            var sel = Parley.inbox.where({selected:true});
-            console.log('Deleting: ', sel);
-
-            Parley.vent.trigger('message:delete', sel);
-        },
-        malice: function (e) {
-            console.log('Malice detected in: ', Parley.inbox.where({selected:true}));
         }
     });
 
@@ -346,23 +438,11 @@ console.log('keyring:store DONE');
         but for now, it's like this...
         **/
         events: {
-			'click #emailVerify':		'emailVerify',
-            'click #loginAction':       'login',
-            'click #registerAction':    'register',
 			'click #logoutAction':		'logout',
-            'click #sendAction':        'sendAction',
             'click #inviteAction':      'inviteAction',
             'click #retryInbox':        'retryInbox',
-            'click #newContact':        'newContact',
-            'click #addContact':        'addContact',
-'click #clear': 'clearKey',
-'click #gen': 'genKey',
-'click #store': 'storeKey'
+            'keydown': 'clickSubmit'
         },
-
-clearKey: function () { Parley.vent.trigger('keyring:clear'); },
-genKey: function () { Parley.vent.trigger('keyring:gen'); },
-storeKey: function () { Parley.vent.trigger('keyring:store'); },
 
         initialize: function (options) {
             this.$el.dialog({autoOpen:false});
@@ -382,7 +462,16 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
                 {   slug: 'setup',
                     template: Mustache.compile($('#setupDialogTemplate').html()),
                     opts: { width: 600, position: ['center', 80], dialogClass: 'no-no-close', draggable: false },
-                    title: 'Welcome to Parley'
+                    title: 'Welcome to Parley',
+                    loaded: function (view) {
+                        view.$('#text_message')._t('welcome');
+                    },
+                    events: {
+                        'click #emailVerify': function (e) { Parley.vent.trigger('setup:verify', e); },
+                        'click #loginAction': function (e) { Parley.vent.trigger('setup:login', e); },
+                        'click #registerAction': function (e) { Parley.vent.trigger('setup:register', e); },
+                        'keydown': 'clickSubmit'
+                    }
                 },
                 {   slug: 'settings',
                     template: Mustache.compile($('#settingsDialogTemplate').html()),
@@ -401,7 +490,10 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
                     },
                     loaded: function (view) {
                         view.$('#contactsList').replaceWith(Parley.app.contactsList);
-                        //_.bind(view.assign(Parley.app.contactsList, '#contactsList'), this);
+                    },
+                    events: {
+                        'click #newContact': function (e) {},
+                        'click #addContact': function (e) {}
                     }
                 },
                 {   slug: 'nokey',
@@ -438,6 +530,9 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
                         view.$('#recipients input[type=text]').each(function (){
                             $(this).autoSuggest(items, _.extend({asHtmlID: this.name}, opts));
                         });
+                    },
+                    events: {
+                        'click #sendAction': function (e) { Parley.vent.trigger('message:send', e); }
                     }
                 }
             ]);
@@ -464,6 +559,8 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
                         title: this.cur.get('title')
                     }, data.opts));
                 this.$el.html(template(data));
+
+                this.delegateEvents(this.cur.get('events'));
 
                 if (_.has(data, 'loaded'))
                     data.loaded(this);
@@ -517,123 +614,8 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
             this.render();
         },
 
-	    emailVerify: function (e) {
-            e.preventDefault();
-			var form = document.forms.emailVerify;
-            if (_.isUndefined(form.email.value)) return false;
-            console.log('Verifying email address: ' + form.email.value);
-
-			Parley.requestUser(form.email.value, _.bind(function (data, textStatus) {
-                //console.log(JSON.stringify(data), textStatus, data.error);
-		    	if (_.isObject(data) && !_.has(data, 'error')) {
-                    console.log('User exists, setting up login form.');
-                    this.setPage('login', {email: form.email.value});
-		    	} else {
-                    console.log('User doesn\'t exists, showing registration form.');
-                    this.setPage('register', {email: form.email.value});
-		    	}
-		    }, this));
-	    },
-        register: function (e) {
-            e.preventDefault();
-            var form = document.forms.registerAction;
-            if (form.password_one.value != form.password_two.value) {
-                // Passwords don't match
-                console.log('Passwords don\'t match.');
-            } else {
-                this.setDialog('loading', { message: Parley.i18n('register-wait') });
-
-                Parley.registerUser(form.name.value, form.email.value, form.password_two.value, _.bind(function (data, textStatus) {
-                    console.log(JSON.stringify(data), textStatus, data.error);
-
-                    console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
-                    console.log('Registering new inbox with Context.io');
-                    
-                    Parley.registerInbox();
-
-                    Parley.app.loadUser();
-                    this.hide();
-                }, this));
-            }
-        },
-        login: function (e) {
-            e.preventDefault();
-            var form = document.forms.loginAction;
-
-            this.setDialog('loading', { message: Parley.i18n('login-wait') });
-
-            Parley.authenticateUser(form.email.value, form.password.value, _.bind( function (data, textStatus) {
-                console.log('User successfully logged in.');
-                Parley.app.loadUser();
-                this.hide();
-            }, this));
-        },    
-	    logout: function () {
-			console.log('Logging out');
-			Parley.currentUser.destroy();
-            Parley.app.render();
-	    },
-        sendAction: function (e) {
-            e.preventDefault();
-
-            var formdata = this.$('form').serializeObject();
-
-            var recipients = [], nokeyRecipients = [];
-            //var recFields = ['as_values_to', 'as_values_cc', 'as_values_bcc'];
-            var recFields = ['as_values_to'];
-            // This can be done more efficiently, probably
-            _.each(recFields, function (fName) {
-                if (!_.isEmpty(formdata[fName])) {
-                    _.each(formdata[fName].split(','), function (ele, i) {
-                        var recipient = Parley.contacts.findWhere({email:ele});
-                        if (recipient)
-                            recipients.push(recipient);
-                        else if (!_.isEmpty(ele))
-                            nokeyRecipients.push({email:ele});
-                    });
-                }
-            });
-
-            console.log('Sending email to: ', recipients);
-            
-            if (nokeyRecipients.length > 0) {
-                console.log('We have no keys for these recipients: ', nokeyRecipients);
-                Parley.app.dialog('nokey', {emails:nokeyRecipients});
-            } else { }
-
-            if (!_.isEmpty(recipients)) Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, status, jqXHR) {
-                console.log( JSON.stringify(data) );
-            });
-        },
-        inviteAction: function (e) {
-            var email,selected = this.$('.selector a.clicked').parent();
-            selected.each(function (i,e) {
-                var $e = $(e);
-                email = $e.find('.email').text();
-                Parley.invite(email, function () {});
-            });
-        },
-        retryInbox: function (e) {
-            /*
-            This is another trace of poor event management. Must get this cleaned up.
-            */
-            Parley.app.loadUser();
-        },
-        newContact: function () {
-            this.setPage('newcontact');
-        },
-        addContact: function (e) {
-            e.preventDefault();
-
-            // Form validation should go here
-            var formdata = $(document.forms.newcontact).serializeObject();
-            var newContact = new Parley.Contact(formdata);
-            //Parley.vent.trigger('contact:userinfo', newContact);
-            this.setDialog('loading', {message:'saving-contacts'});
-
-            Parley.storeKeyring(_.bind(function(){
-                this.setDialog('contacts');
-            }, this));
+        clickSubmit: function (e) {
+            if (e.keyCode == 13) { this.$('input[type=submit],button:visible').click(); }
         }
     });
 
@@ -650,6 +632,7 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
 
 	    initialize: function () {
 			console.log('Initializing Parley.');
+            this.i18n = new Parley.i18n;
 
             this.header = new HeaderView;
             this._dialog = new DialogView;
@@ -686,21 +669,21 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
             console.log(e.target);
             $(e.target).removeClass('hidden');
         },
-        dialog: function () {
-            if (typeof arguments[0] == 'undefined') {
+        dialog: function (opts,data) {
+            if (typeof opts == 'undefined') {
                 // With no arguments, returns dialog data as object
                 return this._dialog.getJSON();
-            } else if (_.isObject(arguments[0])) {
+            } else if (_.isObject(opts)) {
                 // Currently does nothing (always pass a string as first arg)
                 // Will eventually support passing an object, I'll get to it in a sec
-            } else if (_.isString(arguments[0])) {
-                var actions = arguments[0].split(' ');
+            } else if (_.isString(opts)) {
+                var actions = opts.split(' ');
                 switch (actions[0]) {
                     case 'hide':
                         this._dialog.hide();
                         break;
                     default:
-                        if (this._dialog.setDialog(actions[0], arguments[1])) {
+                        if (this._dialog.setDialog(actions[0], data)) {
                             this._dialog.setPage(actions[1]);
                         }
                         break;
@@ -722,15 +705,18 @@ storeKey: function () { Parley.vent.trigger('keyring:store'); },
 			console.log('Setting up main view with logged in user info');
             var opts = {parse:true};
 
+            Parley.vent.trigger('contacts:sync');
+
+/*
             console.log('Populating contacts from keychain');
             for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
                 keychain.push(list[i]);
             }
             Parley.contacts.set(keychain, {parse:true});
-
+*/
             Parley.requestInbox(_.bind(function (data, textStatus) {
                 if (data.error == 'FORBIDDEN') {
-                    this.dialog('loading', {message: Parley.i18n('inbox-forbidden'), buttons: [{id:'retryInbox',text:'Retry'},{id:'cancelLoad',text:'Cancel'}]});
+                    this.dialog('loading', {message: Parley.app.i18n._t('inbox-forbidden'), buttons: [{id:'retryInbox',text:'Retry'},{id:'cancelLoad',text:'Cancel'}]});
                     Parley.registerInbox();
                     return false;
                 }
