@@ -152,6 +152,18 @@ def user(email):
     abort(400)
     
 
+@app.route("/purchase/<email>", methods=['POST'])
+def verify(email):
+  if request.form['user'] == 'PARLEY.CO' and compare_hashes(request.form["sig"], config["parley_website_key"]):
+    user = setUser(email,
+        "account_type":2,
+        "customer_id":request.form["customer_id"]
+        )
+    return jsonify({'email':user['email']}), 201
+  else:
+    abort(403)
+
+
 @app.route("/verify/<email>", methods=['POST'])
 def verify(email):
   user = getUser(email)
