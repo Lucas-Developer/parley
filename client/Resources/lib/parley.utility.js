@@ -73,7 +73,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   window.PYsetup(
     window.Ti.Filesystem.getResourcesDirectory().toString(),
-    window.Ti.Filesystem.getApplicationDataDirectory().toString()
+    window.Ti.Filesystem.getApplicationDataDirectory().toString(),
+    window.Ti.Filesystem.getUserDirectory().toString()
   );
 
   //This is just a shim in case Parley.Contact isn't defined elsewhere

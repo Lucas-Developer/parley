@@ -4,8 +4,6 @@
 #but it requires xcode compiler tools. we'll need to figure out a
 #better way at some point
 
-cd gpg
-
 TARGET_DIR=$(cd osx; pwd)
 
 cd gnupg-1.4.13
