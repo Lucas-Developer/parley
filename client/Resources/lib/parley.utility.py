@@ -15,17 +15,22 @@ except ImportError:
   import simplejson as json
 
 
-def PYsetup(resource_dir,appdata_dir):
+def PYsetup(resource_dir,appdata_dir,home_dir):
   global gpg
+
+  if 'Darwin' in platform.platform():
+    appdata_dir = home_dir
 
   #copy Resources/gpg to application data dir
   gpg_dir = os.path.join(resource_dir,'gpg')
   parley_dir = os.path.join(appdata_dir,'parley_gpg')
+
   if not os.path.isdir(parley_dir):
     shutil.copytree(gpg_dir,parley_dir)
+
   os.chdir(parley_dir)
 
-  def platform_path(): #from ~/.parley
+  def platform_path(): #from parley_dir
     if 'Darwin' in platform.platform():
       return 'osx/bin/gpg'
     elif 'Windows' in platform.platform():
@@ -33,13 +38,13 @@ def PYsetup(resource_dir,appdata_dir):
     elif 'Linux' in platform.platform():
       return 'linux/bin/gpg'
 
-  def install_path(): # from ~/.parley
+  def install_path(): # from parley_dir
     if 'Darwin' in platform.platform():
-      return 'osx-install.sh'
+      return './osx-install.sh'
     elif 'Windows' in platform.platform():
       return None
     elif 'Linux' in platform.platform():
-      return 'linux-install.sh'
+      return './linux-install.sh'
 
 
   gpg_binary = platform_path()

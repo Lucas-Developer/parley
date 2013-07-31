@@ -66,13 +66,21 @@
     **/
     Parley.vent = _.extend({}, Backbone.Events);
 
+    Parley.vent.on('contact:sync', function (e) {
+        console.log('Populating contacts from keychain');
+        for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
+            keychain.push(list[i]);
+        }
+        Parley.contacts.set(keychain, {parse:true});
+    });
+
     Parley.vent.on('contact:userinfo', function (contact) {
         console.log('VENT: contact:userinfo');
 
         // Gotta have either an email or a fingerprint.
         // Will just fail silently if it gets neither
         var email = contact.get('email');
-        
+
         var planA = function(userinfo) {
             if (!_(userinfo).has('public_key')) {
                 planB();
@@ -84,7 +92,7 @@
             }
         }
         var planB = function() {
-            var fingerprint = Parley.requestPublicKey(email) || contact.get('fingerprint');
+            var fingerprint = contact.get('fingerprint') || Parley.requestPublicKey(email);
             var userinfo = Parley.AFIS(fingerprint);
 
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
@@ -105,6 +113,7 @@
     Parley.vent.on('setup:verify', function (e) {
         e.preventDefault();
         var form = document.forms.emailVerify;
+
         if (_.isUndefined(form.email.value)) return false;
         console.log('Verifying email address: ' + form.email.value);
 
@@ -117,49 +126,88 @@
                 Parley.app.dialog('setup register', {email: form.email.value});
             }
         });
+
     });
     Parley.vent.on('setup:register', function (e) {
         e.preventDefault();
         var form = document.forms.registerAction;
+
         if (form.password_one.value != form.password_two.value) {
             // Passwords don't match
             console.log('Passwords don\'t match.');
         } else {
             console.log('About to register user: ' + form.email.value);
-            Parley.app.dialog('loading', { message: Parley.app.i18n._t('register-wait') });
+
+            Parley.app.dialog('info register-wait', { message: Parley.app.i18n._t('register-wait') });
+            Parley.app.dialog('hide setup');
 
             Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
                 console.log(JSON.stringify(data), textStatus, data.error);
 
-                console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
-                console.log('Registering new inbox with Context.io');
+                if (textStatus != 'error') {
+                    console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
+                    console.log('Registering new inbox with Context.io');
                 
-                Parley.registerInbox();
+                    Parley.registerInbox();
 
-                Parley.app.loadUser();
-                Parley.app.dialog('hide');
+                    Parley.app.loadUser();
+                    Parley.app.dialog('hide info register-wait');
+                } else {
+                    console.log(textStatus);
+                }
             });
         }
     });
     Parley.vent.on('setup:login', function (e) {
         e.preventDefault();
-        var form = document.forms.loginAction;
+        var form = document.forms.loginAction,
+            email = form.email.value,
+            password = form.password.value;
 
-        Parley.app.dialog('loading', { message: Parley.app.i18n._t('login-wait') });
+        Parley.app.dialog('hide setup');
+        Parley.app.dialog('info login-wait', { message: Parley.app.i18n._t('login-wait') });
 
-        Parley.authenticateUser(form.email.value, form.password.value, function (data, textStatus) {
+        Parley.authenticateUser(email, password, function (data, textStatus) {
             console.log('User successfully logged in.');
+            Parley.app.dialog('hide info login-wait');
             Parley.app.loadUser();
-            Parley.app.dialog('hide');
         });
     });
+
+    Parley.vent.on('message:sync', function (e) {
+        console.log('VENT: message:sync');
+        Parley.app.dialog('info inbox-loading', { message: 'Loading inbox' });
+        Parley.requestInbox(function (data, textStatus) {
+            if (data.error == 'FORBIDDEN') {
+                console.log('error, forbidden inbox');
 /*
-	    logout: function () {
-			console.log('Logging out');
-			Parley.currentUser.destroy();
-            Parley.app.render();
-	    },
+                Parley.app.dialog('loading', {
+                    message: Parley.app.i18n._t('inbox-forbidden'),
+                    buttons: [
+                        {id:'retryInbox',text:'Retry'},
+                        {id:'cancelLoad',text:'Cancel'}
+                    ],
+                    events: {
+                        'click #retryInbox': function(e) { Parley.registerInbox(); Parley.vent.trigger('message:sync'); }
+                    }
+                });
 */
+                //Parley.registerInbox();
+                return false;
+            } else {
+                console.log('Inbox loaded', data.messages);
+                Parley.app.dialog('hide info inbox-loading');
+
+                Parley.inbox = Parley.inbox || new MessageList;
+                if (_.has(data, 'messages')) {
+                    for (var i = 0, t = data.messages.length; i<t; i++) {
+                        Parley.inbox.add(data.messages[i], {parse:true});
+                    }
+                }
+            }
+        });
+    });
+
     Parley.vent.on('message:send', function (e) {
         e.preventDefault();
 
@@ -183,14 +231,29 @@
 
         console.log('Sending email to: ', recipients);
         
+        if (!_.isEmpty(recipients)) {
+            Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, textStatus) {
+                if (textStatus != 'error') {
+                    console.log('Message successfully sent.');
+                    console.log( JSON.stringify(data) );
+                    Parley.app.dialog('hide');
+                } else {
+                    // Error
+                    alert('We encountered an error sending your email.');
+                    return false;
+                }
+            });
+        } else {
+            alert('You have not entered any valid email addresses! Recipients must have a PGP key associated with their email address.');
+            return false;
+        }
+
+        /*
         if (nokeyRecipients.length > 0) {
             console.log('We have no keys for these recipients: ', nokeyRecipients);
             Parley.app.dialog('setup nokey', {emails:nokeyRecipients});
-        } else { }
-
-        if (!_.isEmpty(recipients)) Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, status, jqXHR) {
-            console.log( JSON.stringify(data) );
-        });
+        }
+        */
     });
 
 /*
@@ -251,7 +314,7 @@
                 last_received: this.attributes.last_received + 1,
                 count: this.attributes.count + 1
             });
-            this.get('messages').push(message);
+            //this.get('messages').push(message);
 
             return this;
         }
@@ -304,10 +367,12 @@
 
             // If it's not encrypted, we can just populate the decrypted message array
             this.decryptedMessage = this.decryptedMessage || [];
+/*
             _.each(data.body, function (v,k) {
                 if (v.type == 'text/plain' && !!~v.content.indexOf('-----BEGIN PGP MESSAGE-----'))
                     this.decryptedMessage.push(v.content);
             }, this);
+*/
         },
         readMessage: function () {
             if (this.decryptedMessage.length > 0) {
@@ -316,10 +381,10 @@
             } else {
                 // This needs some error handling, must be bird-ass tight
                 console.log('Decrypting message.');
-                var sender = this.getSender();
+                var sender = this.get('from');
                 this.decryptedMessage = this.decryptedMessage || [];
                 _.each(this.get('body'), _.bind(function (v,k) {
-                    this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.getSender()));
+                    this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from')));
                 }, this));
                 return this.decryptedMessage;
             }
@@ -438,15 +503,10 @@
         but for now, it's like this...
         **/
         events: {
-			'click #logoutAction':		'logout',
-            'click #inviteAction':      'inviteAction',
-            'click #retryInbox':        'retryInbox',
             'keydown': 'clickSubmit'
         },
 
         initialize: function (options) {
-            this.$el.dialog({autoOpen:false});
-
             /*
             Now, there is certainly a better way to do this but here's how I do it.
             For values that need to be recalculated every render, add init()
@@ -455,13 +515,15 @@
             */
             this.dialogs = new Backbone.Collection([
                 {   slug: 'loading',
+                    el: '#dialog_loading',
                     template: Mustache.compile($('#loadingDialogTemplate').html()),
                     opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
                     title: 'Loading'
                 },
                 {   slug: 'setup',
+                    el: '#dialog_setup',
                     template: Mustache.compile($('#setupDialogTemplate').html()),
-                    opts: { width: 600, position: ['center', 80], dialogClass: 'no-no-close', draggable: false },
+                    opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
                     title: 'Welcome to Parley',
                     loaded: function (view) {
                         view.$('#text_message')._t('welcome');
@@ -474,6 +536,7 @@
                     }
                 },
                 {   slug: 'settings',
+                    el: '#dialog_settings',
                     template: Mustache.compile($('#settingsDialogTemplate').html()),
                     opts: { resizable: false, width: 550 },
                     title: 'Parley Settings',
@@ -482,6 +545,7 @@
                     }
                 },
                 {   slug: 'contacts',
+                    el: '#dialog_contacts',
                     template: Mustache.compile($('#contactsDialogTemplate').html()),
                     opts: { minWidth: 600, maxWidth: 1000 },
                     title: 'Contacts',
@@ -497,11 +561,16 @@
                     }
                 },
                 {   slug: 'nokey',
+                    el: '#dialog_nokey',
                     template: Mustache.compile($('#nokeyDialogTemplate').html()),
                     opts: {},
-                    title: 'Public PGP keys not found.'
+                    title: 'Public PGP keys not found.',
+                    events: {
+                        'click #inviteAction': function (e) {}
+                    }
                 },
                 {   slug: 'compose',
+                    el: '#dialog_compose',
                     template: Mustache.compile($('#composeDialogTemplate').html()),
                     opts: {},
                     title: 'Compose',
@@ -538,52 +607,91 @@
             ]);
         },
 
-        render: function () {
-            console.log('Rendering dialog box');
-            var args = _.isObject(arguments[0]) ? arguments[0] : {};
-            var isOpen = this.$el.dialog('isOpen');
-            if (isOpen && !this.cur) {
-                this.$el.dialog('close');
-            } else if (_.isObject(this.cur)) {
-                var template = this.cur.get('template');
-                var data = this.cur.toJSON();
+        render: function (options, slug) {
+            console.log('Rendering dialog box.'); 
 
-                data = _.extend(args, data);
-                if (_.has(data, 'init'))
-                    data.init(this);
-
-                this.$el.dialog(_.extend({
-                        autoOpen: true,
-                        dialogClass: '',
-                        draggable: true,
-                        title: this.cur.get('title')
-                    }, data.opts));
-                this.$el.html(template(data));
-
-                this.delegateEvents(this.cur.get('events'));
-
-                if (_.has(data, 'loaded'))
-                    data.loaded(this);
+            if (slug) {
+                var cur = this.dialogs.findWhere({slug:slug});
+            } else {
+                var cur = this.cur;
             }
+            var template = cur.get('template');
+
+            var data = cur.get('data') || {};
+            _.extend(data, options);
+            cur.set('data', data);
+
+            if (_.has(cur, 'init')) cur.init(); 
+
+            var $el = cur.get('$dialog') || this.$('#dialog_' + cur.get('slug'));
+
+            if ($el.length == 0) {
+                var $el = $('<div>').attr('id','dialog_' + cur.get('slug')).html(template(data));
+                $('body').append($el);
+                //this.$el.append($el);
+            } else {
+                $el.html(template(data));
+            }
+
+            this.setElement($el);
+
+            var events = cur.get('events');
+            this.delegateEvents(events);
+
+            if (_.has(cur, 'loaded')) cur.loaded(this);
+
+            var dialog = cur.get('$dialog') || $(cur.get('el'));
+            dialog.dialog( _.extend({
+                autoOpen: true,
+                dialogClass: '',
+                draggable: true,
+                title: cur.get('title')
+            }, cur.get('opts') ));
+            cur.set('$dialog', dialog);
+
             return this;
         },
 
         setDialog: function (i, options) {
-            if (_.isNumber(i) && (this.cur = this.dialogs.at(i) || undefined)) {
-                this.render(options);
-                this.setPage();
-                return true;
-            } else if (_.isString(i) && ( this.cur = this.dialogs.findWhere({slug:i}) || undefined )) {
-                this.render(options);
-                this.setPage();
-                return true;
+            console.log('Setting dialog.');
+
+            // Either grab an existing dialog with slug = i,
+            // or make one from scratch (for a modal dialog)
+            if (_.isString(i)) {
+                var d = this.dialogs.findWhere({slug: i});
+                if (!d) {
+                    if (_.has(options, 'modal')) {
+                        var newDialog = {
+                            slug: i,
+                            modal: true,
+                            template: Mustache.compile($('#blankDialogTemplate').html()),
+                            el: '#dialog_' + i,
+                            data: options
+                        };
+                        this.dialogs.add(newDialog);
+                        this.cur = this.dialogs.findWhere({slug:i});
+                    } else {
+                        // Error, no 'this.cur'
+                        return false;
+                    }
+                } else {
+                    this.cur = d;
+                }
+            } else if (_.isNumber(i)) {
+                this.cur = this.dialogs.at(i);
             } else {
                 return false;
             }
+
+            return true;
         },
 
         setPage: function (i, options) {
-            var cur_page, pages = this.$('.page');
+            console.log('Setting page.');
+            //var cur = _.extend(this.cur, options);
+            var cur = this.cur;
+
+            var cur_page, pages = $(cur.get('el')).find('.page');
             if (_.isNumber(i) && (cur_page = pages.get(i) || pages.first())) {
                 pages.removeClass('page-active');
                 cur_page.addClass('page-active');
@@ -597,25 +705,44 @@
             if (pages.filter('.page-active').length == 0) {
                 pages.first().addClass('page-active');
             }
+/*
             if (_.isObject(options)) {
                 for (var val in options) {
                     cur_page.find('[name='+val+']').val(options[val]);
                 }
             }
+*/
+
             this.$(':input').first().focus();
         },
 
-        show: function () {
-            this.cur = this.cur || this.dialogs.at(0);
-            this.render();
+        show: function (slug) {
+            if (this.cur = this.dialogs.findWhere({slug:slug}) || this.dialogs.at(0)) {
+                $(this.cur.el).dialog();
+            } else {
+                return false;
+            }
         },
-        hide: function () {
-            this.cur = undefined;
-            this.render();
+        hide: function (slug) {
+            var dialog = this.dialogs.findWhere({slug:slug});
+            if (dialog) {
+                $(dialog.get('el')).dialog('close');
+
+                if (dialog.get('modal'))
+                    dialog.destroy();
+            } else {
+                return false;
+            }
         },
 
         clickSubmit: function (e) {
-            if (e.keyCode == 13) { this.$('input[type=submit],button:visible').click(); }
+            switch (e.keyCode) {
+                case 13:
+                    this.$('input[type=submit],button:visible').click();
+                case 27:
+                    e.preventDefault();
+                    break;
+            }
         }
     });
 
@@ -644,10 +771,16 @@
 			this.listenTo(Parley.contacts, 'add', this.addContact);
             this.listenTo(Parley.inbox, 'change:selected', this.messageSelectedHandler);
 
-			if (!Parley.currentUser) {
-		    	console.log('No user logged in. Showing setup dialog.');
-                this.dialog('setup');
-			}
+            (function (user,app) {
+                if (!user) {
+		    	    console.log('No user logged in. Showing setup dialog.');
+                    app.dialog('setup');
+			    } else {
+                    console.log('User logged in: ' + user);
+                    Parley.currentUser = new Parley.Contact(JSON.parse(user));
+                    app.dialog('setup login', Parley.currentUser.toJSON());
+                }
+            })(localStorage.getItem('currentUser'),this);
 
 			this.render();
 	    },
@@ -669,22 +802,53 @@
             console.log(e.target);
             $(e.target).removeClass('hidden');
         },
+        /**
+        This function controls the dialog boxes.
+        The syntax is like:
+
+            Parley.app.dialog("(show|hide) [dialog slug] [page name]", data);
+            
+        If you omit the first word, it assumes 'show'
+            Parley.app.dialog("[dialog slug]", data);
+
+        If you pass it 'info' for the dialog slug, it will create a brand new
+        separate dialog with [page name] as the slug. Use this for "loading" windows
+        or modal dialogs.
+        Make sure you pass a button:
+            button: [{id:'buttonId',text:'click me'}, etc.]
+        and an event:
+            event: [{"click #buttonId":function(e){ Parley.vent.trigger('button:clicked'); }}, etc.]
+        as members of 'data'.
+        **/
         dialog: function (opts,data) {
-            if (typeof opts == 'undefined') {
-                // With no arguments, returns dialog data as object
-                return this._dialog.getJSON();
-            } else if (_.isObject(opts)) {
-                // Currently does nothing (always pass a string as first arg)
-                // Will eventually support passing an object, I'll get to it in a sec
-            } else if (_.isString(opts)) {
-                var actions = opts.split(' ');
-                switch (actions[0]) {
+            if (_.isString(opts)) {
+                var _a = opts.split(' ');
+                switch (_a[0]) {
                     case 'hide':
-                        this._dialog.hide();
+                        var slug = _a[1],
+                            page = _a[2];
+                        if (slug == 'info') slug = page;
+
+                        this._dialog.hide(slug);
                         break;
+                    case 'show':
+                        var slug = _a[1],
+                            page = _a[2];
                     default:
-                        if (this._dialog.setDialog(actions[0], data)) {
-                            this._dialog.setPage(actions[1]);
+                        var slug = slug || _a[0],
+                            page = page || _a[1];
+                        if (slug == 'info') {
+                            if ( this._dialog.setDialog( page, {modal:true} ) ) 
+                                this._dialog.render( data, page );
+                        } else {
+                            if (this.curDialog == slug) {
+                                this._dialog.render( data, slug );
+                                this._dialog.setPage(page,data);
+                            } else if (this._dialog.setDialog(slug, data)) {
+                                this.curDialog = slug;
+                                this._dialog.render( data, slug )
+                                this._dialog.setPage(page,data);
+                            }
                         }
                         break;
                 }
@@ -703,35 +867,11 @@
 
 	    loadUser: function () {
 			console.log('Setting up main view with logged in user info');
-            var opts = {parse:true};
 
-            Parley.vent.trigger('contacts:sync');
+            localStorage.setItem('currentUser', JSON.stringify(Parley.currentUser));
 
-/*
-            console.log('Populating contacts from keychain');
-            for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
-                keychain.push(list[i]);
-            }
-            Parley.contacts.set(keychain, {parse:true});
-*/
-            Parley.requestInbox(_.bind(function (data, textStatus) {
-                if (data.error == 'FORBIDDEN') {
-                    this.dialog('loading', {message: Parley.app.i18n._t('inbox-forbidden'), buttons: [{id:'retryInbox',text:'Retry'},{id:'cancelLoad',text:'Cancel'}]});
-                    Parley.registerInbox();
-                    return false;
-                }
-
-                console.log('Inbox loaded', data.messages);
-
-                Parley.inbox = Parley.inbox || new MessageList({}, opts);
-                if (_.has(data, 'messages')) {
-                    for (var i = 0, t = data.messages.length; i<t; i++) {
-                        Parley.inbox.add(data.messages[i], opts);
-                    }
-                }
-
-                this.dialog('setup admin');
-            }, this));
+            Parley.vent.trigger('contact:sync');
+            Parley.vent.trigger('message:sync');
 
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.header.$('.email').text(Parley.currentUser.get('email'));
