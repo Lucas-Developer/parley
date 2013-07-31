@@ -321,9 +321,14 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* Decrypt a message from sender.
   Accepts the encrypted message body and sender as either an email address or Contact object
   parseLinks is an optional boolean for whether or not to convert URLs to HTML anchors
+  insertBRs is an optional boolean for replacing carriage returns with HTML line breaks
+  quote is an optional boolean for returning the message in quoted form (for reply box)
   */
-  Parley.decryptAndVerify = function(encryptedMessage, sender, parseLinks) {
+  Parley.decryptAndVerify = function(encryptedMessage, sender, parseLinks, insertBRs, quote) {
     parseLinks = _.isUndefined(parseLinks); //default true
+    insertBRs = _.isUndefined(insertBRs) ? parseLinks : insertBRs; //default same as parseLinks
+    quote = _.isUndefined(quote) ? !parseLinks : quote; //default opposite of parseLinks
+
     var keyid, email;
     if (_.isString(sender)) {
       email = sender;
@@ -337,7 +342,18 @@ are massaged to fit. The arguments to finished on ajax error look like:
       throw "Error: Sender is illegible."
     }
     var decryptedMessage = window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
-    return (window.linkify && parseLinks) ? linkify(decryptedMessage) : decryptedMessage;
+    if (quote) decryptedMessage = Parley.quote(decryptedMessage);
+    if (window.linkify && parseLinks) decryptedMessage = linkify(decryptedMessage);
+    if (insertBRs) decryptedMessage = Parley.insertBRs(decryptedMessage);
+    return decryptedMessage;
+  }
+
+  Parley.quote = function(message) {
+    return '\r\n\r\n' + message.replace(/\r?\n/g,'\r\n> ');
+  }
+
+  Parley.insertBRs = function(message) {
+    return message.replace(/\r?\n/g,'<br/>');
   }
   
   /* Send Parley invitation from current user to email address
