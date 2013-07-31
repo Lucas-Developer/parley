@@ -349,7 +349,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   }
 
   Parley.quote = function(message) {
-    return '\r\n\r\n' + message.replace(/\r?\n/g,'\r\n> ');
+    return '\r\n\r\n\r\n> ' + message.replace(/\r?\n/g,'\r\n> ');
   }
 
   Parley.insertBRs = function(message) {
