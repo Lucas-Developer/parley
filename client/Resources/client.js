@@ -798,7 +798,7 @@ console.log('hello');
                     Parley.currentUser = new Parley.Contact(JSON.parse(user));
                     app.dialog('setup login', _.extend({}, Parley.currentUser.toJSON(), { message: app.i18n._t('login') }));
                 }
-            })(false /*localStorage.getItem('currentUser')*/,this);
+            })(localStorage.getItem('currentUser'),this);
 
 			this.render();
 	    },
@@ -886,7 +886,7 @@ console.log('hello');
 	    loadUser: function () {
 			console.log('Setting up main view with logged in user info');
 
-            //localStorage.setItem('currentUser', JSON.stringify(Parley.currentUser));
+            localStorage.setItem('currentUser', JSON.stringify(Parley.currentUser));
 
             Parley.vent.trigger('contact:sync');
             Parley.vent.trigger('message:sync');
