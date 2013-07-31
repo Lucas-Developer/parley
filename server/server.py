@@ -69,7 +69,7 @@ def verifySignature(url, method, formData, secret):
       key=secret,
       msg=method+'|'+url+'?'+url_string,
       digestmod=hashlib.sha256).digest()
-  new_sig = base64.b64encode(new_sig)
+  new_sig = base64.b64encode(new_sig).strip('=')
   return compare_hashes(old_sig, new_sig) and t < 30
 
 def getUser(email):
@@ -257,7 +257,7 @@ Black Chair Studios, Inc.
 www.blackchair.net
             """ % (to, token)}
       response = HTTP.post(
-          "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+          "https://api.mailgun.net/v2/parley.co/messages",
           auth=("api", MAILGUN_API_KEY),
           data=message)
       response_dict = response.json()
@@ -328,7 +328,7 @@ Talk soon,
 
   #return jsonify(paidInvitesRemaining=paid_invites), 200
   response = HTTP.post(
-      "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+      "https://api.mailgun.net/v2/parley.co/messages",
       auth=("api", MAILGUN_API_KEY),
       data=message)
   response_dict = response.json()
@@ -345,7 +345,7 @@ def smtp_send():
     message = json.loads(request.form['message'])
     message['from'] = "%s <%s>" % (user["name"], user["email"])
     response = HTTP.post(
-        "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+        "https://api.mailgun.net/v2/parley.co/messages",
         auth=("api", MAILGUN_API_KEY),
         data=message)
     response_dict = response.json()
@@ -367,7 +367,7 @@ def imap_connect(email):
         key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+time,
         digestmod=hashlib.sha256).digest()
-    sig = base64.b64encode(sig)
+    sig = base64.b64encode(sig).strip('=')
     resp = context_io.post_connect_token(
         callback_url="%s/imap/new/%s/%s/%s" % (BASE_URL, email, time, sig),
         email=email
@@ -385,7 +385,7 @@ def imap_new(email, timestamp, sig):
         key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+timestamp,
         digestmod=hashlib.sha256).digest()
-  new_sig = base64.b64encode(new_sig)
+  new_sig = base64.b64encode(new_sig).strip('=')
   if compare_hashes(sig, new_sig) and t < 30*60:
     params = {'token':request.args['contextio_token']}
     token = contextio.ConnectToken(context_io,params)
