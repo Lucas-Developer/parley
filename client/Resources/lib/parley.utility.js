@@ -320,8 +320,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
   
   /* Decrypt a message from sender.
   Accepts the encrypted message body and sender as either an email address or Contact object
+  parseLinks is an optional boolean for whether or not to convert URLs to HTML anchors
   */
-  Parley.decryptAndVerify = function(encryptedMessage, sender) {
+  Parley.decryptAndVerify = function(encryptedMessage, sender, parseLinks) {
+    parseLinks = _.isUndefined(parseLinks); //default true
     var keyid, email;
     if (_.isString(sender)) {
       email = sender;
@@ -335,7 +337,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       throw "Error: Sender is illegible."
     }
     var decryptedMessage = window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
-    return window.linkify ? linkify(decryptedMessage) : decryptedMessage;
+    return (window.linkify && parseLinks) ? linkify(decryptedMessage) : decryptedMessage;
   }
   
   /* Send Parley invitation from current user to email address

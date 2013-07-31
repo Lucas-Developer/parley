@@ -385,7 +385,9 @@
             }, this);
 */
         },
-        readMessage: function () {
+        readMessage: function (parseLinks) {
+            //***: Not sure why decryptedMessage should be an array; there will only be one per Message?
+            parseLinks = _.isUndefined(parseLinks); //default is true
             if (this.decryptedMessage.length > 0) {
                 console.log('Reading message from memory.');
                 return this.decryptedMessage;
@@ -395,7 +397,7 @@
                 var sender = this.get('from');
                 this.decryptedMessage = this.decryptedMessage || [];
                 _.each(this.get('body'), _.bind(function (v,k) {
-                    this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from')));
+                    this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from'), parseLinks));
                 }, this));
                 return this.decryptedMessage;
             }
@@ -457,7 +459,13 @@
 	    },
 
         openCompose: function () {
-            Parley.app.dialog('compose', this.model.toJSON());
+            Parley.app.dialog(
+              'compose',
+              _.extend(
+                this.model.toJSON(),
+                {'plainText':this.model.readMessage(false)}
+              )
+            );
         }
     });
 
