@@ -398,11 +398,11 @@
 
             if (this.decryptedMessage.length > 0) {
                 console.log('Reading message from memory.');
-                var msg = this.decryptedMessage;
+                var msg = this.decryptedMessage[0];
                 if (quote) msg = Parley.quote(msg);
-                if (linkify && parseLinks) msg = linkify(msg);
+                if (window.linkify && parseLinks) msg = linkify(msg);
                 if (insertBRs) msg = Parley.insertBRs(msg);
-                return msg;
+                return [msg];
             } else {
                 // This needs some error handling, must be bird-ass tight
                 console.log('Decrypting message.');
@@ -411,11 +411,11 @@
                 _.each(this.get('body'), _.bind(function (v,k) {
                     this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from')));
                 }, this));
-                var msg = this.decryptedMessage;
+                var msg = this.decryptedMessage[0];
                 if (quote) msg = Parley.quote(msg);
-                if (linkify && parseLinks) msg = linkify(msg);
+                if (window.linkify && parseLinks) msg = linkify(msg);
                 if (insertBRs) msg = Parley.insertBRs(msg);
-                return msg;
+                return [msg];
             }
         },
         toggleSelect: function () {
