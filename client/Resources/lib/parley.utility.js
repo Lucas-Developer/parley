@@ -129,7 +129,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
     passwords.local = Parley.pbkdf2(clearTextPassword);
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
-    window.PYgenKey(); //this is super slow
     $.ajax({
       type:'POST',
       url:Parley.BASE_URL+'/u/'+email,
@@ -139,7 +138,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
         'public_key':window.PYgetPublicKey(),
         'keyring':window.PYgetEncryptedKeyring()
       },
-      success:finished,
+      success: function(a,b,c) {
+                 window.PYgenKey(); //this is super slow
+                 finished(a,b,c);
+               },
       error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
       dataType:'json'
     });
