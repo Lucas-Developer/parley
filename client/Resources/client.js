@@ -81,7 +81,6 @@
         // Will just fail silently if it gets neither
         var email = contact.get('email');
 
-console.log( JSON.stringify(contact) );
         var planA = function(userinfo) {
             if (!_(userinfo).has('public_key')) {
                 planB();
@@ -174,15 +173,10 @@ console.log( JSON.stringify(contact) );
             Parley.app.loadUser();
         });
     });
-/*
-	    logout: function () {
-			console.log('Logging out');
-			Parley.currentUser.destroy();
-            Parley.app.render();
-	    },
-*/
+
     Parley.vent.on('message:sync', function (e) {
         console.log('VENT: message:sync');
+        Parley.app.dialog('info inbox-loading', { message: 'Loading inbox' });
         Parley.requestInbox(function (data, textStatus) {
             if (data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
@@ -202,6 +196,7 @@ console.log( JSON.stringify(contact) );
                 return false;
             } else {
                 console.log('Inbox loaded', data.messages);
+                Parley.app.dialog('hide info inbox-loading');
 
                 Parley.inbox = Parley.inbox || new MessageList;
                 if (_.has(data, 'messages')) {
@@ -612,16 +607,26 @@ console.log( JSON.stringify(contact) );
             ]);
         },
 
-        render: function (cur) {
-            console.log('Rendering dialog box'); 
+        render: function (options, slug) {
+            console.log('Rendering dialog box.'); 
 
-            var cur = cur || this.cur;
+            if (slug) {
+                var cur = this.dialogs.findWhere({slug:slug});
+            } else {
+                var cur = this.cur;
+            }
             var template = cur.get('template');
-            var data = cur.toJSON();
 
-            var $el = this.$('#dialog_' + data.slug);
+            var data = cur.get('data') || {};
+            _.extend(data, options);
+            cur.set('data', data);
+
+            if (_.has(cur, 'init')) cur.init(); 
+
+            var $el = cur.get('$dialog') || this.$('#dialog_' + cur.get('slug'));
+
             if ($el.length == 0) {
-                var $el = $('<div>').attr('id','dialog_' + data.slug).html(template(data));
+                var $el = $('<div>').attr('id','dialog_' + cur.get('slug')).html(template(data));
                 $('body').append($el);
                 //this.$el.append($el);
             } else {
@@ -630,11 +635,19 @@ console.log( JSON.stringify(contact) );
 
             this.setElement($el);
 
-            if (_.has(data, 'loaded'))
-                data.loaded.call(cur, this);
-
             var events = cur.get('events');
             this.delegateEvents(events);
+
+            if (_.has(cur, 'loaded')) cur.loaded(this);
+
+            var dialog = cur.get('$dialog') || $(cur.get('el'));
+            dialog.dialog( _.extend({
+                autoOpen: true,
+                dialogClass: '',
+                draggable: true,
+                title: cur.get('title')
+            }, cur.get('opts') ));
+            cur.set('$dialog', dialog);
 
             return this;
         },
@@ -642,16 +655,19 @@ console.log( JSON.stringify(contact) );
         setDialog: function (i, options) {
             console.log('Setting dialog.');
 
+            // Either grab an existing dialog with slug = i,
+            // or make one from scratch (for a modal dialog)
             if (_.isString(i)) {
                 var d = this.dialogs.findWhere({slug: i});
                 if (!d) {
                     if (_.has(options, 'modal')) {
-                        var newDialog = _.extend({
+                        var newDialog = {
                             slug: i,
                             modal: true,
                             template: Mustache.compile($('#blankDialogTemplate').html()),
-                            el: '#dialog_' + i
-                        },options);
+                            el: '#dialog_' + i,
+                            data: options
+                        };
                         this.dialogs.add(newDialog);
                         this.cur = this.dialogs.findWhere({slug:i});
                     } else {
@@ -667,27 +683,12 @@ console.log( JSON.stringify(contact) );
                 return false;
             }
 
-            var cur = this.cur;
-
-            if (_.has(cur, 'init'))
-                cur.init();
-
-            this.render(
-                _.extend( cur, options )
-            );
-
-            $(cur.get('el')).dialog(_.extend({
-                autoOpen: true,
-                dialogClass: '',
-                draggable: true,
-                title: cur.get('title')
-            }, cur.get('opts') ));
-
             return true;
         },
 
         setPage: function (i, options) {
             console.log('Setting page.');
+            //var cur = _.extend(this.cur, options);
             var cur = this.cur;
 
             var cur_page, pages = $(cur.get('el')).find('.page');
@@ -704,11 +705,14 @@ console.log( JSON.stringify(contact) );
             if (pages.filter('.page-active').length == 0) {
                 pages.first().addClass('page-active');
             }
+/*
             if (_.isObject(options)) {
                 for (var val in options) {
                     cur_page.find('[name='+val+']').val(options[val]);
                 }
             }
+*/
+
             this.$(':input').first().focus();
         },
 
@@ -817,16 +821,6 @@ console.log( JSON.stringify(contact) );
         as members of 'data'.
         **/
         dialog: function (opts,data) {
-/*
-            if (typeof opts == 'undefined') {
-                // With no arguments, returns dialog data as object
-                return this._dialog.getJSON();
-            } else if (_.isObject(opts)) {
-                // Currently does nothing (always pass a string as first arg)
-                // Will eventually support passing an object, I'll get to it in a sec
-            } else
-*/
-
             if (_.isString(opts)) {
                 var _a = opts.split(' ');
                 switch (_a[0]) {
@@ -844,15 +838,17 @@ console.log( JSON.stringify(contact) );
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            this._dialog.setDialog(page, _.extend(data, {modal:true}));
+                            if ( this._dialog.setDialog( page, {modal:true} ) ) 
+                                this._dialog.render( data, page );
                         } else {
                             if (this.curDialog == slug) {
-                                this._dialog.setPage(page);
+                                this._dialog.render( data, slug );
+                                this._dialog.setPage(page,data);
                             } else if (this._dialog.setDialog(slug, data)) {
                                 this.curDialog = slug;
-                                this._dialog.setPage(page);
+                                this._dialog.render( data, slug )
+                                this._dialog.setPage(page,data);
                             }
-                            
                         }
                         break;
                 }
