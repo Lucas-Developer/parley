@@ -218,7 +218,7 @@
 				<input type="text" name="subject" value="{{subject}}">
 			</label>
             <label for="body">
-              <textarea rows="6" name="body">{{#body}}{{{content}}}{{/body}}</textarea>
+              <textarea rows="6" name="body">{{#body}}{{content}}{{/body}}</textarea>
             </label>
         </div>
 
@@ -234,7 +234,7 @@
 		<td class="date"></td>
 	</script>
 	<script type="text/template" id="readMessageTemplate">
-        <td colspan="4"><div class="buttons"><button class="reply">Reply</button></div>{{body}}</td>
+          <td colspan="4"><div class="buttons"><button class="reply">Reply</button></div>{{{body}}}</td>
 	</script>
 	<script type="text/template" id="contactTemplate">
 		<td class="thumbnail"><img src="{{thumbnail}}"></td>
