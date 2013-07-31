@@ -242,7 +242,7 @@ Black Chair Studios, Inc.
 www.blackchair.net
             """ % (to, token)}
       response = HTTP.post(
-          "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+          "https://api.mailgun.net/v2/parley.co/messages",
           auth=("api", MAILGUN_API_KEY),
           data=message)
       response_dict = response.json()
@@ -313,7 +313,7 @@ Talk soon,
 
   #return jsonify(paidInvitesRemaining=paid_invites), 200
   response = HTTP.post(
-      "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+      "https://api.mailgun.net/v2/parley.co/messages",
       auth=("api", MAILGUN_API_KEY),
       data=message)
   response_dict = response.json()
@@ -330,7 +330,7 @@ def smtp_send():
     message = json.loads(request.form['message'])
     message['from'] = "%s <%s>" % (user["name"], user["email"])
     response = HTTP.post(
-        "https://api.mailgun.net/v2/parley.mailgun.org/messages",
+        "https://api.mailgun.net/v2/parley.co/messages",
         auth=("api", MAILGUN_API_KEY),
         data=message)
     response_dict = response.json()
