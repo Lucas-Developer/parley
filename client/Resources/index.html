@@ -17,6 +17,7 @@
 
 <script id="blankDialogTemplate" type="text/template">
     <div class="page page-active">
+        <img src="img/ajax-loader.gif" class="loader">
         <h2>{{header}}</h2>
         <p>{{message}}</p>
         <div class="buttons">
@@ -29,7 +30,9 @@
 <script id="loadingDialogTemplate" type="text/template">
     <div class="page page-active">
         <h2>{{^header}}Patience is a virtue!{{/header}}{{header}}</h2>
-        <div class="loading-image"></div>
+        <div class="loading-image">
+            <img src="img/ajax-loader.gif" class="loader">
+        </div>
         <p>{{message}}</p>
         <div class="buttons">
         {{#buttons}}
@@ -53,7 +56,6 @@
 	    </form>
 	</div>
     <div class="page page-login">
-      <!--<p>That email is registered with Parley!</p>-->
         <p id="text_message">{{message}}</p>
         <form name="loginAction">
             <div class="row">
@@ -70,7 +72,6 @@
         </form>
     </div>
     <div class="page page-register">
-        <p>Set Up Your Parley Account</p>
         <p id="text_message">{{message}}</p>
         <form name="registerAction">
             <div class="row">
@@ -78,8 +79,6 @@
                     <div class="full-width"><input type="email" name="email" id="registerEmailField" value="{{email}}" readonly>
                         <div class="status">
                             <img src="img/ajax-loader.gif" class="loader">
-                            <img src="img/icon-success.png" class="status-success">
-                            <img src="img/icon-error.png" class="status-error">
                         </div>
                     </div>
                 </label>

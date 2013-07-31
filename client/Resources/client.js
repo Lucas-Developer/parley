@@ -569,7 +569,6 @@
                     opts: { minWidth: 600, maxWidth: 1000 },
                     title: 'Contacts',
                     init: function () {
-console.log('hello');
                         this.contacts = Parley.contacts.toJSON();
                     },
                     loaded: function (view) {
@@ -670,8 +669,6 @@ console.log('hello');
             }
             this.delegateEvents(events);
 
-            if (loaded = cur.get('loaded')) loaded.call(cur,this);
-
             var dialog = cur.get('$dialog') || $(cur.get('el'));
             dialog.dialog( _.extend({
                 autoOpen: true,
@@ -680,6 +677,8 @@ console.log('hello');
                 title: cur.get('title')
             }, cur.get('opts') ));
             cur.set('$dialog', dialog);
+
+            if (loaded = cur.get('loaded')) loaded.call(cur,this);
 
             return this;
         },
