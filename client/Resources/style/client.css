@@ -92,6 +92,7 @@
 		padding: 0 10px;
 		height: 62px;
 		overflow: hidden;
+        position: relative;
 		line-height: 58px;
 		background-color: #fff;
 		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
@@ -102,10 +103,9 @@
 
 	header .email { display: inline-block; font-weight: bold; }
 
-    header nav { float: right; }
+    header nav { position: absolute; right: 0; top: 0; }
 	header nav, header nav li { height: 100px; display: inline-block; }
 
-    #inbox-utilities,
     #inbox .header-info,
     #inbox {
         width: 96%;
@@ -134,6 +134,10 @@
         #inbox-utilities .button-set button[name=compose] { float: right; }
 
         #inbox .header-info { display:none; font-size:.8em; line-height:1.2em; }
+
+        #composeAction { width:48px; height: 48px; background: url(../img/pen.png) 0 0 no-repeat; }
+        #settingsAction { width:48px; height: 48px; background: url(../img/tools.png) 0 0 no-repeat; }
+        #contactsAction { width:48px; height: 48px; background: url(../img/id.png) 0 0 no-repeat; }
 
     #inbox table { width: 100%; }
 	

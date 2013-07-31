@@ -176,23 +176,27 @@
 
     Parley.vent.on('message:sync', function (e) {
         console.log('VENT: message:sync');
-        Parley.app.dialog('info inbox-loading', { message: 'Loading inbox' });
+        Parley.app.dialog('info inbox-loading', { message: Parley.app.i18n._t('loading-inbox') });
         Parley.requestInbox(function (data, textStatus) {
             if (data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
-/*
-                Parley.app.dialog('loading', {
+
+                Parley.app.dialog('hide info inbox-loading');
+                Parley.app.dialog('info inbox-error', {
                     message: Parley.app.i18n._t('inbox-forbidden'),
                     buttons: [
                         {id:'retryInbox',text:'Retry'},
                         {id:'cancelLoad',text:'Cancel'}
                     ],
                     events: {
-                        'click #retryInbox': function(e) { Parley.registerInbox(); Parley.vent.trigger('message:sync'); }
+                        'click #retryInbox': function(e) {
+                            Parley.app.dialog('hide info inbox-error');
+                            Parley.app.dialog('info inbox-loading', { message: Parley.app.i18n._t('loading-inbox') });
+                            Parley.registerInbox();
+                            Parley.vent.trigger('message:sync'); }
                     }
                 });
-*/
-                //Parley.registerInbox();
+
                 return false;
             } else {
                 console.log('Inbox loaded', data.messages);
@@ -635,7 +639,10 @@
 
             this.setElement($el);
 
-            var events = cur.get('events');
+            var events = cur.get('events') || {};
+            if (_.has(options, 'events')) {
+                var events = _.extend(events, options.events);
+            }
             this.delegateEvents(events);
 
             if (_.has(cur, 'loaded')) cur.loaded(this);
@@ -705,13 +712,6 @@
             if (pages.filter('.page-active').length == 0) {
                 pages.first().addClass('page-active');
             }
-/*
-            if (_.isObject(options)) {
-                for (var val in options) {
-                    cur_page.find('[name='+val+']').val(options[val]);
-                }
-            }
-*/
 
             this.$(':input').first().focus();
         },
@@ -774,11 +774,11 @@
             (function (user,app) {
                 if (!user) {
 		    	    console.log('No user logged in. Showing setup dialog.');
-                    app.dialog('setup');
+                    app.dialog('setup', { message: app.i18n._t('welcome') });
 			    } else {
                     console.log('User logged in: ' + user);
                     Parley.currentUser = new Parley.Contact(JSON.parse(user));
-                    app.dialog('setup login', Parley.currentUser.toJSON());
+                    app.dialog('setup login', _.extend({}, Parley.currentUser.toJSON(), { message: app.i18n._t('login') }));
                 }
             })(localStorage.getItem('currentUser'),this);
 
