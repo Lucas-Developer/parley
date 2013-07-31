@@ -385,21 +385,37 @@
             }, this);
 */
         },
-        readMessage: function (parseLinks) {
+        readMessage: function (parseLinks, insertBRs, quote) {
+            // parseLinks is an optional boolean for whether or not to convert URLs to HTML anchors
+            // insertBRs is an optional boolean for replacing carriage returns with HTML line breaks
+            // quote is an optional boolean for returning the message in quoted form (for reply box)
+
             //***: Not sure why decryptedMessage should be an array; there will only be one per Message?
+            //
             parseLinks = _.isUndefined(parseLinks); //default is true
+            insertBRs = _.isUndefined(insertBRs) ? parseLinks : insertBRs; //default same as parseLinks
+            quote = _.isUndefined(quote) ? !parseLinks : quote; //default opposite of parseLinks
+
             if (this.decryptedMessage.length > 0) {
                 console.log('Reading message from memory.');
-                return this.decryptedMessage;
+                var msg = this.decryptedMessage;
+                if (quote) msg = Parley.quote(msg);
+                if (linkify && parseLinks) msg = linkify(msg);
+                if (insertBRs) msg = Parley.insertBRs(msg);
+                return msg;
             } else {
                 // This needs some error handling, must be bird-ass tight
                 console.log('Decrypting message.');
                 var sender = this.get('from');
                 this.decryptedMessage = this.decryptedMessage || [];
                 _.each(this.get('body'), _.bind(function (v,k) {
-                    this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from'), parseLinks));
+                    this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from')));
                 }, this));
-                return this.decryptedMessage;
+                var msg = this.decryptedMessage;
+                if (quote) msg = Parley.quote(msg);
+                if (linkify && parseLinks) msg = linkify(msg);
+                if (insertBRs) msg = Parley.insertBRs(msg);
+                return msg;
             }
         },
         toggleSelect: function () {
