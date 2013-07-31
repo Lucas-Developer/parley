@@ -138,8 +138,9 @@ console.log( JSON.stringify(contact) );
             console.log('Passwords don\'t match.');
         } else {
             console.log('About to register user: ' + form.email.value);
-            Parley.app.dialog('hide setup');
+
             Parley.app.dialog('info register-wait', { message: Parley.app.i18n._t('register-wait') });
+            Parley.app.dialog('hide setup');
 
             Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
                 console.log(JSON.stringify(data), textStatus, data.error);
@@ -169,8 +170,8 @@ console.log( JSON.stringify(contact) );
 
         Parley.authenticateUser(email, password, function (data, textStatus) {
             console.log('User successfully logged in.');
-            Parley.app.loadUser();
             Parley.app.dialog('hide info login-wait');
+            Parley.app.loadUser();
         });
     });
 /*
@@ -614,6 +615,7 @@ console.log( JSON.stringify(contact) );
         render: function (cur) {
             console.log('Rendering dialog box'); 
 
+            var cur = cur || this.cur;
             var template = cur.get('template');
             var data = cur.toJSON();
 
@@ -629,9 +631,9 @@ console.log( JSON.stringify(contact) );
             this.setElement($el);
 
             if (_.has(data, 'loaded'))
-                data.loaded(this);
+                data.loaded.call(cur, this);
 
-            var events = this.cur.get('events');
+            var events = cur.get('events');
             this.delegateEvents(events);
 
             return this;
@@ -650,7 +652,7 @@ console.log( JSON.stringify(contact) );
                             template: Mustache.compile($('#blankDialogTemplate').html()),
                             el: '#dialog_' + i
                         },options);
-                        this.dialogs.push(newDialog);
+                        this.dialogs.add(newDialog);
                         this.cur = this.dialogs.findWhere({slug:i});
                     } else {
                         // Error, no 'this.cur'
@@ -665,29 +667,30 @@ console.log( JSON.stringify(contact) );
                 return false;
             }
 
-            if (_.has(data, 'init'))
-                data.init(this);
+            var cur = this.cur;
+
+            if (_.has(cur, 'init'))
+                cur.init();
 
             this.render(
-                _.extend( this.cur, options )
+                _.extend( cur, options )
             );
 
-            var data = this.cur.toJSON();
-            $(this.cur.get('el')).dialog(_.extend({
+            $(cur.get('el')).dialog(_.extend({
                 autoOpen: true,
                 dialogClass: '',
                 draggable: true,
-                title: this.cur.get('title'),
-                beforeClose: function (e,ui) { return false; }
-            }, data.opts));
+                title: cur.get('title')
+            }, cur.get('opts') ));
 
             return true;
         },
 
         setPage: function (i, options) {
             console.log('Setting page.');
+            var cur = this.cur;
 
-            var cur_page, pages = $(this.cur.get('el')).find('.page');
+            var cur_page, pages = $(cur.get('el')).find('.page');
             if (_.isNumber(i) && (cur_page = pages.get(i) || pages.first())) {
                 pages.removeClass('page-active');
                 cur_page.addClass('page-active');
@@ -717,8 +720,12 @@ console.log( JSON.stringify(contact) );
             }
         },
         hide: function (slug) {
-            if (this.cur = this.dialogs.findWhere({slug:slug})) {
-                $(this.cur.el).dialog('close');
+            var dialog = this.dialogs.findWhere({slug:slug});
+            if (dialog) {
+                $(dialog.get('el')).dialog('close');
+
+                if (dialog.get('modal'))
+                    dialog.destroy();
             } else {
                 return false;
             }
