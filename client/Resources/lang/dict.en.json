@@ -1,5 +1,6 @@
 { "welcome": "Welcome to the Parley Pre-Beta! It's still obviously a work in progress, but we hope you find it useful and look forward to your feedback.",
 "login": "Enter your password to access the magic of Parley!",
+"register": "Register for Parley! Keep in mind, this will only work if you have already signed up for the service at http://parley.co",
 "inbox-forbidden": "We can't access your account through context.io. We'll keep trying, or click \"Retry\" below if you think you might have made a mistake.", 
 "register-wait": "Right now, we're generating your encryption keys and sending an encrypted version of them to the Parley server. It takes a little while; sorry about that. It may sound weird, but for once it will actually go faster if you move your mouse and use your keyboard while you wait - it increases system entropy during the key generation process.", 
 "login-wait": "It takes a while to log in! We've downloaded your encrypted keys and contacts from the Parley server, and they take a little while to decrypt. We should be able to speed this process up significantly with the next release.", 

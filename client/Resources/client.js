@@ -74,8 +74,9 @@
         Parley.contacts.set(keychain, {parse:true});
     });
 
-    Parley.vent.on('contact:userinfo', function (contact) {
+    Parley.vent.on('contact:userinfo', function (contact, callback) {
         console.log('VENT: contact:userinfo');
+        var callback = callback || function () {};
 
         // Gotta have either an email or a fingerprint.
         // Will just fail silently if it gets neither
@@ -107,10 +108,10 @@
                 if (Parley.currentUser.get('email') != email) Parley.contacts.add(contact);
             }
         }
-        Parley.requestUser(email, function(){}).success(planA).error(planB);
+        Parley.requestUser(email, callback).success(planA).error(planB);
     });
 
-    Parley.vent.on('setup:verify', function (e) {
+    Parley.vent.on('setup:verify', function (e, callback) {
         e.preventDefault();
         var form = document.forms.emailVerify;
 
@@ -120,15 +121,15 @@
         Parley.requestUser(form.email.value, function (data, textStatus) {
             if (_.isObject(data) && !_.has(data, 'error')) {
                 console.log('User exists, setting up login form.');
-                Parley.app.dialog('setup login', {email: form.email.value});
+                Parley.app.dialog('setup login', {email: form.email.value, message: Parley.app.i18n._t('login') });
             } else {
                 console.log('User doesn\'t exists, showing registration form.');
-                Parley.app.dialog('setup register', {email: form.email.value});
+                Parley.app.dialog('setup register', {email: form.email.value, message: Parley.app.i18n._t('register') });
             }
         });
 
     });
-    Parley.vent.on('setup:register', function (e) {
+    Parley.vent.on('setup:register', function (e, callback) {
         e.preventDefault();
         var form = document.forms.registerAction;
 
@@ -158,7 +159,7 @@
             });
         }
     });
-    Parley.vent.on('setup:login', function (e) {
+    Parley.vent.on('setup:login', function (e, callback) {
         e.preventDefault();
         var form = document.forms.loginAction,
             email = form.email.value,
@@ -174,7 +175,7 @@
         });
     });
 
-    Parley.vent.on('message:sync', function (e) {
+    Parley.vent.on('message:sync', function (e, callback) {
         console.log('VENT: message:sync');
         Parley.app.dialog('info inbox-loading', { message: Parley.app.i18n._t('loading-inbox') });
         Parley.requestInbox(function (data, textStatus) {
@@ -185,8 +186,7 @@
                 Parley.app.dialog('info inbox-error', {
                     message: Parley.app.i18n._t('inbox-forbidden'),
                     buttons: [
-                        {id:'retryInbox',text:'Retry'},
-                        {id:'cancelLoad',text:'Cancel'}
+                        {id:'retryInbox',text:'Retry'}
                     ],
                     events: {
                         'click #retryInbox': function(e) {
@@ -212,7 +212,7 @@
         });
     });
 
-    Parley.vent.on('message:send', function (e) {
+    Parley.vent.on('message:send', function (e, callback) {
         e.preventDefault();
 
         var formdata = $('#composeForm').serializeObject();
@@ -234,13 +234,20 @@
         });
 
         console.log('Sending email to: ', recipients);
+        Parley.app.dialog('info send-message', { message: Parley.app.i18n._t('send-message') })
         
         if (!_.isEmpty(recipients)) {
             Parley.encryptAndSend(formdata.subject, formdata.body, recipients, function (data, textStatus) {
                 if (textStatus != 'error') {
                     console.log('Message successfully sent.');
                     console.log( JSON.stringify(data) );
-                    Parley.app.dialog('hide');
+                    Parley.app.dialog('hide compose');
+                    Parley.app.dialog('hide send-message');
+                    Parley.app.dialog('info sent-message', {
+                        message: Parley.app.i18n._t('sent-message'),
+                        buttons: [ { id: 'closeDialog', text: 'Okay' } ],
+                        events: { 'click #closeDialog': function (e) { Parley.app.dialog('hide sent-message'); } }
+                    });
                 } else {
                     // Error
                     alert('We encountered an error sending your email.');
@@ -554,6 +561,7 @@
                     opts: { minWidth: 600, maxWidth: 1000 },
                     title: 'Contacts',
                     init: function () {
+console.log('hello');
                         this.contacts = Parley.contacts.toJSON();
                     },
                     loaded: function (view) {
@@ -579,11 +587,15 @@
                     opts: {},
                     title: 'Compose',
                     init: function () {
-                        this.to = _.has(this, 'reply_to') ? this.reply_to.toJSON() : _.has(this, 'from') ? this.from.toJSON() : undefined;
-                        if (_.has(this, 'subject')) {
+                        var data = this.get('data');
+                        data.to = _.has(data, 'reply_to') ? data.reply_to.toJSON() : _.has(data, 'from') ? data.from.toJSON() : undefined;
+                        
+                        if (_.has(data, 'subject')) {
                             var prefix = /^(R|r)e:/g;
-                            this.subject = prefix.test(this.subject) ? this.subject : 're: ' + this.subject;
+                            data.subject = prefix.test(data.subject) ? data.subject : 're: ' + data.subject;
                         }
+
+                        this.set('data', data);
                     },
                     loaded: function (view) {
                         var items = Parley.contacts.map(function (ele,i) {
@@ -593,7 +605,12 @@
                             return {name: name, value: email, uid: name + ' <' + email + '>'}
                         });
 
-                        var preFill = _.findWhere(items, {value: this.to.email}) || {};
+                        var data = this.get('data');
+                        var to = data.to;
+                        var preFill = {};
+
+                        if (_.isObject(to))
+                            preFill = _.findWhere(items, {value: data.to.email}) || {};
 
                         var opts = {
                             selectedItemProp: 'name',
@@ -625,7 +642,7 @@
             _.extend(data, options);
             cur.set('data', data);
 
-            if (_.has(cur, 'init')) cur.init(); 
+            if (init = cur.get('init')) init.call(cur);
 
             var $el = cur.get('$dialog') || this.$('#dialog_' + cur.get('slug'));
 
@@ -645,7 +662,7 @@
             }
             this.delegateEvents(events);
 
-            if (_.has(cur, 'loaded')) cur.loaded(this);
+            if (loaded = cur.get('loaded')) loaded.call(cur,this);
 
             var dialog = cur.get('$dialog') || $(cur.get('el'));
             dialog.dialog( _.extend({
@@ -695,6 +712,7 @@
 
         setPage: function (i, options) {
             console.log('Setting page.');
+
             //var cur = _.extend(this.cur, options);
             var cur = this.cur;
 
@@ -875,7 +893,6 @@
 
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.header.$('.email').text(Parley.currentUser.get('email'));
-
 	    },
 
         messageSelectedHandler: function () {
