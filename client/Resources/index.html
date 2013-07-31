@@ -14,7 +14,18 @@
 	    <header class="loggedin"></header>
 	    <section id="inbox" class="NOTloggedin"><table cellspacing=2><tbody></tbody></table></section>
         <div id="dialogWrapper"></div>
-	
+
+<script id="blankDialogTemplate" type="text/template">
+    <div class="page page-active">
+        <h2>{{header}}</h2>
+        <p>{{message}}</p>
+        <div class="buttons">
+        {{#buttons}}
+            <button id="{{id}}">{{text}}</button>
+        {{/buttons}}
+        </div>
+    </div>
+</script>
 <script id="loadingDialogTemplate" type="text/template">
     <div class="page page-active">
         <h2>{{^header}}Patience is a virtue!{{/header}}{{header}}</h2>
@@ -46,7 +57,7 @@
         <form name="loginAction">
             <div class="row">
                 <label for="email" class="half">Email
-                    <input type="email" name="email" readonly>
+                    <input type="email" name="email" value="{{email}}" readonly>
                 </label>
                 <label for="password" class="half">Password
                     <input type="password" name="password">
@@ -85,19 +96,11 @@
                 </label>
             </div>
             <div class="row" id="paymentInfo">
-                <div class="tab message tab-active">
-                    <p>You are set up to use the <a class="account-type" href="#">consumer account</a><span class="provided-by"> provided by thisguy@email.com.</span></p>
-                    <a href="#" class="extra-link">See upgrade options</a>
-                </div>
+                <div class="tab message tab-active"> </div>
             </div>
 
             <button id="registerAction">Register</button>
         </form>
-    </div>
-    <div class="page page-admin">
-	    <button id="clear">clear key</button>
-	    <button id="gen">gen key</button>
-	    <button id="store">store key</button>
     </div>
 </script>
 
@@ -146,14 +149,6 @@
 		<tr><th class="thumbnail"></th><th>Name</th><th>Email</th><th class="buttons"></th></tr>
 	    </thead>
 	    <tbody id="contactsList">
-            {{#contacts}}
-                <tr>
-                    <td class="thumbnail"><img src="{{thumbnail}}"></td>
-                    <td>{{name}}</td>
-	                <td>{{email}} {{fingerprint}} <strong>count=({{count}})</strong></td>
-                    <td class="buttons"><button class="send">Send message</button></td>
-                </tr>
-            {{/contacts}}
 	    </tbody>
 	</table>
     <button id="newContact">New Contact</button>
@@ -176,9 +171,7 @@
 </script>
 
     <script type="text/template" id="nokeyDialogTemplate">
-        <p>We can not send encrypted emails to the following address. This is because we were not able to find the public keys associated with them. The email will still be sent to all other addresses.</p>
-        <p>If you like, send invites to the selected users.</p>
-        <!--<p>You have <strong>{{num_passes}}</strong> more access passes.</p>-->
+        <p>Some recipients don't have associated PGP keys, so we can not send them encrypted email.</p>
         <table class="sortable">
         <thead>
             <tr><th class="selector sorttable_nosort"><a class="clicked"></th><th>Email</th><th class="buttons"></th></tr>
@@ -249,8 +242,8 @@
 	<script type="text/template" id="contactTemplate">
 		<td class="thumbnail"><img src="{{thumbnail}}"></td>
 	    <td>{{name}}</td>
-	    <td>{{email}} {{fingerprint}} <strong>count=({{count}})</strong></td>
-		<td class="buttons"><button class="send">reply</button></td>
+	    <td>{{email}}</td>
+		<td class="buttons"><button class="send">send email</button></td>
 	</script>
 	
 	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
@@ -261,9 +254,8 @@
 	<script type="text/javascript" src="lib/mustache.js"></script>
 	<script type="text/javascript" src="lib/moment.min.js"></script>
 	<script type="text/javascript" src="lib/sorttable.js"></script>
-	<script type="text/javascript" src="lib/jquery.autoSuggest.js"></script>
 	<script type="text/javascript" src="lib/jquery.i18n.min.js"></script>
-	<!--<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>-->
+	<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/webfont/1.4.2/webfont.js"></script>
 	<script type="text/javascript" src="client.js"></script>
     </body>
