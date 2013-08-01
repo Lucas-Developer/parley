@@ -14,8 +14,39 @@ try:
 except ImportError:
   import simplejson as json
 
+def platform_path(): #from parley_dir
+  if 'Darwin' in platform.platform():
+    return 'osx/bin/gpg'
+  elif 'Windows' in platform.platform():
+    return 'win32\gpg.exe'
+  elif 'Linux' in platform.platform():
+    return 'linux/bin/gpg'
 
-def PYsetup(resource_dir,appdata_dir,home_dir):
+def install_path(): # from parley_dir
+  if 'Darwin' in platform.platform():
+    return './osx-install.sh'
+  elif 'Windows' in platform.platform():
+    return None
+  elif 'Linux' in platform.platform():
+    return './linux-install.sh'
+
+def PYinstalled(resource_dir,appdata_dir,home_dir):
+  if 'Darwin' in platform.platform():
+    appdata_dir = home_dir
+  parley_dir = os.path.join(appdata_dir,'parley_gpg')
+  gpg_dir = os.path.join(resource_dir,'gpg')
+  if not os.path.isdir(parley_dir):
+    shutil.copytree(gpg_dir,parley_dir)
+  os.chdir(parley_dir)
+  gpg_binary = platform_path()
+  gpg_home = "keyring"
+  if os.path.isfile(gpg_binary):
+    global gpg
+    gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
+    return True
+  return False
+
+def PYinstall(resource_dir,appdata_dir,home_dir):
   global gpg
 
   if 'Darwin' in platform.platform():
@@ -30,21 +61,6 @@ def PYsetup(resource_dir,appdata_dir,home_dir):
 
   os.chdir(parley_dir)
 
-  def platform_path(): #from parley_dir
-    if 'Darwin' in platform.platform():
-      return 'osx/bin/gpg'
-    elif 'Windows' in platform.platform():
-      return 'win32\gpg.exe'
-    elif 'Linux' in platform.platform():
-      return 'linux/bin/gpg'
-
-  def install_path(): # from parley_dir
-    if 'Darwin' in platform.platform():
-      return './osx-install.sh'
-    elif 'Windows' in platform.platform():
-      return None
-    elif 'Linux' in platform.platform():
-      return './linux-install.sh'
 
 
   gpg_binary = platform_path()
@@ -52,12 +68,11 @@ def PYsetup(resource_dir,appdata_dir,home_dir):
 
   #if Tide's version of GPG isn't installed yet, install it
   #(This approach only works on Linux and Mac with gcc pre-installed))
-  if not os.path.isfile(gpg_binary):
-    subprocess.call([install_path()])
-
+  subprocess.call([install_path()])
   gpg = gnupg.GPG(gpgbinary=gpg_binary,gnupghome=gpg_home)
 
-window.PYsetup = PYsetup
+window.PYinstalled = PYinstalled
+window.PYinstall = PYinstall
 
 
 def PYgenKey():

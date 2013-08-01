@@ -789,13 +789,23 @@
             this.listenTo(Parley.inbox, 'change:selected', this.messageSelectedHandler);
 
             (function (user,app) {
-                if (!user) {
-		    	    console.log('No user logged in. Showing setup dialog.');
-                    app.dialog('setup', { message: app.i18n._t('welcome') });
-			    } else {
-                    console.log('User logged in: ' + user);
-                    Parley.currentUser = new Parley.Contact(JSON.parse(user));
-                    app.dialog('setup login', _.extend({}, Parley.currentUser.toJSON(), { message: app.i18n._t('login') }));
+                if (!Parley.installed()){
+                    app.dialog('info installing',{ buttons:[{id:'install_pgp',text:'ok'}],events:{'click #install_pgp':_.bind(function(){
+                        Parley.install(_.bind(function(){
+                            console.log('No user logged in. Showing setup dialog.');
+                            this.dialog('hide installing');
+                            this.dialog('setup', { message: app.i18n._t('welcome') });
+                        },app));
+                    },app)},message: app.i18n._t('installing')});
+                }else{
+                    if (!user) {
+                        console.log('No user logged in. Showing setup dialog.');
+                        app.dialog('setup', { message: app.i18n._t('welcome') });
+                    } else {
+                        console.log('User logged in: ' + user);
+                        Parley.currentUser = new Parley.Contact(JSON.parse(user));
+                        app.dialog('setup login', _.extend({}, Parley.currentUser.toJSON(), { message: app.i18n._t('login') }));
+                    }
                 }
             })(false /* localStorage.getItem('currentUser') */,this);
 
