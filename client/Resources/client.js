@@ -497,8 +497,124 @@
 	    }
 	});
 
-    var DialogView = Parley.BaseView.extend({
-        el: $('#dialogWrapper'),
+    Parley._dialogs = [
+        {   id: 'dialog_loading',
+            template: Mustache.compile($('#loadingDialogTemplate').html()),
+            model: {
+                slug: 'loading',
+                opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
+                title: 'Loading'
+            }
+        },
+        {   id: 'dialog_setup',
+            template: Mustache.compile($('#setupDialogTemplate').html()),
+            events: {
+                'click #emailVerify': function (e) { Parley.vent.trigger('setup:verify', e); },
+                'click #loginAction': function (e) { Parley.vent.trigger('setup:login', e); },
+                'click #registerAction': function (e) { Parley.vent.trigger('setup:register', e); },
+                'keydown': 'clickSubmit'
+            },
+            model: {
+                slug: 'setup',
+                opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
+                title: 'Welcome to Parley',
+                loaded: function (view) {
+                    view.$('#text_message')._t('welcome');
+                }
+            },
+        },
+        {   
+            id: 'dialog_settings',
+            template: Mustache.compile($('#settingsDialogTemplate').html()),
+            model: {
+                slug: 'settings',
+                opts: { resizable: false, width: 550 },
+                title: 'Parley Settings',
+                init: function () {
+                    _.extend(this, Parley.currentUser.toJSON());
+                }
+            }
+        },
+        {   id: 'dialog_contacts',
+            template: Mustache.compile($('#contactsDialogTemplate').html()),
+            events: {
+                'click #newContact': function (e) {},
+                'click #addContact': function (e) {}
+            },
+            model: {
+                slug: 'contacts',
+                opts: { minWidth: 600, maxWidth: 1000 },
+                title: 'Contacts',
+                init: function () {
+                    this.contacts = Parley.contacts.toJSON();
+                },
+                loaded: function (view) {
+                    view.$('#contactsList').replaceWith(Parley.app.contactsList);
+                }
+            }
+        },
+        {   id: 'dialog_nokey',
+            template: Mustache.compile($('#nokeyDialogTemplate').html()),
+            events: {
+                'click #inviteAction': function (e) {}
+            },
+            model: {
+                slug: 'nokey',
+                opts: {},
+                title: 'Public PGP keys not found.'
+            }
+        },
+        {   
+            id: 'dialog_compose',
+            template: Mustache.compile($('#composeDialogTemplate').html()),
+            events: {
+                'click #sendAction': function (e) { Parley.vent.trigger('message:send', e); }
+            },
+            model: {
+                slug: 'compose',
+                opts: {},
+                title: 'Compose',
+                init: function () {
+                    var data = this.data;
+                    data.to = _.has(data, 'reply_to') ? data.reply_to.toJSON() : _.has(data, 'from') ? data.from.toJSON() : undefined;
+                    
+                    if (_.has(data, 'subject')) {
+                        var prefix = /^(R|r)e:/g;
+                        data.subject = prefix.test(data.subject) ? data.subject : 're: ' + data.subject;
+                    }
+
+                    return this;
+                },
+                loaded: function (view) {
+                    var items = Parley.contacts.map(function (ele,i) {
+                        var email = ele.get('email');
+                        var name = ele.get('name') || email;
+
+                        return {name: name, value: email, uid: name + ' <' + email + '>'}
+                    });
+
+                    var data = this.get('data');
+                    var to = data.to;
+                    var preFill = {};
+
+                    if (_.isObject(to))
+                        preFill = _.findWhere(items, {value: data.to.email}) || {};
+
+                    var opts = {
+                        selectedItemProp: 'name',
+                        searchObjProps: 'name,value',
+                        preFill: [preFill]
+                    };
+                    view.$('#recipients input[type=text]').each(function (){
+                        $(this).autoSuggest(items, _.extend({asHtmlID: this.name}, opts));
+                    });
+                }
+            }
+        }
+    ];
+
+    var DialogView = Backbone.View.extend({
+        tagName: 'div',
 
         /**
         This will be handled through the fancy vent
@@ -509,238 +625,63 @@
         },
 
         initialize: function (options) {
+            console.log('Initializing');
+
             /*
             Now, there is certainly a better way to do this but here's how I do it.
             For values that need to be recalculated every render, add init()
             in an object below and do what you need, secure in the knowledge that it
             will be invoked immediately before rendering.
             */
-            this.dialogs = new Backbone.Collection([
-                {   slug: 'loading',
-                    el: '#dialog_loading',
-                    template: Mustache.compile($('#loadingDialogTemplate').html()),
-                    opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
-                    title: 'Loading'
-                },
-                {   slug: 'setup',
-                    el: '#dialog_setup',
-                    template: Mustache.compile($('#setupDialogTemplate').html()),
-                    opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
-                    title: 'Welcome to Parley',
-                    loaded: function (view) {
-                        view.$('#text_message')._t('welcome');
-                    },
-                    events: {
-                        'click #emailVerify': function (e) { Parley.vent.trigger('setup:verify', e); },
-                        'click #loginAction': function (e) { Parley.vent.trigger('setup:login', e); },
-                        'click #registerAction': function (e) { Parley.vent.trigger('setup:register', e); },
-                        'keydown': 'clickSubmit'
-                    }
-                },
-                {   slug: 'settings',
-                    el: '#dialog_settings',
-                    template: Mustache.compile($('#settingsDialogTemplate').html()),
-                    opts: { resizable: false, width: 550 },
-                    title: 'Parley Settings',
-                    init: function () {
-                        _.extend(this, Parley.currentUser.toJSON());
-                    }
-                },
-                {   slug: 'contacts',
-                    el: '#dialog_contacts',
-                    template: Mustache.compile($('#contactsDialogTemplate').html()),
-                    opts: { minWidth: 600, maxWidth: 1000 },
-                    title: 'Contacts',
-                    init: function () {
-                        this.contacts = Parley.contacts.toJSON();
-                    },
-                    loaded: function (view) {
-                        view.$('#contactsList').replaceWith(Parley.app.contactsList);
-                    },
-                    events: {
-                        'click #newContact': function (e) {},
-                        'click #addContact': function (e) {}
-                    }
-                },
-                {   slug: 'nokey',
-                    el: '#dialog_nokey',
-                    template: Mustache.compile($('#nokeyDialogTemplate').html()),
-                    opts: {},
-                    title: 'Public PGP keys not found.',
-                    events: {
-                        'click #inviteAction': function (e) {}
-                    }
-                },
-                {   slug: 'compose',
-                    el: '#dialog_compose',
-                    template: Mustache.compile($('#composeDialogTemplate').html()),
-                    opts: {},
-                    title: 'Compose',
-                    init: function () {
-                        var data = this.get('data');
-                        data.to = _.has(data, 'reply_to') ? data.reply_to.toJSON() : _.has(data, 'from') ? data.from.toJSON() : undefined;
-                        
-                        if (_.has(data, 'subject')) {
-                            var prefix = /^(R|r)e:/g;
-                            data.subject = prefix.test(data.subject) ? data.subject : 're: ' + data.subject;
-                        }
+            this.model = new Backbone.Model(options.model);
+            this.template = options.template;
+            this.events = _.extend(this.events, options.model.events);
 
-                        this.set('data', data);
-                    },
-                    loaded: function (view) {
-                        var items = Parley.contacts.map(function (ele,i) {
-                            var email = ele.get('email');
-                            var name = ele.get('name') || email;
-
-                            return {name: name, value: email, uid: name + ' <' + email + '>'}
-                        });
-
-                        var data = this.get('data');
-                        var to = data.to;
-                        var preFill = {};
-
-                        if (_.isObject(to))
-                            preFill = _.findWhere(items, {value: data.to.email}) || {};
-
-                        var opts = {
-                            selectedItemProp: 'name',
-                            searchObjProps: 'name,value',
-                            preFill: [preFill]
-                        };
-                        view.$('#recipients input[type=text]').each(function (){
-                            $(this).autoSuggest(items, _.extend({asHtmlID: this.name}, opts));
-                        });
-                    },
-                    events: {
-                        'click #sendAction': function (e) { Parley.vent.trigger('message:send', e); }
-                    }
-                }
-            ]);
-        },
-
-        render: function (options, slug) {
-            console.log('Rendering dialog box.'); 
-
-            if (slug) {
-                var cur = this.dialogs.findWhere({slug:slug});
-            } else {
-                var cur = this.cur;
-            }
-            var template = cur.get('template');
-
-            var data = cur.get('data') || {};
-            _.extend(data, options);
-            cur.set('data', data);
-
-            if (init = cur.get('init')) init.call(cur);
-
-            var $el = cur.get('$dialog') || this.$('#dialog_' + cur.get('slug'));
-
-            if ($el.length == 0) {
-                var $el = $('<div>').attr('id','dialog_' + cur.get('slug')).html(template(data));
-                $('body').append($el);
-                //this.$el.append($el);
-            } else {
-                $el.html(template(data));
-            }
-
-            this.setElement($el);
-
-            var events = cur.get('events') || {};
-            if (_.has(options, 'events')) {
-                var events = _.extend(events, options.events);
-            }
-            this.delegateEvents(events);
-
-            var dialog = cur.get('$dialog') || $(cur.get('el'));
-            dialog.dialog( _.extend({
+            this.model.set('opts', {
                 autoOpen: true,
                 dialogClass: '',
                 draggable: true,
-                title: cur.get('title')
-            }, cur.get('opts') ));
-            cur.set('$dialog', dialog);
+                title: options.model.title
+            });
 
-            if (loaded = cur.get('loaded')) loaded.call(cur,this);
+            this.$el.appendTo('#dialogWrapper');
+
+            this.listenTo(this.model, "change", this.render);
+        },
+
+        render: function () {
+            console.log('Rendering dialog box.'); 
+
+            if (init = this.model.get('init')) this.model.set(init.call(this.model.toJSON()));
+
+            this.$el
+                .html( this.template(this.model.toJSON()) );
+
+            var page = this.model.get('page');
+            if (!page) {
+                this.$('.page').hide().first().show();
+            } else {
+                this.$('.page').hide().filter('.page-'+page).show();
+            }
+
+            this.delegateEvents(this.events);
+
+            if (loaded = this.model.get('loaded')) loaded.call(this.model.toJSON(), this);
 
             return this;
         },
 
-        setDialog: function (i, options) {
-            console.log('Setting dialog.');
-
-            // Either grab an existing dialog with slug = i,
-            // or make one from scratch (for a modal dialog)
-            if (_.isString(i)) {
-                var d = this.dialogs.findWhere({slug: i});
-                if (!d) {
-                    if (_.has(options, 'modal')) {
-                        var newDialog = {
-                            slug: i,
-                            modal: true,
-                            template: Mustache.compile($('#blankDialogTemplate').html()),
-                            el: '#dialog_' + i,
-                            data: options
-                        };
-                        this.dialogs.add(newDialog);
-                        this.cur = this.dialogs.findWhere({slug:i});
-                    } else {
-                        // Error, no 'this.cur'
-                        return false;
-                    }
-                } else {
-                    this.cur = d;
-                }
-            } else if (_.isNumber(i)) {
-                this.cur = this.dialogs.at(i);
-            } else {
-                return false;
-            }
-
-            return true;
+        setData: function (data) {
+            this.model.set(data);
+            return this;
         },
-
-        setPage: function (i, options) {
-            console.log('Setting page.');
-
-            //var cur = _.extend(this.cur, options);
-            var cur = this.cur;
-
-            var cur_page, pages = $(cur.get('el')).find('.page');
-            if (_.isNumber(i) && (cur_page = pages.get(i) || pages.first())) {
-                pages.removeClass('page-active');
-                cur_page.addClass('page-active');
-            } else if (_.isString(i)) {
-                cur_page = pages.filter('.page-'+i, i).first();
-                if (cur_page.length) {
-                    pages.removeClass('page-active');
-                    cur_page.addClass('page-active');
-                }
-            }
-            if (pages.filter('.page-active').length == 0) {
-                pages.first().addClass('page-active');
-            }
-
-            this.$(':input').first().focus();
+        show: function () {
+            this.$el.dialog( this.model.get('opts') );
+            return this;
         },
-
-        show: function (slug) {
-            if (this.cur = this.dialogs.findWhere({slug:slug}) || this.dialogs.at(0)) {
-                $(this.cur.el).dialog();
-            } else {
-                return false;
-            }
-        },
-        hide: function (slug) {
-            var dialog = this.dialogs.findWhere({slug:slug});
-            if (dialog) {
-                $(dialog.get('el')).dialog('close');
-
-                if (dialog.get('modal'))
-                    dialog.destroy();
-            } else {
-                return false;
-            }
+        hide: function () {
+            this.$el.dialog('close');
+            return this;
         },
 
         clickSubmit: function (e) {
@@ -781,8 +722,12 @@
 			console.log('Initializing Parley.');
             this.i18n = new Parley.i18n;
 
-            //this.header = new HeaderView;
-            this._dialog = new DialogView;
+            this._dialogs = [];
+            for (var i=0,l=Parley._dialogs.length; i<l; i++) {
+                var view = new DialogView(Parley._dialogs[i]);
+                var slug = Parley._dialogs[i].model.slug;
+                this._dialogs.push({slug:slug,view:view});
+            }
 
 			this.inbox = $('#inbox tbody');
 			this.contactsList = $('<div>');
@@ -824,6 +769,7 @@
             console.log(e.target);
             $(e.target).removeClass('hidden');
         },
+
         /**
         This function controls the dialog boxes.
         The syntax is like:
@@ -851,7 +797,10 @@
                             page = _a[2];
                         if (slug == 'info') slug = page;
 
-                        this._dialog.hide(slug);
+                        var dialog = _(this._dialogs).findWhere({slug:slug});
+                        if (dialog)
+                            dialog.view.hide();
+
                         break;
                     case 'show':
                         var slug = _a[1],
@@ -859,19 +808,26 @@
                     default:
                         var slug = slug || _a[0],
                             page = page || _a[1];
-                        if (slug == 'info') {
-                            if ( this._dialog.setDialog( page, {modal:true} ) ) 
-                                this._dialog.render( data, page );
+                        if (slug == 'info') slug = page;
+
+                        var dialog = _(this._dialogs).findWhere({slug:slug});
+                        if (dialog) {
+                            dialog.view.setData(_.extend(data,{page:page})).show();
                         } else {
-                            if (this.curDialog == slug) {
-                                this._dialog.render( data, slug );
-                                this._dialog.setPage(page,data);
-                            } else if (this._dialog.setDialog(slug, data)) {
-                                this.curDialog = slug;
-                                this._dialog.render( data, slug )
-                                this._dialog.setPage(page,data);
+                            var view = new DialogView({
+                                model: data,
+                                template: Mustache.compile($('#blankDialogTemplate').html()),
+                                id: 'dialog_' + slug
+                            });
+                            dialog = {
+                                slug: slug,
+                                view: view
                             }
+                            this._dialogs.push(dialog);
+
+                            view.setData(_.extend(data,{page:page})).show();
                         }
+
                         break;
                 }
             }
