@@ -13,6 +13,8 @@
 	.svg-icon path { fill: #191208; }
 	    .svg-icon:hover path { fill: #000; }
 
+    button { border: none; cursor: pointer; padding: 8px 16px; text-transform: lowercase; }
+
     form .row {
 	    display: table;
 		width: 100%;
@@ -82,12 +84,8 @@
     .no-close .ui-dialog-titlebar-close { display: none; }
     .hidetext { display: block; text-indent: -9999px; }
     
-    /*
-    body.loggedout .loggedin { display: none; }
-    body.loggedin .loggedout { display: none; }
-    */
-
     header {
+        display: none;
 		width: 100%;
 		padding: 0 10px;
 		height: 62px;
@@ -98,13 +96,19 @@
 		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
 		border-bottom: 1px solid rgba(16,20,0,0.35);
     }
-    header h1 { display: inline-block; vertical-align: top; width: 136px; margin-right: 30px; height: 60px; background: url(../img/logo.png) no-repeat 0 0; }
-	header h1 span { display: block; text-indent: -9999px; overflow: hidden; }
+    header h1 {
+        float: left;
+        width: 136px;
+        height: 60px;
+        background: url(../img/logo.png) no-repeat 0 0;
+    }
+    header .email { padding: 2px 0 0 20px; font-weight: bold; display: inline-block; float: left; display: none; }
+    header nav { display: inline-block; float: right; display: none; }
+        header nav button { display: inline-block; float: left; margin: 6px; }
 
-	header .email { display: inline-block; font-weight: bold; }
-
-    header nav { position: absolute; right: 0; top: 0; }
-	header nav, header nav li { height: 100px; display: inline-block; }
+    .loggedin header,
+    .loggedin header .email,
+    .loggedin header nav { display: block; }
 
     #inbox .header-info,
     #inbox {
@@ -115,24 +119,7 @@
         margin-right: 2%;
     }
 
-        #inbox-utilities { height: 40px; display: inline-block; }
-/*
-            #inbox-utilities.has-sel .no-sel,
-            #inbox-utilities.has-sel .multi-sel,
-            #inbox-utilities.no-sel .multi-sel,
-            #inbox-utilities.no-sel .has-sel,
-            #inbox-utilities.multi-sel .no-sel,
-            #inbox-utilities.multi-sel .has-sel { display: none; }
-            #inbox-utilities.has-sel .has-sel, 
-            #inbox-utilities.multi-sel .multi-sel, 
-            #inbox-utilities.no-sel .no-sel { display: inline-block; }
-*/
-        #inbox-utilities .button-set button {
-            float: left;
-        }
-
-        #inbox-utilities .button-set button[name=compose] { float: right; }
-
+    #inbox-utilities { height: 40px; display: inline-block; }
         #inbox .header-info { display:none; font-size:.8em; line-height:1.2em; }
 
         #composeAction { width:48px; height: 48px; background: url(../img/pen.png) 0 0 no-repeat; }

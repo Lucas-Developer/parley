@@ -11,7 +11,16 @@
 	<title>Parley - myemail@parley.com</title>
     </head>
     <body class="loggedout">
-	    <header class="loggedin"></header>
+        <header class="loggedin">
+            <h1></h1>
+            <span class="email loggedin"></span>
+
+            <nav>
+                <button class="loggedin" name="compose" id="composeAction"></button>
+                <button class="loggedin" name="open-contacts" id="contactsAction"></button>
+                <button class="loggedin" name="settings" id="settingsAction"></button>
+            </nav>
+        </header>
 	    <section id="inbox" class="NOTloggedin"><table cellspacing=2><tbody></tbody></table></section>
         <div id="dialogWrapper"></div>
 
@@ -187,17 +196,6 @@
     </script>
     
     <script type="text/template" id="headerTemplate">
-	    <h1><span>Parley</span></h1>
-	    <span class="email loggedin"></span>
-
-        <section id="inbox-utilities" class="no-sel loggedin">
-            <button id="composeAction" class="no-sel" name="compose">compose</button>
-            <!--<button id="replyAction" class="has-sel" name="reply">reply</button>-->
-        </section>
-	    <nav>
-            <button class="loggedin" name="open-contacts" id="contactsAction">contacts</button>
-            <button class="loggedin" name="settings" id="settingsAction">settings</button>
-	    </nav>
     </script>
 	<script type="text/template" id="composeDialogTemplate">
 	    <form id="composeForm">

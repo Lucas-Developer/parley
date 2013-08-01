@@ -127,7 +127,6 @@
                 Parley.app.dialog('setup register', {email: form.email.value, message: Parley.app.i18n._t('register') });
             }
         });
-
     });
     Parley.vent.on('setup:register', function (e, callback) {
         e.preventDefault();
@@ -140,20 +139,25 @@
             console.log('About to register user: ' + form.email.value);
 
             Parley.app.dialog('info register-wait', { message: Parley.app.i18n._t('register-wait') });
-            Parley.app.dialog('hide setup');
 
             Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
                 console.log(JSON.stringify(data), textStatus, data.error);
 
-                if (textStatus != 'error') {
+                if (!_.has(data, 'error')) {
                     console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
                     console.log('Registering new inbox with Context.io');
                 
                     Parley.registerInbox();
 
                     Parley.app.loadUser();
+                    Parley.app.dialog('hide setup');
                     Parley.app.dialog('hide info register-wait');
                 } else {
+                    Parley.app.dialog('info register-wait', {
+                        message: Parley.app.i18n._t('register-error'),
+                        buttons: [ { id: "closeDialog", text: "Okay" } ],
+                        events: { "click #closeDialog": function (e) { Parley.app.dialog('hide register-wait'); } }
+                    });
                     console.log(textStatus);
                 }
             });
@@ -469,43 +473,6 @@
 	    }
 	});
 
-    var HeaderView = Parley.BaseView.extend({
-        el: $('header'),
-	    template: Mustache.compile($('#headerTemplate').html()),
-
-        events: {
-            'click #composeAction': function (e) {
-                console.log('Composing new message.');
-                Parley.app.dialog('compose');
-            },
-            'click #replyAction': function (e) {
-                var sel = Parley.inbox.findWhere({selected:true});
-                console.log('Replying to: ', sel);
-
-                Parley.app.dialog('compose', reply_to.toJSON());
-            },
-            'click #forwardAction': function (e) {
-                var sel = Parley.inbox.findWhere({selected:true});
-                console.log('Forwarding: ', sel);
-            },
-            'click #deleteAction': function (e) {
-                var sel = Parley.inbox.where({selected:true});
-                console.log('Deleting: ', sel);
-
-                Parley.vent.trigger('message:delete', sel);
-            },
-            'click #maliceAction': function (e) {
-                console.log('Malice detected in: ', Parley.inbox.where({selected:true}));
-            }
-        },
-
-        render: function () {
-            this.$el.html(this.template());
-
-            return this;
-        }
-    });
-
     var DialogView = Parley.BaseView.extend({
         el: $('#dialogWrapper'),
 
@@ -767,18 +734,30 @@
 	    el: $('body'),
 
 	    events: {
-			'click #settingsAction':	'openSettings',
-			'click #contactsAction':	'openContacts',
-            'click .hidden':            'showHidden'
-	    },
+            'click #composeAction': function (e) {
+                console.log('Composing new message.');
+                Parley.app.dialog('compose');
+            },
+            'click #replyAction': function (e) {
+                var sel = Parley.inbox.findWhere({selected:true});
+                console.log('Replying to: ', sel);
 
-        vent: _.extend({}, Backbone.Events),
+                Parley.app.dialog('compose', reply_to.toJSON());
+            },
+			'click #settingsAction': function () {
+                this.dialog('settings');
+            },
+            'click #contactsAction': function () {
+                this.dialog('contacts');
+            },
+            'click .hidden': 'showHidden'
+	    },
 
 	    initialize: function () {
 			console.log('Initializing Parley.');
             this.i18n = new Parley.i18n;
 
-            this.header = new HeaderView;
+            //this.header = new HeaderView;
             this._dialog = new DialogView;
 
 			this.inbox = $('#inbox tbody');
@@ -786,7 +765,6 @@
 
 			this.listenTo(Parley.inbox, 'add', this.addMessage);
 			this.listenTo(Parley.contacts, 'add', this.addContact);
-            this.listenTo(Parley.inbox, 'change:selected', this.messageSelectedHandler);
 
             (function (user,app) {
                 if (!user) {
@@ -805,16 +783,9 @@
 	    render: function () {
             console.log('Rendering the app');
            
-            this.assign(this.header, 'header');
             return this;
 		},
 
-        openSettings: function () {
-            this.dialog('settings');
-        },
-        openContacts: function () {
-            this.dialog('contacts');
-        },
 	    showHidden: function (e) {
             console.log(e.target);
             $(e.target).removeClass('hidden');
@@ -891,25 +862,11 @@
             Parley.vent.trigger('message:sync');
 
 			this.$el.addClass('loggedin').removeClass('loggedout');
-			this.header.$('.email').text(Parley.currentUser.get('email'));
-	    },
-
-        messageSelectedHandler: function () {
-            var selectedMessages = Parley.inbox.where({selected:true});
-            if (selectedMessages.length == 0) {
-            } if (selectedMessages.length == 1) {
-                this.header.$('#inbox-utilities').removeClass('multi-sel no-sel').addClass('has-sel');
-            } else if (selectedMessages.length > 1) {
-                this.header.$('#inbox-utilities').removeClass('no-sel has-sel').addClass('multi-sel');
-            } else {
-                this.header.$('#inbox-utilities').removeClass('multi-sel has-sel').addClass('no-sel');
-            }
-        }
+			this.$('.email').text(Parley.currentUser.get('email'));
+	    }
 	});
 	
     Parley.inbox = new MessageList;
     Parley.contacts = new ContactList;
 	Parley.app = new AppView;
-
-	$('button').button();
 }(window.Parley = window.Parley || {}, jQuery));
