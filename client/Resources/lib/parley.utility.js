@@ -397,7 +397,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* This function pulls down 50 messages at a time from the user's IMAP
   server, but only returns the ones with the "BEGIN PGP" section (ie. the
   encrypted ones). Therefore the client should expect anywhere between 0
-  and 50 messages to be returned per request, and could continue calling
+  and 200 messages to be returned per request, and could continue calling
   this function until the UI is populated.
 
   eg.
@@ -405,7 +405,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     var inboxFiller = function (targetNumber, lastOffset) {
       Parley.requestInbox(lastOffset, function(data, status, jqXHR) {
         if (data.messages.length < targetNumber) {
-          inboxFiller(targetNumber-data.messages.length, lastOffset+50)
+          inboxFiller(targetNumber-data.messages.length, lastOffset+200)
           Parley.Inbox.add(data.messages)
           //probably also makes sense to store lastOffset somewhere for later
           //if the user scrolls down or next page or whatever
