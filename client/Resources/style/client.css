@@ -110,6 +110,8 @@
     .loggedin header .email,
     .loggedin header nav { display: block; }
 
+    #dialogWrapper { display: none; }
+
     #inbox .header-info,
     #inbox {
         width: 96%;
