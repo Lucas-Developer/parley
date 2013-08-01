@@ -395,7 +395,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   //wait a second, ask server for imap server, check response,
   //wait another second...
-  Parley.waitForRegisteredInbox = _.delay(function(finished) {
+  Parley.waitForRegisteredInbox = function(finished) {
     var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
     var time = Math.floor((new Date())/1000);
     var sig = Parley.signAPIRequest(url,'GET',{'time':time});
@@ -407,13 +407,13 @@ are massaged to fit. The arguments to finished on ajax error look like:
         if (data.imap_account) {
           finished(true);
         } else {
-          Parley.waitForRegisteredInbox(finished);
+          _.delay(Parley.waitForRegisteredInbox, 1000, finished);
         }
       },
       error:function(jqXHR,textStatus,errorString){finished(false);},
       dataType:'json'
     });
-  }, 1000);
+  };
 
   /* This function pulls down 50 messages at a time from the user's IMAP
   server, but only returns the ones with the "BEGIN PGP" section (ie. the
