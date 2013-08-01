@@ -189,6 +189,7 @@
 	#settingsDialog form { max-width: 550px; margin: auto; }
 .ui-dialog-titlebar button, .ui-dialog-titlebar span {outline:none;}
 .thumbnail img {width:50px;height:50px;}
+tr.contact td { vertical-align:middle; }
     /* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
     .as-selections input { margin-top: 0 !important; }
     .as-selections input { background-color: transparent !important; }

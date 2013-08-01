@@ -93,6 +93,7 @@
         var email = contact.get('email');
 
         var planA = function(userinfo) {
+          console.log("A");
             if (!_(userinfo).has('public_key')) {
                 planB();
             } else {
@@ -103,6 +104,7 @@
             }
         }
         var planB = function() {
+          console.log("B");
             var fingerprint = contact.get('fingerprint') || Parley.requestPublicKey(email);
             var userinfo = Parley.AFIS(fingerprint);
 
@@ -570,9 +572,17 @@
                 'click #addContact': function (e) {
                     e.preventDefault();
                     var formData = this.$('form[name=newcontact]').serializeObject();
-
-                    Parley.contacts.add({email: formData['contact_email'],name: formData['contact_name']});
+                    Parley.contacts.add({email: formData['email']});
                     Parley.app.dialog('contacts contactlist');
+                },
+                'keydown': function (e) {
+                  switch (e.keyCode) {
+                    case 13:
+                      this.$('input[type=submit],button:visible').click();
+                    case 27:
+                      e.preventDefault();
+                      break;
+                    }
                 }
             },
             model: {
