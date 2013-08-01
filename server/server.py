@@ -69,7 +69,7 @@ def verifySignature(url, method, formData, secret):
       key=secret,
       msg=method+'|'+url+'?'+url_string,
       digestmod=hashlib.sha256).digest()
-  new_sig = base64.b64encode(new_sig).strip('=')
+  new_sig = base64.b64encode(new_sig,'-_').strip('=')
   return compare_hashes(old_sig, new_sig) and t < 30
 
 def getUser(email):
@@ -367,7 +367,7 @@ def imap_connect(email):
         key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+time,
         digestmod=hashlib.sha256).digest()
-    sig = base64.b64encode(sig).strip('=')
+    sig = base64.b64encode(sig,'-_').strip('=')
     resp = context_io.post_connect_token(
         callback_url="%s/imap/new/%s/%s/%s" % (BASE_URL, email, time, sig),
         email=email
@@ -385,7 +385,7 @@ def imap_new(email, timestamp, sig):
         key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+timestamp,
         digestmod=hashlib.sha256).digest()
-  new_sig = base64.b64encode(new_sig).strip('=')
+  new_sig = base64.b64encode(new_sig,'-_').strip('=')
   if compare_hashes(sig, new_sig) and t < 30*60:
     params = {'token':request.args['contextio_token']}
     token = contextio.ConnectToken(context_io,params)
@@ -418,7 +418,7 @@ def imap_get():
     account_dict = json.loads(user["imap_account"])
     params = {'id':account_dict["id"]}
     account = contextio.Account(context_io, params)
-    messages =  account.get_messages(include_body=1,body_type='text/plain',limit=50,offset=request.args["offset"])
+    messages =  account.get_messages(include_body=1,body_type='text/plain',limit=100,offset=request.args["offset"])
 
     #filter out unencrypted mail, and create an array of serialized messages
     serialized_messages = []
