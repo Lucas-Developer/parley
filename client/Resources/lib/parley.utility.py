@@ -143,7 +143,7 @@ def PYsignAPIRequest(url, method, data):
       key=window.Parley.currentUser.attributes.passwords.remote,
       msg=method+'|'+url+'?'+url_string,
       digestmod=hashlib.sha256).digest()
-  sig = base64.b64encode(sig).strip('=')
+  sig = base64.b64encode(sig,'-_').strip('=')
   return sig
 
 window.PYsignAPIRequest = PYsignAPIRequest
