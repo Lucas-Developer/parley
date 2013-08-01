@@ -473,9 +473,18 @@
             Parley.app.dialog('contacts', {single: this.model.get('from').toJSON()});
         },
 	    openMessage: function () {
-            Parley.readMessageView = new ReadMessageView({model:this.model});
+              if (Parley.readMessageView && Parley.readMessageView.model.get('message_id') == this.model.get('message_id')) {
+                Parley.readMessageView.$el.remove();
+                Parley.readMessageView = null;
+              } else if (Parley.readMessageView) {
+                Parley.readMessageView.$el.remove();
+                Parley.readMessageView = new ReadMessageView({model:this.model});
+                this.$el.after(Parley.readMessageView.render().el);
+              } else {
+                Parley.readMessageView = new ReadMessageView({model:this.model});
 
-            this.$el.after(Parley.readMessageView.render().el);
+                this.$el.after(Parley.readMessageView.render().el);
+              }
 	    },
         toggleSelect: function () {
             this.model.toggleSelect();
