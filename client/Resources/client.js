@@ -74,6 +74,16 @@
         Parley.contacts.set(keychain, {parse:true});
     });
 
+    Parley.vent.on('contact:add', function (contact, callback) {
+        console.log('VENT: contact:add');
+        var callback = callback || function () {};
+
+        var form = document.forms.newcontact;
+
+        Parley.app.dialog('contacts contactlist');
+        Parley.vent.trigger('contact:userinfo', {email:form.contact_email.value, name:form.contact_name.value});
+    });
+
     Parley.vent.on('contact:userinfo', function (contact, callback) {
         console.log('VENT: contact:userinfo');
         var callback = callback || function () {};
@@ -550,12 +560,18 @@
         {   id: 'dialog_contacts',
             template: Mustache.compile($('#contactsDialogTemplate').html()),
             events: {
-                'click #newContact': function (e) {},
-                'click #addContact': function (e) {}
+                'click #newContact': function (e) { e.preventDefault(); Parley.app.dialog('contacts newcontact'); },
+                'click #addContact': function (e) {
+                    e.preventDefault();
+                    var formData = this.$('form[name=newcontact]').serializeObject();
+
+                    Parley.contacts.add({email: formData['contact_email'],name: formData['contact_name']});
+                    Parley.app.dialog('contacts contactlist');
+                }
             },
             model: {
                 slug: 'contacts',
-                opts: { minWidth: 600, maxWidth: 1000 },
+                opts: { minWidth: 600 },
                 title: 'Contacts',
                 init: function () {
                     this.contacts = Parley.contacts.toJSON();
@@ -645,12 +661,12 @@
             */
             this.model = new Backbone.Model(options.model);
             this.template = options.template;
-            this.events = _.extend(this.events, options.model.events);
+            this.events = _.extend(this.events, options.events);
 
             this.model.set('opts', {
                 autoOpen: true,
                 dialogClass: '',
-                title: options.model.title
+                minWidth: 600
             });
 
             this.$el.appendTo('#dialogWrapper');
