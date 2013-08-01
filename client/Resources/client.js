@@ -164,7 +164,7 @@
                     Parley.registerInbox();
                     Parley.waitForRegisteredInbox(function(success) {
                       Parley.app.dialog('hide info inbox-error');
-                      _.delay(function(){Parley.vent.trigger('message:sync');},1000);
+                      _.delay(function(){Parley.vent.trigger('message:sync');},5000);
                     });
 
                     Parley.app.loadUser();
