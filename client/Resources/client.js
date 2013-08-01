@@ -499,7 +499,7 @@
 	    },
 	    render: function () {
             var message_body = _.reduce(this.model.readMessage(), function (memo, val) {
-                return memo + '<p>' + val.replace('\\n', '<br>') + '</p>';
+                return memo + '<p>' + val + '</p>';
             }, '');
             
 			this.$el.addClass('message-body').html(this.template({body:message_body}));
@@ -609,9 +609,9 @@
                 opts: {},
                 title: 'Compose',
                 init: function () {
-                    this.to = _.has(this, 'reply_to') ? this.reply_to.toJSON() : _.has(this, 'from') ? this.from.toJSON() : undefined;
+                    this.to = this.reply_to ? this.reply_to.toJSON() : this.from ? this.from.toJSON() : undefined;
                     
-                    if (_.has(this, 'subject')) {
+                    if (this.subject) {
                         var prefix = /^(R|r)e:/g;
                         this.subject = prefix.test(this.subject) ? this.subject : 're: ' + this.subject;
                     }
@@ -735,12 +735,11 @@
 	    events: {
             'click #composeAction': function (e) {
                 console.log('Composing new message.');
-                Parley.app.dialog('compose');
+                Parley.app.dialog('compose', {'from':null,'subject':null,'plainText':null});
             },
             'click #replyAction': function (e) {
                 var sel = Parley.inbox.findWhere({selected:true});
                 console.log('Replying to: ', sel);
-
                 Parley.app.dialog('compose', reply_to.toJSON());
             },
 			'click #settingsAction': function () {

@@ -187,7 +187,7 @@
 		.ui-dialog table .thumbnail { padding: 2px; width: 32px; height: 32px; }
 
 	#settingsDialog form { max-width: 550px; margin: auto; }
-
+.ui-dialog-titlebar button, .ui-dialog-titlebar span {outline:none;}
     /* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
     .as-selections input { margin-top: 0 !important; }
     .as-selections input { background-color: transparent !important; }
