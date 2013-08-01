@@ -389,10 +389,24 @@
             }, this);
 */
         },
-        readMessage: function () {
+        readMessage: function (parseLinks, insertBRs, quote) {
+            // parseLinks is an optional boolean for whether or not to convert URLs to HTML anchors
+            // insertBRs is an optional boolean for replacing carriage returns with HTML line breaks
+            // quote is an optional boolean for returning the message in quoted form (for reply box)
+
+            //***: Not sure why decryptedMessage should be an array; there will only be one per Message?
+            //
+            parseLinks = _.isUndefined(parseLinks); //default is true
+            insertBRs = _.isUndefined(insertBRs) ? parseLinks : insertBRs; //default same as parseLinks
+            quote = _.isUndefined(quote) ? !parseLinks : quote; //default opposite of parseLinks
+
             if (this.decryptedMessage.length > 0) {
                 console.log('Reading message from memory.');
-                return this.decryptedMessage;
+                var msg = this.decryptedMessage[0];
+                if (quote) msg = Parley.quote(msg);
+                if (window.linkify && parseLinks) msg = linkify(msg);
+                if (insertBRs) msg = Parley.insertBRs(msg);
+                return [msg];
             } else {
                 // This needs some error handling, must be bird-ass tight
                 console.log('Decrypting message.');
@@ -401,7 +415,11 @@
                 _.each(this.get('body'), _.bind(function (v,k) {
                     this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from')));
                 }, this));
-                return this.decryptedMessage;
+                var msg = this.decryptedMessage[0];
+                if (quote) msg = Parley.quote(msg);
+                if (window.linkify && parseLinks) msg = linkify(msg);
+                if (insertBRs) msg = Parley.insertBRs(msg);
+                return [msg];
             }
         },
         toggleSelect: function () {
@@ -461,7 +479,13 @@
 	    },
 
         openCompose: function () {
-            Parley.app.dialog('compose', this.model.toJSON());
+            Parley.app.dialog(
+              'compose',
+              _.extend(
+                this.model.toJSON(),
+                {'plainText':this.model.readMessage(false)}
+              )
+            );
         }
     });
 

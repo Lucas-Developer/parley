@@ -322,6 +322,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Accepts the encrypted message body and sender as either an email address or Contact object
   */
   Parley.decryptAndVerify = function(encryptedMessage, sender) {
+
     var keyid, email;
     if (_.isString(sender)) {
       email = sender;
@@ -334,8 +335,15 @@ are massaged to fit. The arguments to finished on ajax error look like:
     } else {
       throw "Error: Sender is illegible."
     }
-    var decryptedMessage = window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
-    return window.linkify ? linkify(decryptedMessage) : decryptedMessage;
+    return window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
+  }
+
+  Parley.quote = function(message) {
+    return '\r\n\r\n\r\n> ' + message.replace(/\r?\n/g,'\r\n> ');
+  }
+
+  Parley.insertBRs = function(message) {
+    return message.replace(/\r?\n/g,'<br/>');
   }
   
   /* Send Parley invitation from current user to email address

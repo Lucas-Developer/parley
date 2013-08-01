@@ -215,7 +215,7 @@
 				<input type="text" name="subject" value="{{subject}}">
 			</label>
             <label for="body">
-              <textarea rows="6" name="body">{{#body}}{{content}}{{/body}}</textarea>
+              <textarea rows="6" name="body">{{plainText}}</textarea>
             </label>
         </div>
 
@@ -241,13 +241,14 @@
 	</script>
 	
 	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="lib/underscore-min.js"></script>
 	<script type="text/python" src="lib/parley.utility.py"></script>
 	<script type="text/javascript" src="lib/parley.utility.js"></script>
-	<script type="text/javascript" src="lib/underscore-min.js"></script>
 	<script type="text/javascript" src="lib/backbone-min.js"></script>
 	<script type="text/javascript" src="lib/mustache.js"></script>
 	<script type="text/javascript" src="lib/moment.min.js"></script>
 	<script type="text/javascript" src="lib/sorttable.js"></script>
+	<script type="text/javascript" src="lib/ba-linkify.min.js"></script>
 	<script type="text/javascript" src="lib/jquery.i18n.min.js"></script>
 	<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/webfont/1.4.2/webfont.js"></script>
