@@ -155,8 +155,11 @@
                 } else {
                     Parley.app.dialog('info register-wait', {
                         message: Parley.app.i18n._t('register-error'),
-                        buttons: [ { id: "closeDialog", text: "Okay" } ],
-                        events: { "click #closeDialog": function (e) { Parley.app.dialog('hide register-wait'); } }
+                        buttons: [ {
+                            id: "closeDialog",
+                            text: "Okay",
+                            handler:function (e) { Parley.app.dialog('hide register-wait'); }
+                        } ]
                     });
                     console.log(textStatus);
                 }
@@ -189,16 +192,16 @@
                 Parley.app.dialog('hide info inbox-loading');
                 Parley.app.dialog('info inbox-error', {
                     message: Parley.app.i18n._t('inbox-forbidden'),
-                    buttons: [
-                        {id:'retryInbox',text:'Retry'}
-                    ],
-                    events: {
-                        'click #retryInbox': function(e) {
+                    buttons: [ {
+                        id:'retryInbox',
+                        text:'Retry',
+                        handler: function(e) {
                             Parley.app.dialog('hide info inbox-error');
                             Parley.app.dialog('info inbox-loading', { message: Parley.app.i18n._t('loading-inbox') });
                             Parley.registerInbox();
-                            Parley.vent.trigger('message:sync'); }
-                    }
+                            Parley.vent.trigger('message:sync');
+                        }
+                    } ]
                 });
 
                 return false;
@@ -249,8 +252,9 @@
                     Parley.app.dialog('hide send-message');
                     Parley.app.dialog('info sent-message', {
                         message: Parley.app.i18n._t('sent-message'),
-                        buttons: [ { id: 'closeDialog', text: 'Okay' } ],
-                        events: { 'click #closeDialog': function (e) { Parley.app.dialog('hide sent-message'); } }
+                        buttons: [ { id: 'closeDialog', text: 'Okay',
+                            handler: function (e) { Parley.app.dialog('hide sent-message'); }
+                        } ]
                     });
                 } else {
                     // Error
@@ -516,7 +520,7 @@
             },
             model: {
                 slug: 'setup',
-                opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
+                opts: { dialogClass: 'no-close' },
                 title: 'Welcome to Parley',
                 loaded: function (view) {
                     view.$('#text_message')._t('welcome');
@@ -575,12 +579,11 @@
                 opts: {},
                 title: 'Compose',
                 init: function () {
-                    var data = this.data;
-                    data.to = _.has(data, 'reply_to') ? data.reply_to.toJSON() : _.has(data, 'from') ? data.from.toJSON() : undefined;
+                    this.to = _.has(this, 'reply_to') ? this.reply_to.toJSON() : _.has(this, 'from') ? this.from.toJSON() : undefined;
                     
-                    if (_.has(data, 'subject')) {
+                    if (_.has(this, 'subject')) {
                         var prefix = /^(R|r)e:/g;
-                        data.subject = prefix.test(data.subject) ? data.subject : 're: ' + data.subject;
+                        this.subject = prefix.test(this.subject) ? this.subject : 're: ' + this.subject;
                     }
 
                     return this;
@@ -593,12 +596,11 @@
                         return {name: name, value: email, uid: name + ' <' + email + '>'}
                     });
 
-                    var data = this.get('data');
-                    var to = data.to;
+                    var to = this.to;
                     var preFill = {};
 
                     if (_.isObject(to))
-                        preFill = _.findWhere(items, {value: data.to.email}) || {};
+                        preFill = _.findWhere(items, {value: this.to.email}) || {};
 
                     var opts = {
                         selectedItemProp: 'name',
@@ -640,7 +642,6 @@
             this.model.set('opts', {
                 autoOpen: true,
                 dialogClass: '',
-                draggable: true,
                 title: options.model.title
             });
 
@@ -651,8 +652,6 @@
 
         render: function () {
             console.log('Rendering dialog box.'); 
-
-            if (init = this.model.get('init')) this.model.set(init.call(this.model.toJSON()));
 
             this.$el
                 .html( this.template(this.model.toJSON()) );
@@ -666,17 +665,19 @@
 
             this.delegateEvents(this.events);
 
-            if (loaded = this.model.get('loaded')) loaded.call(this.model.toJSON(), this);
-
             return this;
         },
 
         setData: function (data) {
             this.model.set(data);
+
+            if (init = this.model.get('init')) this.model.set(init.call(this.model.toJSON()));
             return this;
         },
         show: function () {
-            this.$el.dialog( this.model.get('opts') );
+            this.render().$el.dialog( this.model.get('opts') );
+
+            if (loaded = this.model.get('loaded')) loaded.call(this.model.toJSON(), this);
             return this;
         },
         hide: function () {
@@ -697,6 +698,9 @@
 
 	var AppView = Parley.BaseView.extend({
 	    el: $('body'),
+
+        blankTemplate: Mustache.compile($('#blankDialogTemplate').html()),
+        tempDialogs: [],
 
 	    events: {
             'click #composeAction': function (e) {
@@ -737,13 +741,19 @@
 
             (function (user,app) {
                 if (!Parley.installed()){
-                    app.dialog('info installing',{ buttons:[{id:'install_pgp',text:'ok'}],events:{'click #install_pgp':_.bind(function(){
-                        Parley.install(_.bind(function(){
-                            console.log('No user logged in. Showing setup dialog.');
-                            this.dialog('hide installing');
-                            this.dialog('setup', { message: app.i18n._t('welcome') });
-                        },app));
-                    },app)},message: app.i18n._t('installing')});
+                    app.dialog('info installing',{
+                        buttons:[{
+                            id:'install_pgp', text:'ok',
+                            handler: _.bind(function(){
+                                Parley.install(_.bind(function(){
+                                    console.log('No user logged in. Showing setup dialog.');
+                                    this.dialog('hide installing');
+                                    this.dialog('setup', { message: this.i18n._t('welcome') });
+                                }, this));
+                            }, app)
+                        }],
+                        message: app.i18n._t('installing')
+                    });
                 }else{
                     if (!user) {
                         console.log('No user logged in. Showing setup dialog.');
@@ -795,11 +805,17 @@
                     case 'hide':
                         var slug = _a[1],
                             page = _a[2];
-                        if (slug == 'info') slug = page;
-
-                        var dialog = _(this._dialogs).findWhere({slug:slug});
-                        if (dialog)
-                            dialog.view.hide();
+                        if (slug == 'info') {
+                            var dialog = this.tempDialogs[page];
+                            if (dialog) {
+                                dialog.dialog('destroy');
+                                this.tempDialogs[page] = undefined;
+                            }
+                        } else { 
+                            var dialog = _(this._dialogs).findWhere({slug:slug});
+                            if (dialog)
+                                dialog.view.hide();
+                        }
 
                         break;
                     case 'show':
@@ -808,24 +824,36 @@
                     default:
                         var slug = slug || _a[0],
                             page = page || _a[1];
-                        if (slug == 'info') slug = page;
+                        if (slug == 'info') {
+                            if (_.has(this.tempDialogs, page)) {
+                                var dialog = this.tempDialogs[page];
+                                dialog.html(this.blankTemplate(data));
+                            } else {
+                                var dialog = $(this.blankTemplate(data)).dialog();
+                                this.tempDialogs[page] = dialog;
 
-                        var dialog = _(this._dialogs).findWhere({slug:slug});
-                        if (dialog) {
-                            dialog.view.setData(_.extend(data,{page:page})).show();
-                        } else {
-                            var view = new DialogView({
-                                model: data,
-                                template: Mustache.compile($('#blankDialogTemplate').html()),
-                                id: 'dialog_' + slug
-                            });
-                            dialog = {
-                                slug: slug,
-                                view: view
+                                _.each(data.buttons, function (ele) {
+                                    $(document).on('click', '#'+ele.id, ele.handler);
+                                });
                             }
-                            this._dialogs.push(dialog);
+                        } else {
+                            var dialog = _(this._dialogs).findWhere({slug:slug});
+                            if (dialog) {
+                                dialog.view.setData(_.extend({page:page},data)).show();
+                            } else {
+                                var view = new DialogView({
+                                    model: data,
+                                    template: this.blankTemplate,
+                                    id: 'dialog_' + slug
+                                });
+                                dialog = {
+                                    slug: slug,
+                                    view: view
+                                }
+                                this._dialogs.push(dialog);
 
-                            view.setData(_.extend(data,{page:page})).show();
+                                view.setData(_.extend(data,{page:page})).show();
+                            }
                         }
 
                         break;
