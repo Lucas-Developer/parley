@@ -71,12 +71,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   Parley.BASE_URL = "https://api.parley.co";
 
-  window.PYsetup(
-    window.Ti.Filesystem.getResourcesDirectory().toString(),
-    window.Ti.Filesystem.getApplicationDataDirectory().toString(),
-    window.Ti.Filesystem.getUserDirectory().toString()
-  );
-
   //This is just a shim in case Parley.Contact isn't defined elsewhere
   Parley.Contact = Parley.Contact || function () {
     this.attributes = this.attributes || {};
@@ -88,6 +82,23 @@ are massaged to fit. The arguments to finished on ajax error look like:
         return this.attributes[key];
       }
     }
+  }
+  Parley.installed = function(){
+      result = window.PYinstalled(
+          window.Ti.Filesystem.getResourcesDirectory().toString(),
+          window.Ti.Filesystem.getApplicationDataDirectory().toString(),
+          window.Ti.Filesystem.getUserDirectory().toString()
+      );
+      console.log(result);
+      return result
+  }
+  Parley.install = function(finished){
+      window.PYinstall(
+          window.Ti.Filesystem.getResourcesDirectory().toString(),
+          window.Ti.Filesystem.getApplicationDataDirectory().toString(),
+          window.Ti.Filesystem.getUserDirectory().toString()
+      );
+      finished();
   }
 
   /* Sign Parley API request--identical to Amazon API signing method,
