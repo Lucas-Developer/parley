@@ -102,6 +102,7 @@
                 contact.set( _.extend(userinfo, Parley.AFIS(fingerprint)) );
                 if (Parley.currentUser.get('email') != email) Parley.contacts.add(contact);
             }
+            Parley.storeKeyring(console.log);
         }
         var planB = function() {
           console.log("B");
@@ -119,6 +120,7 @@
                 contact.set(userinfo);
                 if (Parley.currentUser.get('email') != email) Parley.contacts.add(contact);
             }
+            Parley.storeKeyring(console.log);
         }
         Parley.requestUser(email, callback).success(planA).error(planB);
     });
@@ -363,7 +365,7 @@
 	    tagName: 'tr',
 	    template: Mustache.compile($('#contactTemplate').html()),
 	    events: {
-            "click .send" :     "sendMessage"
+            "click" :     "sendMessage"
         },
 		render: function () {
 			var data = this.model.toJSON();
@@ -374,6 +376,7 @@
 			return this;
 	    },
         sendMessage: function () {
+                       console.log('sendMessage');
             Parley.app.dialog('compose', {from:this.model});
         }
 	});

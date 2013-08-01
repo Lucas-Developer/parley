@@ -193,7 +193,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   
   /* Stores (encrypted) local keyring on the server.
   Accepts finished callback. */
-  Parley.storeKeyring = function(finished) {
+  Parley.storeKeyring = _.debounce(function(finished) {
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
@@ -211,7 +211,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         dataType:'json'
       });
     }
-  }
+  }, 1000*60);
   
   /* Requests the public key corresponding to an email address from public keyservers.
   This function can take a bit of time to execute.
