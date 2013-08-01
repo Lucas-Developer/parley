@@ -418,7 +418,7 @@ def imap_get():
     account_dict = json.loads(user["imap_account"])
     params = {'id':account_dict["id"]}
     account = contextio.Account(context_io, params)
-    messages =  account.get_messages(include_body=1,body_type='text/plain',limit=200,offset=request.args["offset"])
+    messages =  account.get_messages(include_body=1,body_type='text/plain',limit=100,offset=request.args["offset"])
 
     #filter out unencrypted mail, and create an array of serialized messages
     serialized_messages = []
