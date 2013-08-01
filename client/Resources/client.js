@@ -161,15 +161,15 @@
                     console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
                     console.log('Registering new inbox with Context.io');
                 
-                    Parley.app.dialog('info inbox-error');
                     Parley.registerInbox();
                     Parley.waitForRegisteredInbox(function(success) {
                       Parley.app.dialog('hide info inbox-error');
-                      Parley.app.loadUser();
-                      Parley.app.dialog('hide setup');
-                      Parley.app.dialog('hide info register-wait');
+                      _.delay(function(){Parley.vent.trigger('message:sync');},1000);
                     });
 
+                    Parley.app.loadUser();
+                    Parley.app.dialog('hide setup');
+                    Parley.app.dialog('hide info register-wait');
                 } else {
                     Parley.app.dialog('info register-wait', {
                         message: Parley.app.i18n._t('register-error'),
