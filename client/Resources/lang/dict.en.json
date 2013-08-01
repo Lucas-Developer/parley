@@ -6,5 +6,6 @@
 "login-wait": "It takes a while to log in! We've downloaded your encrypted keys and contacts from the Parley server, and they take a little while to decrypt. We should be able to speed this process up significantly with the next release.", 
 "saving-contacts": "Please wait while we save your contacts to the server! Again, the encryption process takes some time, but we will be speeding it up with the next release.",
 "loading-inbox": "We are loading your inbox. This may take a minute or two, depending on how many encrypted messages you have. Please be patient. Thanks! You are the best.",
+"send-message": "Encrypting and sending...",
 "sent-message": "Your message was encrypted and sent on its way!",
 "installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait." }
