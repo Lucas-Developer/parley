@@ -148,6 +148,10 @@
                     console.log('Registering new inbox with Context.io');
                 
                     Parley.registerInbox();
+                    Parley.waitForRegisteredInbox(function(success) {
+                      Parley.app.dialog('hide info inbox-error');
+                      _.delay(Parley.vent.trigger,1000,'message:sync');
+                    });
 
                     Parley.app.loadUser();
                     Parley.app.dialog('hide setup');
@@ -199,6 +203,10 @@
                             Parley.app.dialog('hide info inbox-error');
                             Parley.app.dialog('info inbox-loading', { message: Parley.app.i18n._t('loading-inbox') });
                             Parley.registerInbox();
+                            Parley.waitForRegisteredInbox(function(success) {
+                              Parley.app.dialog('hide info inbox-error');
+                              _.delay(Parley.vent.trigger,1000,'message:sync');
+                            });
                             Parley.vent.trigger('message:sync');
                         }
                     } ]
@@ -825,7 +833,7 @@
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            if (_.has(this.tempDialogs, page)) {
+                            if (this.tempDialogs.page) {
                                 var dialog = this.tempDialogs[page];
                                 dialog.html(this.blankTemplate(data));
                             } else {
