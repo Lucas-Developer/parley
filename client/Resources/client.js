@@ -93,6 +93,7 @@
         var email = contact.get('email');
 
         var planA = function(userinfo) {
+          console.log("A");
             if (!_(userinfo).has('public_key')) {
                 planB();
             } else {
@@ -101,8 +102,10 @@
                 contact.set( _.extend(userinfo, Parley.AFIS(fingerprint)) );
                 if (Parley.currentUser.get('email') != email) Parley.contacts.add(contact);
             }
+            Parley.storeKeyring(console.log);
         }
         var planB = function() {
+          console.log("B");
             var fingerprint = contact.get('fingerprint') || Parley.requestPublicKey(email);
             var userinfo = Parley.AFIS(fingerprint);
 
@@ -117,6 +120,7 @@
                 contact.set(userinfo);
                 if (Parley.currentUser.get('email') != email) Parley.contacts.add(contact);
             }
+            Parley.storeKeyring(console.log);
         }
         Parley.requestUser(email, callback).success(planA).error(planB);
     });
@@ -158,6 +162,10 @@
                     console.log('Registering new inbox with Context.io');
                 
                     Parley.registerInbox();
+                    Parley.waitForRegisteredInbox(function(success) {
+                      Parley.app.dialog('hide info inbox-error');
+                      _.delay(function(){Parley.vent.trigger('message:sync');},5000);
+                    });
 
                     Parley.app.loadUser();
                     Parley.app.dialog('hide setup');
@@ -206,10 +214,11 @@
                         id:'retryInbox',
                         text:'Retry',
                         handler: function(e) {
-                            Parley.app.dialog('hide info inbox-error');
-                            Parley.app.dialog('info inbox-loading', { message: Parley.app.i18n._t('loading-inbox') });
                             Parley.registerInbox();
-                            Parley.vent.trigger('message:sync');
+                            Parley.waitForRegisteredInbox(function(success) {
+                              Parley.app.dialog('hide info inbox-error');
+                              _.delay(function(){Parley.vent.trigger('message:sync');},1000);
+                            });
                         }
                     } ]
                 });
@@ -356,7 +365,7 @@
 	    tagName: 'tr',
 	    template: Mustache.compile($('#contactTemplate').html()),
 	    events: {
-            "click .send" :     "sendMessage"
+            "click" :     "sendMessage"
         },
 		render: function () {
 			var data = this.model.toJSON();
@@ -367,6 +376,7 @@
 			return this;
 	    },
         sendMessage: function () {
+                       console.log('sendMessage');
             Parley.app.dialog('compose', {from:this.model});
         }
 	});
@@ -468,9 +478,18 @@
             Parley.app.dialog('contacts', {single: this.model.get('from').toJSON()});
         },
 	    openMessage: function () {
-            Parley.readMessageView = new ReadMessageView({model:this.model});
+              if (Parley.readMessageView && Parley.readMessageView.model.get('message_id') == this.model.get('message_id')) {
+                Parley.readMessageView.$el.remove();
+                Parley.readMessageView = null;
+              } else if (Parley.readMessageView) {
+                Parley.readMessageView.$el.remove();
+                Parley.readMessageView = new ReadMessageView({model:this.model});
+                this.$el.after(Parley.readMessageView.render().el);
+              } else {
+                Parley.readMessageView = new ReadMessageView({model:this.model});
 
-            this.$el.after(Parley.readMessageView.render().el);
+                this.$el.after(Parley.readMessageView.render().el);
+              }
 	    },
         toggleSelect: function () {
             this.model.toggleSelect();
@@ -485,7 +504,7 @@
 	    },
 	    render: function () {
             var message_body = _.reduce(this.model.readMessage(), function (memo, val) {
-                return memo + '<p>' + val.replace('\\n', '<br>') + '</p>';
+                return memo + '<p>' + val + '</p>';
             }, '');
             
 			this.$el.addClass('message-body').html(this.template({body:message_body}));
@@ -556,9 +575,17 @@
                 'click #addContact': function (e) {
                     e.preventDefault();
                     var formData = this.$('form[name=newcontact]').serializeObject();
-
-                    Parley.contacts.add({email: formData['contact_email'],name: formData['contact_name']});
+                    Parley.contacts.add({email: formData['email']});
                     Parley.app.dialog('contacts contactlist');
+                },
+                'keydown': function (e) {
+                  switch (e.keyCode) {
+                    case 13:
+                      this.$('input[type=submit],button:visible').click();
+                    case 27:
+                      e.preventDefault();
+                      break;
+                    }
                 }
             },
             model: {
@@ -595,9 +622,9 @@
                 opts: {},
                 title: 'Compose',
                 init: function () {
-                    this.to = _.has(this, 'reply_to') ? this.reply_to.toJSON() : _.has(this, 'from') ? this.from.toJSON() : undefined;
+                    this.to = this.reply_to ? this.reply_to.toJSON() : this.from ? this.from.toJSON() : undefined;
                     
-                    if (_.has(this, 'subject')) {
+                    if (this.subject) {
                         var prefix = /^(R|r)e:/g;
                         this.subject = prefix.test(this.subject) ? this.subject : 're: ' + this.subject;
                     }
@@ -724,12 +751,11 @@
 	    events: {
             'click #composeAction': function (e) {
                 console.log('Composing new message.');
-                Parley.app.dialog('compose');
+                Parley.app.dialog('compose', {'from':null,'subject':null,'plainText':null});
             },
             'click #replyAction': function (e) {
                 var sel = Parley.inbox.findWhere({selected:true});
                 console.log('Replying to: ', sel);
-
                 Parley.app.dialog('compose', reply_to.toJSON());
             },
 			'click #settingsAction': function () {
@@ -844,7 +870,7 @@
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            if (_.has(this.tempDialogs, page)) {
+                            if (this.tempDialogs.page) {
                                 var dialog = this.tempDialogs[page];
                                 dialog.html(this.blankTemplate(data));
                             } else {
