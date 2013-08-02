@@ -182,7 +182,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
         url:url,
         data:{'time':time,'sig':sig},
         success:function(data, textStatus, jqXHR) {
-          if (data.keyring) window.PYimportEncryptedKeyring(data.keyring);
+          if (data.keyring) {
+            window.PYimportEncryptedKeyring(data.keyring);
+          } else {
+            data.error = 'Failed to authenticate. Returning public user info.';
+          }
           finished(data, textStatus, jqXHR);
         },
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
