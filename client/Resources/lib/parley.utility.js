@@ -133,7 +133,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   decorate the UI accordingly.
   Accepts email, cleartext password, finished callback */
   Parley.registerUser = function (name, email, clearTextPassword, finished) {
-    Parley.currentUser = Parley.currentUser || new Parley.Contact();
+    Parley.currentUser = Parley.currentUser || new Parley.Contact({isCurrentUser:true});
     Parley.currentUser.set('name', name);
     Parley.currentUser.set('email', email);
     var passwords = Parley.currentUser.get('passwords') || {};
@@ -159,7 +159,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   }
 
   Parley.authenticateUser = function(email, clearTextPassword, finished) {
-    Parley.currentUser = Parley.currentUser || new Parley.Contact();
+    Parley.currentUser = Parley.currentUser || new Parley.Contact({isCurrentUser:true});
     Parley.currentUser.set('email', email);
     var passwords = Parley.currentUser.get('passwords') || {};
     passwords.local = Parley.pbkdf2(clearTextPassword);

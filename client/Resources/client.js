@@ -174,7 +174,8 @@
                     Parley.app.dialog('hide setup');
                     Parley.app.dialog('hide info register-wait');
                 } else {
-                    Parley.app.dialog('info register-wait', {
+                    Parley.app.dialog('hide register-wait');
+                    Parley.app.dialog('info register-error', {
                         header: 'Error',
                         message: Parley.app.i18n._t('register-error'),
                         buttons: [ 'okay' ]
@@ -342,7 +343,8 @@
         initialize: function (attrs) {
             console.log('Initializing contact.');
 
-            Parley.vent.trigger('contact:userinfo', this);
+            if (!_.has(attrs, 'isCurrentUser'))
+                Parley.vent.trigger('contact:userinfo', this);
         },
         addMessage: function (message) {
             message = message.toJSON ? message.toJSON() : message;
@@ -934,7 +936,7 @@
             //localStorage.setItem('currentUser', JSON.stringify(Parley.currentUser));
 
             Parley.vent.trigger('contact:sync');
-            Parley.vent.trigger('message:sync');
+            //Parley.vent.trigger('message:sync');
 
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.$('.email').text(Parley.currentUser.get('email'));
