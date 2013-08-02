@@ -19,10 +19,12 @@
     };
 	WebFont.load({
 	    google: {
-		families: ['Source Sans Pro', 'PT Sans', 'PT Serif']
+		families: ['Quicksand', 'Source Sans Pro', 'PT Sans', 'PT Serif']
 	    }
 	});
 
+    // This uses a jquery i18n plugin, there may be better
+    // but this was the easiest to work with at it works fine!
     Parley.i18n = Backbone.Model.extend({
         defaults: function () {
             return {
@@ -149,10 +151,11 @@
         if (form.password_one.value != form.password_two.value) {
             // Passwords don't match
             console.log('Passwords don\'t match.');
+            Parley.app.dialog('show info no-match', { message: Parley.app.i18n._t('no-match'), buttons: [ 'okay' ] });
         } else {
             console.log('About to register user: ' + form.email.value);
 
-            Parley.app.dialog('info register-wait', { message: Parley.app.i18n._t('register-wait') });
+            Parley.app.dialog('info register-wait', { header: 'Registering', message: Parley.app.i18n._t('register-wait') });
 
             Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
                 console.log(JSON.stringify(data), textStatus, data.error);
@@ -172,12 +175,9 @@
                     Parley.app.dialog('hide info register-wait');
                 } else {
                     Parley.app.dialog('info register-wait', {
+                        header: 'Error',
                         message: Parley.app.i18n._t('register-error'),
-                        buttons: [ {
-                            id: "closeDialog",
-                            text: "Okay",
-                            handler:function (e) { Parley.app.dialog('hide register-wait'); }
-                        } ]
+                        buttons: [ 'okay' ]
                     });
                     console.log(textStatus);
                 }
@@ -190,19 +190,23 @@
             email = form.email.value,
             password = form.password.value;
 
-        Parley.app.dialog('hide setup');
-        Parley.app.dialog('info login-wait', { message: Parley.app.i18n._t('login-wait') });
+        Parley.app.dialog('info login-wait', { header: 'Logging in', message: Parley.app.i18n._t('login-wait') });
 
         Parley.authenticateUser(email, password, function (data, textStatus) {
-            console.log('User successfully logged in.');
-            Parley.app.dialog('hide info login-wait');
-            Parley.app.loadUser();
+            if (!_.has(data, 'error')) {
+                console.log('User successfully logged in.');
+                Parley.app.dialog('hide setup');
+                //Parley.app.dialog('hide info login-wait');
+                Parley.app.loadUser();
+            } else {
+                //Parley.app.dialog('hide info login-wait');
+            }
         });
     });
 
     Parley.vent.on('message:sync', function (e, callback) {
         console.log('VENT: message:sync');
-        Parley.app.dialog('info inbox-loading', { message: Parley.app.i18n._t('loading-inbox') });
+        Parley.app.dialog('info inbox-loading', { header: 'Loading inbox', message: Parley.app.i18n._t('loading-inbox') });
         Parley.requestInbox(function (data, textStatus) {
             if (data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
@@ -224,7 +228,7 @@
                 });
 
                 return false;
-            } else {
+            } else if (!_.has(data, 'error')) {
                 console.log('Inbox loaded', data.messages);
                 Parley.app.dialog('hide info inbox-loading');
 
@@ -234,6 +238,8 @@
                         Parley.inbox.add(data.messages[i], {parse:true});
                     }
                 }
+            } else {
+                // An error occurred
             }
         });
     });
@@ -271,9 +277,7 @@
                     Parley.app.dialog('hide send-message');
                     Parley.app.dialog('info sent-message', {
                         message: Parley.app.i18n._t('sent-message'),
-                        buttons: [ { id: 'closeDialog', text: 'Okay',
-                            handler: function (e) { Parley.app.dialog('hide sent-message'); }
-                        } ]
+                        buttons: [ 'okay' ]
                     });
                 } else {
                     // Error
@@ -325,12 +329,6 @@
 */
     /** END VENT CODE **/
 
-	Parley.BaseView = Backbone.View.extend({
-		assign: function (view, selector) {
-			view.setElement(this.$(selector)).render();
-		}
-	});
-
 	Parley.Contact = Backbone.Model.extend({
 	    defaults: function () {
 			return {
@@ -361,7 +359,7 @@
 	var ContactList = Backbone.Collection.extend({
 	    model: Parley.Contact
 	});
-	var ContactView = Parley.BaseView.extend({
+	var ContactView = Backbone.View.extend({
 	    tagName: 'tr',
 	    template: Mustache.compile($('#contactTemplate').html()),
 	    events: {
@@ -455,7 +453,7 @@
 	var MessageList = Backbone.Collection.extend({
 	    model: Parley.Message
 	});
-	var MessageView = Parley.BaseView.extend({
+	var MessageView = Backbone.View.extend({
 	    tagName: 'tr',
 	    template: Mustache.compile($('#messageTemplate').html()),
 	    events: {
@@ -496,7 +494,7 @@
         },
 	});
 
-    var ReadMessageView = Parley.BaseView.extend({
+    var ReadMessageView = Backbone.View.extend({
 	    tagName: 'tr',
 	    template: Mustache.compile($('#readMessageTemplate').html()),
 	    events: {
@@ -531,14 +529,6 @@
 	});
 
     Parley._dialogs = [
-        {   id: 'dialog_loading',
-            template: Mustache.compile($('#loadingDialogTemplate').html()),
-            model: {
-                slug: 'loading',
-                opts: { width: 600, position: ['center', 80], dialogClass: 'no-close', draggable: false },
-                title: 'Loading'
-            }
-        },
         {   id: 'dialog_setup',
             template: Mustache.compile($('#setupDialogTemplate').html()),
             events: {
@@ -561,7 +551,6 @@
             template: Mustache.compile($('#settingsDialogTemplate').html()),
             model: {
                 slug: 'settings',
-                opts: { resizable: false, width: 550 },
                 title: 'Parley Settings',
                 init: function () {
                     _.extend(this, Parley.currentUser.toJSON());
@@ -581,7 +570,7 @@
                 'keydown': function (e) {
                   switch (e.keyCode) {
                     case 13:
-                      this.$('input[type=submit],button:visible').click();
+                      this.$('input[type=submit],button:visible').first().click();
                     case 27:
                       e.preventDefault();
                       break;
@@ -590,7 +579,6 @@
             },
             model: {
                 slug: 'contacts',
-                opts: { minWidth: 600 },
                 title: 'Contacts',
                 init: function () {
                     this.contacts = Parley.contacts.toJSON();
@@ -682,12 +670,12 @@
             this.model = new Backbone.Model(options.model);
             this.template = options.template;
             this.events = _.extend(this.events, options.events);
-
-            this.model.set('opts', {
+            this.opts = _.extend({
+                position: { my: 'center', at: 'center' },
                 autoOpen: true,
-                dialogClass: '',
-                minWidth: 600
-            });
+                minWidth: 600,
+                title: this.model.get('title')
+            }, (this.model.get('opts') || {}));
 
             this.$el.appendTo('#dialogWrapper');
 
@@ -721,7 +709,7 @@
             return this;
         },
         show: function () {
-            this.render().$el.dialog( this.model.get('opts') );
+            this.render().$el.dialog( this.opts );
 
             if (loaded = this.model.get('loaded')) loaded.call(this.model.toJSON(), this);
             return this;
@@ -734,7 +722,7 @@
         clickSubmit: function (e) {
             switch (e.keyCode) {
                 case 13:
-                    this.$('input[type=submit],button:visible').click();
+                    this.$('input[type=submit],button:visible').first().click();
                 case 27:
                     e.preventDefault();
                     break;
@@ -742,7 +730,7 @@
         }
     });
 
-	var AppView = Parley.BaseView.extend({
+	var AppView = Backbone.View.extend({
 	    el: $('body'),
 
         blankTemplate: Mustache.compile($('#blankDialogTemplate').html()),
@@ -838,12 +826,32 @@
         separate dialog with [page name] as the slug. Use this for "loading" windows
         or modal dialogs.
         Make sure you pass a button:
-            button: [{id:'buttonId',text:'click me'}, etc.]
-        and an event:
-            event: [{"click #buttonId":function(e){ Parley.vent.trigger('button:clicked'); }}, etc.]
+            button: [{id:'buttonId',text:'click me',handler:function(}, etc.]
         as members of 'data'.
         **/
         dialog: function (opts,data) {
+            var _buttons = {
+                "okay": {
+                    id: "okayButton",
+                    text: "Okay",
+                    handler: function(e){ this.dialog('close'); }
+                }
+            };
+            if (_.has(data, 'buttons')) {
+                data.buttons = _.map(data.buttons, function (ele) {
+                    if (_.isString(ele) && _.has(_buttons, ele)) return _buttons[ele];
+                    else return ele;
+                });
+            }
+
+            var _images = {
+                "loading": "img/loader.gif",
+                "logo": "img/logo.png",
+                "logo_big": "img/logo_big.png"
+            };
+
+            if (data && _.has(_images, data.image)) data.image = _images[data.image];
+
             if (_.isString(opts)) {
                 var _a = opts.split(' ');
                 switch (_a[0]) {
@@ -874,11 +882,15 @@
                                 var dialog = this.tempDialogs[page];
                                 dialog.html(this.blankTemplate(data));
                             } else {
-                                var dialog = $(this.blankTemplate(data)).dialog();
+                                var dialog = $(this.blankTemplate(data)).dialog({
+                                    resizable: false,
+                                    dialogClass: 'no-close',
+                                    minWidth: '400'
+                                });
                                 this.tempDialogs[page] = dialog;
 
                                 _.each(data.buttons, function (ele) {
-                                    $(document).on('click', '#'+ele.id, ele.handler);
+                                    $(document).on('click', '#'+ele.id, _.bind(ele.handler, dialog));
                                 });
                             }
                         } else {

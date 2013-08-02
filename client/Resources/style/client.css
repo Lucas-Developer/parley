@@ -1,11 +1,11 @@
 * {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
     body {
 		font-size: 100%;
-		font-family: "Source Sans Pro", "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+		font-family: "Quicksand", "Source Sans Pro", "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 		color: #191208;
 		background: url(../img/cartographer.png) 0 0 repeat;
     }
-	p, input { font-family: "Source Sans Pro", "PT Sans",Helvetica,Arial,sans-serif; }
+	p, input { font-family: "Quicksand", "Source Sans Pro", "PT Sans",Helvetica,Arial,sans-serif; }
 
 	h2 {font-size:1.2em;}
     h3 {text-align: left; font-size: 1.3em; }
@@ -13,7 +13,8 @@
 	.svg-icon path { fill: #191208; }
 	    .svg-icon:hover path { fill: #000; }
 
-    button { border: none; cursor: pointer; padding: 8px 16px; text-transform: lowercase; }
+    button { outline: none; border: none; cursor: pointer; padding: 8px 16px; text-transform: lowercase; }
+        button:hover { outline: none; background-color: #f5ad66; color: #eee; }
 
     form .row {
 	    display: table;
@@ -77,12 +78,17 @@
 	table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.1); }
 		table tbody tr:hover { background-color: #eee; }
 
-    .ui-widget { font-family: "PT Sans",Helvetica,Arial,sans-serif; }
+    .ui-widget { font-family: "Quicksand","PT Sans",Helvetica,Arial,sans-serif; }
     .ui-state-default { background-color: transparent; background-image: none; }
-    .ui-dialog { background-color: #fff; border: 1px solid #eee; }
+    .ui-dialog { border-radius: 3px; box-shadow: 0 0 10px rgba(50,50,50,0.5); border: 1px solid #f5ad66; }
     .ui-dialog .section { width: 100%; border-bottom: 1px solid #eee; }
-    .no-close .ui-dialog-titlebar-close { display: none; }
+    .no-close .ui-dialog-titlebar { display: none; }
+        .ui-dialog h2 { padding-bottom: 5px; border-bottom: 1px solid #f4f0ec; margin-bottom: 15px; }
+        .ui-dialog p { font-size: 1em; }
     .hidetext { display: block; text-indent: -9999px; }
+
+    .ui-dialog .image-wrapper { max-width: 400px; margin: 5px auto; }
+        .ui-dialog .image-wrapper img { width: 100%; }
     
     header {
         display: none;
@@ -174,7 +180,7 @@
 
     .ui-dialog button { margin: auto; display: block; }
 
-        .ui-dialog p { text-align: center; margin: 5px 0 10px; }
+        .ui-dialog p { margin: 5px 0 10px; }
         .ui-dialog input[type=text],
         .ui-dialog input[type=password],
         .ui-dialog input[type=email]

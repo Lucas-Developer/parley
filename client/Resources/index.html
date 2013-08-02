@@ -26,21 +26,8 @@
 
 <script id="blankDialogTemplate" type="text/template">
     <div class="page page-active">
+        {{#image}}<div class="image-wrapper"><img src="{{image}}"></div>{{/image}}
         <h2>{{header}}</h2>
-        <p>{{message}}</p>
-        <div class="buttons">
-        {{#buttons}}
-            <button id="{{id}}">{{text}}</button>
-        {{/buttons}}
-        </div>
-    </div>
-</script>
-<script id="loadingDialogTemplate" type="text/template">
-    <div class="page page-active">
-        <h2>{{^header}}Patience is a virtue!{{/header}}{{header}}</h2>
-        <div class="loading-image">
-            <img src="img/ajax-loader.gif" class="loader">
-        </div>
         <p>{{message}}</p>
         <div class="buttons">
         {{#buttons}}
@@ -193,21 +180,18 @@
         </table>
         <button id="inviteAction" name="invite">Send invite<span class="pl"></span> to selected user<span class="pl"></span>.</button>
     </script>
-    
-    <script type="text/template" id="headerTemplate">
-    </script>
 	<script type="text/template" id="composeDialogTemplate">
 	    <form id="composeForm">
 		<div class="row" id="recipients">
 			<label for="to">To
 				<input type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
 			</label>
-			<label {{^cc}}class="hidden" {{/cc}}for="cc">Cc
+			<!--<label {{^cc}}class="hidden" {{/cc}}for="cc">Cc
 				<input type="text" name="cc"{{#cc}} value="{{email}}"{{/cc}}>
 			</label>
 			<label {{^bcc}}class="hidden" {{/bcc}}for="bcc">Bcc
 				<input type="text" name="bcc">
-			</label>
+			</label>-->
         </div>
         <div class="row">
 			<label for="subject">Subject

@@ -8,4 +8,6 @@
 "loading-inbox": "We are loading your inbox. This may take a minute or two, but again we will be able to improve that with the next release. Please be patient. Thanks! You are the best.",
 "send-message": "Encrypting and sending...",
 "sent-message": "Your message was encrypted and sent on its way!",
-"installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait." }
+"installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait.",
+"no-match": "Your passwords don't match. Please retype one, or the other, or both.",
+"register-error": "We encountered some type of registration error, but we're not totally sure exactly what happened." }
