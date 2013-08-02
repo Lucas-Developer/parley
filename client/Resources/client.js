@@ -639,7 +639,8 @@
         but for now, it's like this...
         **/
         events: {
-            'keydown': 'clickSubmit'
+            'keydown': 'clickSubmit',
+            'click .ui-dialog-titlebar-close': 'hide'
         },
 
         initialize: function (options) {
@@ -672,6 +673,8 @@
             this.$el
                 .html( this.template(this.model.toJSON()) );
 
+            this.$('form').trigger('reset');
+
             var page = this.model.get('page');
             if (!page) {
                 this.$('.page').hide().first().show();
@@ -696,7 +699,7 @@
             if (loaded = this.model.get('loaded')) loaded.call(this.model.toJSON(), this);
             return this;
         },
-        hide: function () {
+        hide: function (e) {
             this.$el.dialog('close');
             return this;
         },
