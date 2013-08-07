@@ -71,6 +71,16 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   Parley.BASE_URL = "https://api.parley.co";
 
+    /**
+    Wrapping encodeURIComponent in case we accidentally call it twice.
+    Ideally this doesn't exist, but for now, until we get tidier, voila.
+
+    If a string is NOT encoded OR does not contain an @, it will be encoded
+    **/
+    Parley.encodeEmail = function (email) {
+        return email && !~email.indexOf('%40') ? email : encodeURIComponent(email);
+    }
+
   //This is just a shim in case Parley.Contact isn't defined elsewhere
   Parley.Contact = Parley.Contact || function () {
     this.attributes = this.attributes || {};
@@ -121,7 +131,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Parley.requestUser = function (email, finished) {
     return $.ajax({
       type:'GET',
-      url:Parley.BASE_URL+'/u/'+email,
+      url:Parley.BASE_URL+'/u/'+Parley.encodeEmail(email),
       success:finished,
       error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
       dataType:'json'
@@ -142,7 +152,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     Parley.currentUser.set('passwords', passwords);
     $.ajax({
       type:'POST',
-      url:Parley.BASE_URL+'/u/'+email,
+      url:Parley.BASE_URL+'/u/'+Parley.encodeEmail(email),
       data:{
         'name':name,
         'p':Parley.currentUser.get('passwords').remote,
@@ -174,7 +184,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
-      var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
+      var email = Parley.currentUser.get('email');
+      var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
       $.ajax({
@@ -201,7 +212,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
-      var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
+      var email = Parley.currentUser.get('email');
+      var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       var keyring = window.PYgetEncryptedKeyring();
       var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring, 'public_key':window.PYgetPublicKey()};
       var sig = Parley.signAPIRequest(url,'POST',data);
@@ -368,7 +380,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
-      var url = Parley.BASE_URL+'/invite/'+email;
+      var url = Parley.BASE_URL+'/invite/'+Parley.encodeEmail(email);
       var data = { 'user': Parley.currentUser.get('email') };
       if (!!gift) {
         //if signature is defined, server will try to share a paid account
@@ -378,7 +390,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       }
       $.ajax({
         type:'POST',
-        url:Parley.BASE_URL+'/invite/'+email,
+        url:Parley.BASE_URL+'/invite/'+Parley.encodeEmail(email),
         data:data,
         success:finished,
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -388,7 +400,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
   }
 
   Parley.registerInbox = function() {
-    var url = Parley.BASE_URL+'/imap/connect/' + Parley.currentUser.get('email');
+    var email = Parley.currentUser.get('email');
+    var url = Parley.BASE_URL+'/imap/connect/' + Parley.encodeEmail(email);
     var data = { 'time': Math.floor((new Date())/1000) };
     var sig = Parley.signAPIRequest(url,'GET',data);
     data.sig = sig;
@@ -400,7 +413,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //wait a second, ask server for imap server, check response,
   //wait another second...
   Parley.waitForRegisteredInbox = function(finished) {
-    var url = Parley.BASE_URL+'/u/'+Parley.currentUser.get('email');
+    var email = Parley.currentUser.get('email');
+    var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
     var time = Math.floor((new Date())/1000);
     var sig = Parley.signAPIRequest(url,'GET',{'time':time});
     $.ajax({

@@ -217,7 +217,7 @@
           <td colspan="4"><div class="buttons"><button class="reply">Reply</button></div>{{{body}}}</td>
 	</script>
 	<script type="text/template" id="contactTemplate">
-		<td class="thumbnail"><img src="{{thumbnail}}"></td>
+		<td class="thumbnail">{{#thumbnail}}<img alt="{{name}}" src="{{thumbnail}}">{{/thumbnail}}</td>
 	    <td>{{name}}</td>
 	    <td>{{email}}</td>
 		<td class="buttons"><button class="send">send email</button></td>
@@ -235,6 +235,14 @@
 	<script type="text/javascript" src="lib/jquery.i18n.min.js"></script>
 	<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/webfont/1.4.2/webfont.js"></script>
+	<script type="text/javascript" src="events.js"></script>
 	<script type="text/javascript" src="client.js"></script>
+    <script type="text/javascript">
+	WebFont.load({
+	    google: {
+		    families: ['Quicksand', 'Source Sans Pro', 'PT Sans', 'PT Serif']
+	    }
+	});
+    </script>
     </body>
 </html>
