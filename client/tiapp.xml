@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ti:app xmlns:ti='http://ti.appcelerator.org'>
 <id>co.parley.client</id>
-<name>ParleyClient</name>
-<version>0.1.1</version>
+<name>PareyClient</name>
+<version>0.1.2</version>
 <publisher>Black Chair Studios, Inc.</publisher>
 <url>http//parley.co</url>
 <icon>default_app_logo.png</icon>

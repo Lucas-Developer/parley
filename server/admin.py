@@ -11,7 +11,7 @@ cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 def email_all(subject, message):
   cur.execute("SELECT name, email FROM users")
   for u in cur.fetchall():
-    envelope = {"from": "Dave Noel <dave@blackchair.net>",
+    envelope = {"from": "Dave from Parley <dave@blackchair.net>",
         "to": [u['email']],
         "subject": subject,
         "text": message}
