@@ -21,7 +21,7 @@ import requests as HTTP
 import contextio
 import base64, hmac, hashlib
 import random, string
-from urllib import urlencode, quote_plus
+from urllib import urlencode, quote_plus, unquote
 import time
 import psycopg2
 import psycopg2.extras
@@ -122,6 +122,7 @@ def setUser(email,info):
 
 @app.route("/u/<email>", methods=['GET','POST'])
 def user(email):
+  email = unquote(email) 
   user = getUser(email)
   if request.method == 'GET':
     if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
@@ -154,6 +155,7 @@ def user(email):
 
 @app.route("/purchase/<email>", methods=['POST'])
 def purchase(email):
+  email = unquote(email)
   if request.form['user'] == 'PARLEY.CO' and compare_hashes(request.form["sig"], config["parley_website_key"]):
     user = setUser(
         email,
@@ -169,6 +171,7 @@ def purchase(email):
 
 @app.route("/verify/<email>", methods=['POST'])
 def verify(email):
+  email = unquote(email)
   user = getUser(email)
   meta = json.loads(user['meta'])
   if user['pending'] and not 'verified' in meta:
@@ -183,6 +186,7 @@ def verify(email):
 
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
+  email = unquote(to)
   #TODO: implement paid invites!
   to_user = getUser(to)
 
@@ -221,7 +225,7 @@ Dave Noel
 Co-Founder
 Black Chair Studios, Inc.
 www.blackchair.net
-            """ % (to, token)}
+            """ % (quote_plus(to), token)}
       else:
         if to_user:
           meta = json.loads(to_user['meta'])
@@ -255,7 +259,7 @@ Dave Noel
 Co-Founder
 Black Chair Studios, Inc.
 www.blackchair.net
-            """ % (to, token)}
+            """ % (quote_plus(to), token)}
       response = HTTP.post(
           "https://api.mailgun.net/v2/parley.co/messages",
           auth=("api", MAILGUN_API_KEY),
@@ -309,7 +313,7 @@ I generated this invitation for you so that we can exchange encrypted email easi
 
 Hope to hear from you soon,
 %s
-        """ % (new_user["email"], token, from_user['name'])}
+        """ % (quote_plus(new_user["email"]), token, from_user['name'])}
 
   elif to_user and to_user["pending"]:
     #create reminder message
@@ -324,7 +328,7 @@ I generated this reminder for you to sign up for Parley so that we can exchange 
 
 Talk soon,
 %s
-        """ % (to_user["email"], token, from_user['name'])}
+        """ % (quote_plus(to_user["email"]), token, from_user['name'])}
 
   #return jsonify(paidInvitesRemaining=paid_invites), 200
   response = HTTP.post(
@@ -360,6 +364,7 @@ context_io = contextio.ContextIO(
 
 @app.route("/imap/connect/<email>", methods=['GET'])
 def imap_connect(email):
+  email = unquote(email)
   user = getUser(email)
   if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     time = request.args["time"]
@@ -369,7 +374,7 @@ def imap_connect(email):
         digestmod=hashlib.sha256).digest()
     sig = base64.b64encode(sig,'-_').strip('=')
     resp = context_io.post_connect_token(
-        callback_url="%s/imap/new/%s/%s/%s" % (BASE_URL, email, time, sig),
+        callback_url="%s/imap/new/%s/%s/%s" % (BASE_URL, quote_plus(email), time, sig),
         email=email
         )
     return jsonify(**resp), 200
@@ -378,6 +383,7 @@ def imap_connect(email):
 
 @app.route("/imap/new/<email>/<timestamp>/<sig>", methods=['GET'])
 def imap_new(email, timestamp, sig):
+  email = unquote(email)
   user = getUser(email)
   sig = quote_plus(sig)
   t = abs(time.time() - int(timestamp))
