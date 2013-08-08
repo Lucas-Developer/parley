@@ -35,7 +35,7 @@
                 if (!Parley.contacts.findWhere({email: userinfo.email}))
                     Parley.contacts.add(contact);
             }
-            //Parley.storeKeyring(console.log);
+            Parley.storeKeyring(console.log);
         }
         var planB = function(data, textStatus) {
             console.log("B");
@@ -54,7 +54,7 @@
                 if (!Parley.contacts.findWhere({email: userinfo.email}))
                     Parley.contacts.add(contact);
             }
-            //Parley.storeKeyring(console.log);
+            Parley.storeKeyring(console.log);
         }
         if (email) {
             Parley.requestUser(email, callback).success(planA).error(planB);
@@ -94,7 +94,7 @@
 
             Parley.app.dialog('info register-wait', { header: 'Registering', message: Parley.app.i18n._t('register-wait') });
 
-            Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus) {
+            Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus, jqXHR) {
                 console.log(JSON.stringify(data), textStatus, data.error);
 
                 if (!_.has(data, 'error')) {
@@ -111,7 +111,7 @@
                     Parley.app.dialog('hide info register-wait');
                     Parley.app.render();
                 } else {
-                    Parley.app.dialog('hide register-wait');
+                    Parley.app.dialog('hide info register-wait');
                     Parley.app.dialog('info register-error', {
                         header: 'Error',
                         message: Parley.app.i18n._t('register-error'),

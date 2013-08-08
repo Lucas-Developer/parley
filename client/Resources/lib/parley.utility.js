@@ -78,7 +78,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
     If a string is NOT encoded OR does not contain an @, it will be encoded
     **/
     Parley.encodeEmail = function (email) {
-        return email && !~email.indexOf('%40') ? email : encodeURIComponent(email);
+        if (email)
+            return (!~email.indexOf('%40') ? email : encodeURIComponent(email));
+        return '';
     }
 
   //This is just a shim in case Parley.Contact isn't defined elsewhere
@@ -160,10 +162,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
         'keyring':window.PYgetEncryptedKeyring()
       },
       success: function(a,b,c) {
-                 window.PYgenKey(); //this is super slow
-                 finished(a,b,c);
-               },
-      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+        window.PYgenKey(); //this is super slow
+        finished(a,b,c);
+      },
+      error: function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
       dataType:'json'
     });
   }
