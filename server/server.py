@@ -149,8 +149,7 @@ def user(email):
         return jsonify(**user), 201
       else:
         abort(403)
-  else:
-    abort(400)
+  abort(400)
     
 
 @app.route("/purchase/<email>", methods=['POST'])
