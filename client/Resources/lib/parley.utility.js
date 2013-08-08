@@ -157,13 +157,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
       url:Parley.BASE_URL+'/u/'+Parley.encodeEmail(email),
       data:{
         'name':name,
-        'p':Parley.currentUser.get('passwords').remote,
-        'public_key':'',
-        'keyring':window.PYgetEncryptedKeyring()
+        'p':Parley.currentUser.get('passwords').remote
       },
-      success: function(a,b,c) {
+      success: function() {
         window.PYgenKey(); //this is super slow
-        finished(a,b,c);
+        Parley.storeKeyring(finished);
       },
       error: function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
       dataType:'json'
