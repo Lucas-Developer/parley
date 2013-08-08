@@ -186,7 +186,7 @@ def verify(email):
 
 @app.route("/invite/<to>", methods=['POST'])
 def invite(to):
-  email = unquote(to)
+  to = unquote(to)
   #TODO: implement paid invites!
   to_user = getUser(to)
 
