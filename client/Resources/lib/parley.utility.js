@@ -156,7 +156,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       data:{
         'name':name,
         'p':Parley.currentUser.get('passwords').remote,
-        'public_key':window.PYgetPublicKey(),
+        'public_key':'',
         'keyring':window.PYgetEncryptedKeyring()
       },
       success: function(a,b,c) {
