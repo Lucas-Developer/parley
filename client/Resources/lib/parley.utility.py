@@ -76,6 +76,7 @@ window.PYinstall = PYinstall
 
 
 def PYgenKey():
+  PYclearKeys()
   input_data = gpg.gen_key_input(
       key_type="RSA",
       key_length=2048,
