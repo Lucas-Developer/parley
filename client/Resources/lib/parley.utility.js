@@ -227,7 +227,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         dataType:'json'
       });
     }
-  }, 1000*60);
+  }, 1000*3);
   
   /* Requests the public key corresponding to an email address from public keyservers.
   This function can take a bit of time to execute.
