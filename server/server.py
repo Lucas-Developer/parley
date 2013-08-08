@@ -138,7 +138,7 @@ def user(email):
       #create/update user's keyring
       user = setUser(email,{'keyring':request.form['keyring'],'public_key':request.form['public_key']})
       return jsonify(**user), 201
-    elif user["pending"] and 'p' in request.form:
+    elif user and user["pending"] and 'p' in request.form:
       meta = json.loads(user['meta'])
       if 'verified' in meta and meta['verified'] == True:
         new_user = {"pending":False,"secret":request.form['p']}
@@ -174,7 +174,7 @@ def verify(email):
   email = unquote(email)
   user = getUser(email)
   meta = json.loads(user['meta'])
-  if user['pending'] and not 'verified' in meta:
+  if user and user['pending'] and not 'verified' in meta:
     if compare_hashes(request.form['token'], meta['verification_token']):
       user = setUser(email,{'verified':True})
       return jsonify(**user), 201
