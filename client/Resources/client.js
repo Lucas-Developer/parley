@@ -277,7 +277,7 @@
                 'click #newContact': function (e) { e.preventDefault(); Parley.app.dialog('contacts newcontact'); },
                 'click #addContact': function (e) {
                     e.preventDefault();
-                    var formData = this.$('form[name=newcontact]').serializeArray();
+                    var formdata = this.$('form[name=newcontact]').serializeArray();
                     var email = _.findWhere(formdata, {name:'email'});
                     Parley.contacts.add({email: email.value});
                     Parley.app.dialog('contacts contactlist');
