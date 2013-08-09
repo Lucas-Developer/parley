@@ -8,12 +8,12 @@
 	
 	<script type="text/javascript" src="lib/jquery-2.0.2.min.js"></script>
 
-	<title>Parley - myemail@parley.com</title>
+	<title>Parley</title>
     </head>
     <body class="loggedout">
         <header class="loggedin">
             <h1></h1>
-            <span class="email loggedin"></span>
+            <!--<span class="email loggedin"></span>-->
 
             <nav>
                 <button class="loggedin" name="compose" id="composeAction"></button>
@@ -38,6 +38,7 @@
 </script>
 <script id="setupDialogTemplate" type="text/template">
 	<div class="page page-splash page-active">
+        <h2>Welcome</h2>
         <p id="text_message">{{message}}</p>
 	    <form name="emailVerify">
 			<div class="row">
@@ -229,20 +230,15 @@
 	<script type="text/javascript" src="lib/parley.utility.js"></script>
 	<script type="text/javascript" src="lib/backbone-min.js"></script>
 	<script type="text/javascript" src="lib/mustache.js"></script>
+
 	<script type="text/javascript" src="lib/moment.min.js"></script>
-	<script type="text/javascript" src="lib/sorttable.js"></script>
+
 	<script type="text/javascript" src="lib/ba-linkify.min.js"></script>
 	<script type="text/javascript" src="lib/jquery.i18n.min.js"></script>
 	<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>
-	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/webfont/1.4.2/webfont.js"></script>
+
 	<script type="text/javascript" src="events.js"></script>
 	<script type="text/javascript" src="client.js"></script>
-    <script type="text/javascript">
-	WebFont.load({
-	    google: {
-		    families: ['Quicksand', 'Source Sans Pro', 'PT Sans', 'PT Serif']
-	    }
-	});
-    </script>
+
     </body>
 </html>

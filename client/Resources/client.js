@@ -295,6 +295,7 @@
             model: {
                 slug: 'contacts',
                 title: 'Contacts',
+                opts: { minHeight: 300 },
                 init: function () {
                     this.contacts = Parley.contacts.toJSON();
                 },

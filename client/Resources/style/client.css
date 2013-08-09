@@ -1,18 +1,29 @@
+@font-face { font-family: "Raleway"; src: url(Raleway-Medium.ttf) format("truetype"); font-weight: 500; }
+@font-face { font-family: "Raleway"; src: url(Raleway-Regular.ttf) format("truetype"); font-weight: 400; }
+@font-face { font-family: "Raleway"; src: url(Raleway-Light.ttf) format("truetype"); font-weight: 300; }
+
+@font-face { font-family: "Open Sans"; src: url(OpenSans-Regular.otf) format("opentype"); font-weight: 400; }
+@font-face { font-family: "Open Sans"; src: url(OpenSans-Semibold.otf) format("opentype"); font-weight: 600; }
+@font-face { font-family: "Open Sans"; src: url(OpenSans-Italic.otf) format("opentype"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Open Sans"; src: url(OpenSans-SemiboldItalic.otf) format("opentype"); font-weight: 600; font-style: italic; }
+
 * {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
     body {
 		font-size: 100%;
-		font-family: "Quicksand", "Source Sans Pro", "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 		color: #191208;
 		background: url(../img/cartographer.png) 0 0 repeat;
     }
-	p, input { font-family: "Quicksand", "Source Sans Pro", "PT Sans",Helvetica,Arial,sans-serif; }
+    body, p, .ui-widget { font-family: "Raleway"; }
+    button { font-weight: 500; text-transform: capitalize; }
+    input, textarea { font-family: "Open Sans"; }
 
-	h2 {font-size:1.2em;}
+    h1, h2, h3, h4, h5, h6 { font-weight: 300; }
+	h2 {font-size:1.4em;}
     h3 {text-align: left; font-size: 1.3em; }
-	p { font-size: 0.8em; line-height: 1.3em; }
+	p { font-size: 0.9em; line-height: 1.3em; }
 
-    button { outline: none; border: none; cursor: pointer; padding: 8px 16px; text-transform: lowercase; }
-        button:hover { outline: none; background-color: #f5ad66; color: #eee; }
+    button { outline: none; border: none; cursor: pointer; padding: 8px 16px; }
+        button:hover,button:active { outline: none; background-color: #f5ad66; color: #eee; }
 
     form .row {
 	    display: table;
@@ -36,7 +47,7 @@
 			border-color: #f5ad66;
 	    	background-color: #fff;
 		}
-            input[readonly] { border: none; font-weight: bold; background: none; }
+            input[readonly] { border: none; font-weight: 500; background: none; }
 
 		form .row .half { width: 48%; margin-right: 4%; }
             form .row .half:nth-child(even) { margin-right: 0; }
@@ -76,18 +87,18 @@
 	table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.1); }
 		table tbody tr:hover { background-color: #eee; }
 
-    .ui-widget { font-family: "Quicksand","PT Sans",Helvetica,Arial,sans-serif; }
     .ui-state-default { background-color: transparent; background-image: none; }
     .ui-dialog { border-radius: 3px; box-shadow: 0 0 10px rgba(50,50,50,0.5); border: 1px solid #f5ad66; }
     .ui-dialog .section { width: 100%; border-bottom: 1px solid #eee; }
     .no-close .ui-dialog-titlebar { display: none; }
-        .ui-dialog h2 { padding-bottom: 5px; border-bottom: 1px solid #f4f0ec; margin-bottom: 15px; }
-        .ui-dialog p { font-size: 1em; }
+        h2 { padding-bottom: 5px; border-bottom: 1px solid #f5ad66; margin-bottom: 15px; }
     .hidetext { display: block; text-indent: -9999px; }
 
     .ui-dialog .image-wrapper { max-width: 400px; margin: 5px auto; }
         .ui-dialog .image-wrapper img { width: 100%; }
     
+    .page-contactlist { min-height: 400px; }
+
     header {
         display: none;
 		width: 100%;
@@ -106,7 +117,7 @@
         height: 60px;
         background: url(../img/logo.png) no-repeat 0 6px;
     }
-    header .email { color: #191208; padding: 12px 0 0 20px; font-weight: bold; display: inline-block; float: left; }
+    header .email { color: #191208; padding: 12px 0 0 20px; font-weight: 500; display: inline-block; float: left; }
     header nav { display: inline-block; float: right; }
         header nav button { display: inline-block; float: left; margin: 6px; }
 
@@ -171,7 +182,7 @@
             #inbox .message .message-utilities { float: right; }
                 #inbox .message .message-utilities li { display: inline-block; }
 
-        #inbox tr.unread { font-weight: bold; }
+        #inbox tr.unread { font-weight: 500; }
 
     .ui-dialog .page, .ui-dialog .tab { display: none; clear; both; }
         .ui-dialog .page-active, .ui-dialog .tab-active { display: block; }
