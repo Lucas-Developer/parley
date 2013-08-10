@@ -24,11 +24,13 @@
 	    <section id="inbox" class="NOTloggedin"><table cellspacing=2><tbody></tbody></table></section>
         <div id="dialogWrapper"></div>
 
+
 <script id="blankDialogTemplate" type="text/template">
     <div class="page page-active">
         {{#image}}<div class="image-wrapper"><img src="{{image}}"></div>{{/image}}
         <h2>{{header}}</h2>
         <p>{{message}}</p>
+        {{{extra_html}}}
         <div class="buttons">
         {{#buttons}}
             <button id="{{id}}">{{text}}</button>
@@ -38,7 +40,7 @@
 </script>
 <script id="setupDialogTemplate" type="text/template">
 	<div class="page page-splash page-active">
-        <h2>Welcome</h2>
+        <div class="splash-logo"><img src="img/logo_big.png"></div>
         <p id="text_message">{{message}}</p>
 	    <form name="emailVerify">
 			<div class="row">
@@ -52,6 +54,7 @@
 	    </form>
 	</div>
     <div class="page page-login">
+        <h2>Log In</h2>
         <p id="text_message">{{message}}</p>
         <form name="loginAction">
             <div class="row">
@@ -68,6 +71,7 @@
         </form>
     </div>
     <div class="page page-register">
+        <h2>Register</h2>
         <p id="text_message">{{message}}</p>
         <form name="registerAction">
             <div class="row">
@@ -96,13 +100,17 @@
                 <div class="tab message tab-active"> </div>
             </div>
 
-            <button id="registerAction">Register</button>
+            <p>To use encrypted email, you must have a <strong>secret key</strong>. If you have never used PGP encryption, select <strong>Generate New Key</strong> and the Parley client will set you up. If you have an existing key, I don't need to tell you to click <strong>Import Private Key</strong>.</p>
+            <p>
+                <button id="registerAction">Generate New Key</button> or <button id="importKeyDialogAction">Import Private Key</button>
+            </p>
         </form>
     </div>
 </script>
 
 <script type="text/template" id="settingsDialogTemplate">
 	<form name="settings">
+        <h2>{{title}}</h2>
 	    <h4>Personal information</h4>
 	    <div class="row">
 	        <label for="fName">Name
@@ -132,6 +140,7 @@
 </script>
 
 <script type="text/template" id="contactsDialogTemplate">
+    <h2>{{title}}</h2>
     <div class="page page-contactlist page-active">
     <div id="singleContact">
         {{#selected}}
@@ -182,6 +191,7 @@
         <button id="inviteAction" name="invite">Send invite<span class="pl"></span> to selected user<span class="pl"></span>.</button>
     </script>
 	<script type="text/template" id="composeDialogTemplate">
+        <h2>{{title}}</h2>
 	    <form id="composeForm">
 		<div class="row" id="recipients">
 			<label for="to">To

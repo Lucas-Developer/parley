@@ -73,7 +73,7 @@
         Parley.requestUser(form.email.value, function (data, textStatus) {
             if (_.isObject(data) && !_.has(data, 'error')) {
                 console.log('User exists, setting up login form.');
-                Parley.app.dialog('setup login', {email: form.email.value, message: Parley.app.i18n._t('login') });
+                Parley.app.dialog('setup login', { email: form.email.value, message: Parley.app.i18n._t('login') });
             } else {
                 console.log('User doesn\'t exists, showing registration form.');
                 Parley.app.dialog('setup register', {email: form.email.value, message: Parley.app.i18n._t('register') });
@@ -88,7 +88,7 @@
         if (form.password_one.value != form.password_two.value) {
             // Passwords don't match
             console.log('Passwords don\'t match.');
-            Parley.app.dialog('show info no-match', { message: Parley.app.i18n._t('no-match'), buttons: [ 'okay' ] });
+            Parley.app.dialog('show info no-match', { header: Parley.app.i18n._t('Password Mismatch'), message: Parley.app.i18n._t('no-match'), buttons: [ 'okay' ] });
         } else {
             console.log('About to register user: ' + form.email.value);
 

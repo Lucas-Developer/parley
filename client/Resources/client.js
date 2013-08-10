@@ -248,7 +248,45 @@
             events: {
                 'click #emailVerify': function (e) { Parley.vent.trigger('setup:verify', e); },
                 'click #loginAction': function (e) { Parley.vent.trigger('setup:login', e); },
-                'click #registerAction': function (e) { Parley.vent.trigger('setup:register', e); },
+                'click #registerAction': function (e) {
+                    e.preventDefault();
+                    Parley.app.dialog('show info keygenConfirm', {
+                        header: Parley.app.i18n._t('Are You Sure?'),
+                        message: Parley.app.i18n._t('keygen-confirm'),
+                        buttons: [
+                            {
+                                id: "registerConfirmed",
+                                text: Parley.app.i18n._t('Generate'),
+                                handler: function () { Parley.vent.trigger('setup:register', e); }
+                            },
+                            'cancel'
+                        ]
+                    });
+                },
+                'click #importKeyDialogAction': function (e) {
+                    e.preventDefault();
+                    Parley.app.dialog('show info importkey', {
+                        header: Parley.app.i18n._t('Import Key'),
+                        message: Parley.app.i18n._t('message-import-key'),
+                        extra_html: '<textarea name="key" rows="6"></textarea>',
+                        buttons: [
+                            {
+                                id: "importKeyAction",
+                                text: Parley.app.i18n._t('Import Key'),
+                                handler: function (e) {
+                                    var key = $('#importKeyField').val();
+                                    /*
+                                    // Import secret key and close dialog.
+                                    Parley.importSecretKey(key, function () {
+                                        Parley.app.dialog('hide info importkey');
+                                    });
+                                    */
+                                }
+                            },
+                            'cancel'
+                        ]
+                    });
+                },
                 'keydown': 'clickSubmit'
             },
             model: {
@@ -542,11 +580,8 @@
         **/
         dialog: function (opts,data) {
             var _buttons = {
-                "okay": {
-                    id: "okayButton",
-                    text: "Okay",
-                    handler: function(e){ this.dialog('close'); }
-                }
+                "okay": { id: "okayButton", text: "Okay", handler: function(e){ this.dialog('close'); } },
+                "cancel": { id: "cancelButton", text: "Cancel", handler: function(e){ this.dialog('close'); } }
             };
             if (_.has(data, 'buttons')) {
                 data.buttons = _.map(data.buttons, function (ele) {

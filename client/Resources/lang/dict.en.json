@@ -11,4 +11,6 @@
 "sent-message": "Your message was encrypted and sent on its way!",
 "installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait.",
 "no-match": "Your passwords don't match. Please retype one, or the other, or both.",
-"register-error": "We encountered some type of registration error, but we're not totally sure exactly what happened." }
+"register-error": "We encountered some type of registration error, but we're not totally sure exactly what happened.",
+"message-import-key": "Paste your key in the box the below to import it into your Parley client.",
+"keygen-confirm": "Do not generate a new key if you already have a public PGP key. If you do not have a public PGP key, or if you are unsure about it, generate yourself a new one! (You would know if you had one)." }

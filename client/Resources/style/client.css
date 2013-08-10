@@ -18,9 +18,9 @@
     input, textarea { font-family: "Open Sans"; }
 
     h1, h2, h3, h4, h5, h6 { font-weight: 300; }
-	h2 {font-size:1.4em;}
+	h2 {font-size:1.5em;}
     h3 {text-align: left; font-size: 1.3em; }
-	p { font-size: 0.9em; line-height: 1.3em; }
+	p { font-size: 0.9em; line-height: 1.4em; }
 
     button { outline: none; border: none; cursor: pointer; padding: 8px 16px; }
         button:hover,button:active { outline: none; background-color: #f5ad66; color: #eee; }
@@ -64,7 +64,7 @@
 				display: block;
 				margin-top:5px;
 			}
-            form .row textarea { width: 100%; }
+            textarea { width: 100%; margin-bottom: 10px; }
 
             form .row .hidden { display: inline; width: auto; margin-right: 10px; }
             form .row .hidden * { display: none; }
@@ -187,7 +187,7 @@
     .ui-dialog .page, .ui-dialog .tab { display: none; clear; both; }
         .ui-dialog .page-active, .ui-dialog .tab-active { display: block; }
 
-    .ui-dialog button { margin: auto; display: block; }
+    .ui-dialog button { display: inline-block; }
 
         .ui-dialog p { margin: 5px 0 10px; }
         .ui-dialog input[type=text],
@@ -209,6 +209,9 @@ tr.contact { cursor:pointer; }
     /* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
     .as-selections input { margin-top: 0 !important; }
     .as-selections input { background-color: transparent !important; }
+
+.splash-logo { margin: 30px auto; height: 200px; width: 155px; }
+
 /* Gonna start putting responsive stuff here */
 @media screen and (max-width: 9000px) and (min-width: 0px) {
 }
