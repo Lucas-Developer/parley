@@ -5,6 +5,7 @@ window._phrases = {
 "password": "password",
 "submit": "submit",
 "email": "email",
+"compose": "compose",
 "register": "register",
 "registering": "registering",
 "name": "name",
@@ -12,6 +13,12 @@ window._phrases = {
 "okay": "okay",
 "cancel": "cancel",
 "error": "error",
+"contacts": "contacts",
+"to": "to",
+"cc": "cc",
+"bcc": "bcc",
+"subject": "subject",
+"send": "send",
 
 // Short phrases
 "are you sure": "Are you sure?",
@@ -35,7 +42,11 @@ window._phrases = {
 "save contact": "Save contact",
 "save settings": "Save settings",
 "revoke and delete": "Revoke and delete",
+"destroy parley account": "Destroy Parley account",
 "revoke key": "Revoke key",
+"welcome to parley": "Welcome to Parley",
+"parley settings": "Parley settings",
+"send email": "Send email",
 
 // Messages: setup
 "message-installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait.",
@@ -46,6 +57,7 @@ window._phrases = {
 "message-keygen": "To use encrypted email, you must have a <strong>secret key</strong>. If you have never used PGP encryption, select <strong>Generate New Key</strong> and the Parley client will set you up. If you have an existing key, I don't need to tell you to click <strong>Import Private Key</strong>.",
 "message-keygen-confirm": "Do not generate a new key if you already have a public PGP key. If you do not have a public PGP key, or if you are unsure about it, generate yourself a new one! (You would know if you had one).",
 "message-key-revoke": "Revoking your key will clear your user account with Parley along with revoking it from the public PGP key servers. Use with caution.",
+"message-key-notfound": "Public PGP keys not found",
 "message-import-key": "Paste your key in the box the below to import it into your Parley client.",
 "message-register-wait": "Right now, we're generating your encryption keys and sending an encrypted version of them to the Parley server. It takes a little while; sorry about that. It may sound weird, but for once it will actually go faster if you move your mouse and use your keyboard while you wait - it increases system entropy during the key generation process.",
 
