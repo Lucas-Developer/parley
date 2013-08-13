@@ -119,8 +119,13 @@ def setUser(email,info):
   conn.commit()
   return getUser(email)
 
+def deleteUser(email):
+  cur.execute("DELETE FROM users WHERE email=%s",[email])
+  conn.commit()
+  return {"success":True} #TODO: this should be more informative
 
-@app.route("/u/<email>", methods=['GET','POST'])
+
+@app.route("/u/<email>", methods=['GET','POST','DELETE'])
 def user(email):
   email = unquote(email) 
   user = getUser(email)
@@ -135,10 +140,15 @@ def user(email):
       abort(404)
   elif request.method == 'POST':
     if user and not user["pending"] and 'keyring' in request.form and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
-      #create/update user's keyring
-      user = setUser(email,{'keyring':request.form['keyring'],'public_key':request.form['public_key']})
+      #update active user
+      new_user = {}
+      for key in ["keyring","public_key","secret"]:
+        if key in request.form:
+          new_user[key] = request.form[key]
+      user = setUser(email,new_user)
       return jsonify(**user), 201
     elif user and user["pending"] and 'p' in request.form:
+      #activate pending user
       meta = json.loads(user['meta'])
       if 'verified' in meta and meta['verified'] == True:
         new_user = {"pending":False,"secret":request.form['p']}
@@ -149,6 +159,10 @@ def user(email):
         return jsonify(**user), 201
       else:
         abort(403)
+  elif request.method == 'DELETE':
+    if user and not user["pending"] and 'keyring' in request.form and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
+      resp = deleteUser(email)
+      return jsonify(**resp), 200 #TODO: use proper HTTP code
   abort(400)
     
 

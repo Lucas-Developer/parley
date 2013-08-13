@@ -240,8 +240,57 @@ are massaged to fit. The arguments to finished on ajax error look like:
     return window.PYfetchKey(email);
   }
 
-  Parley.importKey = function(key) {
+  Parley.importKey = Parley.importPublicKey = Parley.importSecretKey = function(key) {
     return window.PYimportKey(key);
+  }
+
+  Parley.changePass = function(oldPass, newPass, finished) {
+    if (Parley.pbkdf2(oldPass) == Parley.currentUser.get('passwords').local) { //this is extremely superficial (because PWs are already in memory) but hopefully will at least reduce the likelihood of situations like "my little brother saw Parley open and decided to change my password"
+      var oldLocal, newLocal, oldRemote, newRemote, passwords = Parley.currentUser.get('passwords');
+      oldLocal = passwords.local;
+      oldRemote = passwords.remote;
+      passwords.local = newLocal = Parley.pbkdf2(newPass);
+      passwords.remote = newRemote = Parley.pbkdf2(newRemote);
+      window.PYchangePass(newLocal); //change keyring passphrase
+      //update passwords on server along with keyring
+      var email = Parley.currentUser.get('email');
+      var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
+      var keyring = window.PYgetEncryptedKeyring();
+      var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring, 'public_key':window.PYgetPublicKey(),'secret':newRemote};
+      var sig = Parley.signAPIRequest(url,'POST',data);
+      data.sig = sig;
+      $.ajax({
+        type:'POST',
+        url:url,
+        data:data,
+        success:function(a,b,c){
+          Parley.currentUser.set('passwords',passwords);
+          finished(a,b,c);
+        },
+        error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+        dataType:'json'
+      });
+    }
+  }
+
+  Parley.killUser = function(finished) {
+    var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(Parley.currentUser.get('email'));
+    var data = {};
+    data.sig = Parley.signAPIRequest(url, 'DELETE', data);
+    $.ajax({
+      type:'DELETE',
+      url:url,
+      data:data,
+      success:function(a,b,c) {
+        a.revoked = window.PYrevokeKey();
+        if (!a.revoked) {
+          a.error = 'Failed to revoke key';
+        }
+        finished(a,b,c);
+      },
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
   }
 
   //This function could be used to build Parley.Contacts from a keyring
