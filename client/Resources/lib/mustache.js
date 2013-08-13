@@ -275,7 +275,12 @@
         break;
       case 'name':
         value = context.lookup(tokenValue);
-        if (value != null) buffer += mustache.escape(value);
+        if (tokenValue.substr(0,2) === 't_') {
+            value = tokenValue.slice(2).replace(/_/g, ' ');
+            buffer += _t(value);
+        } else if (value != null) {
+            buffer += mustache.escape(value);
+        }
         break;
       case 'text':
         buffer += tokenValue;

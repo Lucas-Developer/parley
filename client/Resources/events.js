@@ -73,10 +73,14 @@
         Parley.requestUser(form.email.value, function (data, textStatus) {
             if (_.isObject(data) && !_.has(data, 'error')) {
                 console.log('User exists, setting up login form.');
-                Parley.app.dialog('setup login', { email: form.email.value, message: Parley.app.i18n._t('login') });
+                Parley.app.dialog('setup login', {
+                    email: form.email.value
+                });
             } else {
                 console.log('User doesn\'t exists, showing registration form.');
-                Parley.app.dialog('setup register', {email: form.email.value, message: Parley.app.i18n._t('register') });
+                Parley.app.dialog('setup register', {
+                    email: form.email.value
+                });
             }
         });
     });
@@ -88,11 +92,11 @@
         if (form.password_one.value != form.password_two.value) {
             // Passwords don't match
             console.log('Passwords don\'t match.');
-            Parley.app.dialog('show info no-match', { header: Parley.app.i18n._t('Password Mismatch'), message: Parley.app.i18n._t('no-match'), buttons: [ 'okay' ] });
+            Parley.app.dialog('show info no-match', { header: _t('password mismatch'), message: _t('error-password-nomatch'), buttons: [ 'okay' ] });
         } else {
             console.log('About to register user: ' + form.email.value);
 
-            Parley.app.dialog('info register-wait', { header: 'Registering', message: Parley.app.i18n._t('register-wait') });
+            Parley.app.dialog('show info register-wait', { header: _t('registering'), message: _t('message-register-wait') });
 
             Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus, jqXHR) {
                 console.log(JSON.stringify(data), textStatus, data.error);
@@ -114,7 +118,7 @@
                     Parley.app.dialog('hide info register-wait');
                     Parley.app.dialog('info register-error', {
                         header: 'Error',
-                        message: Parley.app.i18n._t('register-error'),
+                        message: _t('error-register'),
                         buttons: [ 'okay' ]
                     });
                     console.log('Error registering');
@@ -129,7 +133,7 @@
             email = form.email.value,
             password = form.password.value;
 
-        Parley.app.dialog('info login-wait', { header: 'Logging in', message: Parley.app.i18n._t('login-wait') });
+        Parley.app.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
 
         Parley.authenticateUser(email, password, function (data, textStatus) {
             if (!_.has(data, 'error')) {
@@ -143,8 +147,8 @@
             } else {
                 Parley.app.dialog('hide info login-wait');
                 Parley.app.dialog('info login-error', {
-                    header: 'Error logging in',
-                    message: Parley.app.i18n._t('login-error'),
+                    header: _t('error logging in'),
+                    message: _t('error-login'),
                     buttons: ['okay']
                 });
             }
@@ -153,14 +157,14 @@
 
     Parley.vent.on('message:sync', function (e, callback) {
         console.log('VENT: message:sync');
-        Parley.app.dialog('info inbox-loading', { header: 'Loading inbox', message: Parley.app.i18n._t('loading-inbox') });
+        Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
         Parley.requestInbox(function (data, textStatus) {
             if (data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
 
                 Parley.app.dialog('hide info inbox-loading');
                 Parley.app.dialog('info inbox-error', {
-                    message: Parley.app.i18n._t('inbox-forbidden'),
+                    message: _t('error-inbox-forbidden'),
                     buttons: [ {
                         id:'retryInbox',
                         text:'Retry',
@@ -209,7 +213,7 @@
         });
 
         console.log('Sending email to: ', recipients);
-        Parley.app.dialog('info send-message', { message: Parley.app.i18n._t('send-message') })
+        Parley.app.dialog('info send-message', { message: _t('message-message-sending') })
         
         if (!_.isEmpty(recipients)) {
             Parley.encryptAndSend(subject.value, body.value, recipients, function (data, textStatus) {
@@ -219,7 +223,7 @@
                     Parley.app.dialog('hide compose');
                     Parley.app.dialog('hide info send-message');
                     Parley.app.dialog('info sent-message', {
-                        message: Parley.app.i18n._t('sent-message'),
+                        message: _t('message-message-sent'),
                         buttons: [ 'okay' ]
                     });
                 } else {
