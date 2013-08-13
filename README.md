@@ -15,7 +15,7 @@ Once GPG is installed, you can provide an email address that is registered with 
 If you have used a keyserver before to manage your identity with other PGP-based services, you can import that key to use it with Parley as well. Otherwise, generate a new key to continue. This process also takes a moment.
 At this point, your inbox will be loaded. The previous steps for registration and key generation will not be required for subsequent logins
 
-### Overview of the Cryptosystem
+# Overview of the Cryptosystem
 ----------------------------
 Parley utilizes the same underlying architecture as PGP to provide confidentiality and integrity for messages sent using the client. You can read more about it [here](http://en.wikipedia.org/wiki/Pretty_Good_Privacy).
 
