@@ -273,8 +273,8 @@
                         if (e.type == 'focus')
                         else if (e.target.value != '')
                             $('#newPasswordFields').fadeIn();
-*/
                     });
+*/
                 }
             }
         },
