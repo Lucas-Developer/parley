@@ -101,7 +101,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
           window.Ti.Filesystem.getApplicationDataDirectory().toString(),
           window.Ti.Filesystem.getUserDirectory().toString()
       );
-      console.log(result);
       return result
   }
   Parley.install = function(finished){

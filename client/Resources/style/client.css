@@ -17,12 +17,13 @@
     button { font-weight: 500; text-transform: capitalize; }
     input, textarea { font-family: "Open Sans"; }
 
-    h1, h2, h3, h4, h5, h6 { font-weight: 300; }
-	h2 {font-size:1.5em;}
+    .ui-dialog-title,
+    h1, h2, h3, h4, h5, h6 { color: #191208; font-weight: 300; text-transform: capitalize; }
+	.ui-dialog-title, h2 {font-size:1.5em;}
     h3 {text-align: left; font-size: 1.3em; }
 	p { font-size: 0.9em; line-height: 1.4em; }
 
-    button { outline: none; border: none; cursor: pointer; padding: 8px 16px; }
+    button { outline: none; border: none; cursor: pointer; padding: 8px 16px; white-space: nowrap; }
         button:hover,button:active { outline: none; background-color: #f5ad66; color: #eee; }
 
     form .row {
@@ -32,6 +33,7 @@
 	    border-top: 1px solid #ccc;
 	    /*background-color: #eee;*/
 	}
+        form .row.no-line { border-top: none; }
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
 			color: #191208;
 			padding: 4px 8px 4px 4px;
@@ -49,7 +51,7 @@
 		}
             input[readonly] { border: none; font-weight: 500; background: none; }
 
-		form .row .half { width: 48%; margin-right: 4%; }
+		form .row .half { width: 48%; margin-right: 4%; float: left; }
             form .row .half:nth-child(even) { margin-right: 0; }
 		form .row .quarter { width: 20%; margin-right: 5%; }
 
@@ -59,6 +61,7 @@
             width:100%;
             float:left;
             margin-bottom: 10px;
+            text-transform: capitalize;
         }
 			form .row label input, input[type=search] {
 				display: block;
@@ -91,13 +94,17 @@
     .ui-dialog { border-radius: 3px; box-shadow: 0 0 10px rgba(50,50,50,0.5); border: 1px solid #f5ad66; }
     .ui-dialog .section { width: 100%; border-bottom: 1px solid #eee; }
     .no-close .ui-dialog-titlebar { display: none; }
-        h2 { padding-bottom: 5px; border-bottom: 1px solid #f5ad66; margin-bottom: 15px; }
+        
+        .ui-dialog-titlebar, h2 { background: none; border: none; padding-bottom: 5px; border-bottom: 1px solid #f5ad66; margin-bottom: 15px; }
     .hidetext { display: block; text-indent: -9999px; }
 
     .ui-dialog .image-wrapper { max-width: 400px; margin: 5px auto; }
         .ui-dialog .image-wrapper img { width: 100%; }
     
+    .close-button { display: inline-block; float: right; }
+
     .page-contactlist { min-height: 400px; }
+    #contactListTable { width: 100%; min-width: 600px; }
 
     header {
         display: none;
@@ -184,6 +191,8 @@
 
         #inbox tr.unread { font-weight: 500; }
 
+    #refreshAction { width: 200px; margin: 20px auto; display: block; }
+
     .ui-dialog .page, .ui-dialog .tab { display: none; clear; both; }
         .ui-dialog .page-active, .ui-dialog .tab-active { display: block; }
 
@@ -211,6 +220,8 @@ tr.contact { cursor:pointer; }
     .as-selections input { background-color: transparent !important; }
 
 .splash-logo { margin: 30px auto; height: 200px; width: 155px; }
+
+.newPasswordFields { display: none; }
 
 /* Gonna start putting responsive stuff here */
 @media screen and (max-width: 9000px) and (min-width: 0px) {

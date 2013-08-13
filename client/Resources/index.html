@@ -7,6 +7,7 @@
 	<link rel="stylesheet" type="text/css" href="style/autoSuggest.css">
 	
 	<script type="text/javascript" src="lib/jquery-2.0.2.min.js"></script>
+    <script type="text/javascript" src="lang/dict.en.json"></script>
 
 	<title>Parley</title>
     </head>
@@ -18,17 +19,18 @@
             <nav>
                 <button class="loggedin" name="compose" id="composeAction"></button>
                 <button class="loggedin" name="open-contacts" id="contactsAction"></button>
-                <!--<button class="loggedin" name="settings" id="settingsAction"></button>-->
+                <button class="loggedin" name="settings" id="settingsAction"></button>
             </nav>
         </header>
 	    <section id="inbox" class="NOTloggedin"><table cellspacing=2><tbody></tbody></table></section>
+        <!-- <button id="refreshAction">Refresh Inbox</button> -->
         <div id="dialogWrapper"></div>
 
 
 <script id="blankDialogTemplate" type="text/template">
     <div class="page page-active">
         {{#image}}<div class="image-wrapper"><img src="{{image}}"></div>{{/image}}
-        <h2>{{header}}</h2>
+        {{#header}}<h2>{{header}}</h2>{{/header}}
         <p>{{message}}</p>
         {{{extra_html}}}
         <div class="buttons">
@@ -41,41 +43,40 @@
 <script id="setupDialogTemplate" type="text/template">
 	<div class="page page-splash page-active">
         <div class="splash-logo"><img src="img/logo_big.png"></div>
-        <p id="text_message">{{message}}</p>
+        <p id="text_message">{{t_message-welcome}}</p>
 	    <form name="emailVerify">
 			<div class="row">
-	        	<label for="email">Enter your email
+	        	<label for="email">{{t_enter_your_email}}
 	        		<input type="email" name="email">
 				</label>
 			</div>
 
-	        <button id="emailVerify">Submit</button>
-
+	        <button id="emailVerify">{{t_submit}}</button>
 	    </form>
 	</div>
     <div class="page page-login">
-        <h2>Log In</h2>
-        <p id="text_message">{{message}}</p>
+        <h2>{{t_log_in}}</h2>
+        <!--<p id="text_message">{{t_message-login}}</p>-->
         <form name="loginAction">
-            <div class="row">
-                <label for="email" class="half">Email
+            <div class="row no-line">
+                <label for="email" class="half">{{t_email}}
                     <input type="email" name="email" value="{{email}}" readonly>
                 </label>
-                <label for="password" class="half">Password
+                <label for="password" class="half">{{t_password}}
                     <input type="password" name="password">
                 </label>
                 <!--<a href="#" class="extra-link">Forgot password?</a>-->
             </div>
 
-            <button id="loginAction">Log in</button>
+            <button id="loginAction">{{t_log_in}}</button>
         </form>
     </div>
     <div class="page page-register">
-        <h2>Register</h2>
-        <p id="text_message">{{message}}</p>
+        <h2>{{t_register}}</h2>
+        <p id="text_message">{{t_message-register}}</p>
         <form name="registerAction">
             <div class="row">
-                <label class="tab tab-active" for="email">Email
+                <label class="tab tab-active" for="email">{{t_email}}
                     <div class="full-width"><input type="email" name="email" id="registerEmailField" value="{{email}}" readonly>
                         <div class="status">
                             <img src="img/ajax-loader.gif" class="loader">
@@ -84,25 +85,22 @@
                 </label>
             </div>
             <div class="row">
-                <label for="name">Name
+                <label for="name">{{t_name}}
                     <input type="text" name="name">
                 </label>
             </div>
             <div class="row" id="passwordInfo">
-                <label for="password_one" class="half">Choose a password
+                <label for="password_one" class="half">{{t_choose_password}}
                     <input type="password" name="password_one">
                 </label>
-                <label for="password_two" class="half">Confirm password
+                <label for="password_two" class="half">{{t_confirm_password}}
                     <input type="password" name="password_two">
                 </label>
             </div>
-            <div class="row" id="paymentInfo">
-                <div class="tab message tab-active"> </div>
-            </div>
 
-            <p>To use encrypted email, you must have a <strong>secret key</strong>. If you have never used PGP encryption, select <strong>Generate New Key</strong> and the Parley client will set you up. If you have an existing key, I don't need to tell you to click <strong>Import Private Key</strong>.</p>
+            <p>{{t_message-keygen}}</p>
             <p>
-                <button id="registerAction">Generate New Key</button> or <button id="importKeyDialogAction">Import Private Key</button>
+                <button id="registerAction">{{t_generate_new_key}}</button> {{t_or}} <button id="importKeyDialogAction">{{t_import_private_key}}</button>
             </p>
         </form>
     </div>
@@ -110,74 +108,75 @@
 
 <script type="text/template" id="settingsDialogTemplate">
 	<form name="settings">
-        <h2>{{title}}</h2>
-	    <h4>Personal information</h4>
+	    <h4>{{t_personal_information}}</h4>
 	    <div class="row">
-	        <label for="fName">Name
-	        	<input type="text" value="{{name}}" name="fName">
+	        <label for="name">{{t_name}}
+	        	<input type="text" value="{{name}}" name="name">
 			</label>
 	    </div>
-	    <h4></h4>
+	    <h4>{{t_change_password}}</h4>
 	    <div class="row">
+            <div class="half">
+                <label for="cur_password">{{t_current_password}}
+                    <input type="text" id="curPasswordField" name="cur_password">
+                </label>
+            </div>
+
+            <div class="newPasswordFields half">
+                <label for="new_password_1">{{t_new_password}}
+                    <input type="text" name="new_password_1">
+                </label>
+
+                <label for="new_password_2">{{t_confirm_password}}
+                    <input type="text" name="new_password_2">
+                </label>
+            </div>
 	    </div>
-	    <h4>Password</h4>
-	    <div class="row">
-			<label for="cur_password">Current password
-				<input type="text" name="cur_password">
-			</label>
+        <h4>{{t_revoke_key}}</h4>
+        <div class="row">
+            <p>{{t_message-key-revoke}}</p>
+	        <button id="revokeKeyAction">{{t_revoke_and_delete}}</button>
+        </div>
 
-			<label for="new_password_1">New password
-				<input type="text" name="new_password_1">
-			</label>
-
-			<label for="new_password_2">Confirm new password
-				<input type="text" name="new_password_2">
-			</label>
-	    </div>
-
-	    <button id="saveSettings">Save settings</button>
+        <div class="row">
+            <button id="saveSettings">{{t_save_settings}}</button>
+            <button id="cancelButton">{{t_cancel}}</button>
+        </div>
 	</form>
 </script>
 
 <script type="text/template" id="contactsDialogTemplate">
-    <h2>{{title}}</h2>
     <div class="page page-contactlist page-active">
-    <div id="singleContact">
-        {{#selected}}
-            <img src="{{thumbnail}}" />
-            <p>{{name}}</p>
-            <p>{{email}}</p>
-        {{/selected}}
-    </div>
 	<input type="search" placeholder="Search..." name="contactSearch">
-	<table class="sortable">
+	<table id="contactsListTable" class="sortable">
 	    <!--<thead>
-		<tr><th class="thumbnail"></th><th>Name</th><th>Email</th><th class="buttons"></th></tr>
+		<tr><th class="thumbnail"></th><th>{{t_name}}</th><th>{{t_email}}</th><th class="buttons"></th></tr>
               </thead>-->
 	    <tbody id="contactsList">
 	    </tbody>
 	</table>
-    <button id="newContact">New Contact</button>
+    <button id="newContact">{{t_new_contact}}</button>
     </div>
     <div class="page page-newcontact">
     <form name="newcontact">
-        <h4>Add new contact</h4>
+        <h4>{{t_add_new_contact}}</h4>
 	    <div class="row">
-			<label for="contact_email">Email
+			<label for="contact_email">{{t_email}}
 				<input type="text" name="email">
 			</label>
 
-			<!--<label for="contact_name">Name
+			<!--<label for="contact_name">{{t_name}}
 				<input type="text" name="name">
                               </label>-->
 	    </div>
-        <button id="addContact">Save Contact</button>
+        <button id="addContact">{{t_save_contact}}</button>
+        <button id="backToContactlist">{{t_cancel}}</button>
     </form>
     </div>
 </script>
 
     <script type="text/template" id="nokeyDialogTemplate">
-        <p>Some recipients don't have associated PGP keys, so we can not send them encrypted email.</p>
+        <p>{{t_message-nokey}}</p>
         <table class="sortable">
         <thead>
             <tr><th class="selector sorttable_nosort"><a class="clicked"></th><th>Email</th><th class="buttons"></th></tr>
@@ -188,24 +187,23 @@
             {{/emails}}
         </tbody>
         </table>
-        <button id="inviteAction" name="invite">Send invite<span class="pl"></span> to selected user<span class="pl"></span>.</button>
+        <button id="inviteAction" name="invite">{{t_invite}}</button>
     </script>
 	<script type="text/template" id="composeDialogTemplate">
-        <h2>{{title}}</h2>
 	    <form id="composeForm">
-		<div class="row" id="recipients">
-			<label for="to">To
+		<div class="no-line row" id="recipients">
+			<label for="to">{{t_to}}
 				<input type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
 			</label>
-			<!--<label {{^cc}}class="hidden" {{/cc}}for="cc">Cc
+			<!--<label {{^cc}}class="hidden" {{/cc}}for="cc">{{t_cc}}
 				<input type="text" name="cc"{{#cc}} value="{{email}}"{{/cc}}>
 			</label>
-			<label {{^bcc}}class="hidden" {{/bcc}}for="bcc">Bcc
+			<label {{^bcc}}class="hidden" {{/bcc}}for="bcc">{{t_bcc}}
 				<input type="text" name="bcc">
 			</label>-->
         </div>
         <div class="row">
-			<label for="subject">Subject
+			<label for="subject">{{t_subject}}
 				<input type="text" name="subject" value="{{subject}}">
 			</label>
             <label for="body">
@@ -213,7 +211,7 @@
             </label>
         </div>
 
-	    <button id="sendAction">Send</button>
+	    <button id="sendAction">{{t_send}}</button>
 
 	    </form>
 	</script>
@@ -225,13 +223,13 @@
 		<td class="date"></td>
 	</script>
 	<script type="text/template" id="readMessageTemplate">
-          <td colspan="4"><div class="buttons"><button class="reply">Reply</button></div>{{{body}}}</td>
+          <td colspan="4"><div class="buttons"><button class="reply">{{t_reply}}</button></div>{{{body}}}</td>
 	</script>
 	<script type="text/template" id="contactTemplate">
 		<td class="thumbnail">{{#thumbnail}}<img alt="{{name}}" src="{{thumbnail}}">{{/thumbnail}}</td>
 	    <td>{{name}}</td>
 	    <td>{{email}}</td>
-		<td class="buttons"><button class="send">send email</button></td>
+		<td class="buttons"><button data-email="{{email}}" class="send">{{t_send_email}}</button></td>
 	</script>
 	
 	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
@@ -245,6 +243,7 @@
 
 	<script type="text/javascript" src="lib/ba-linkify.min.js"></script>
 	<script type="text/javascript" src="lib/jquery.i18n.min.js"></script>
+	<script type="text/javascript" src="lib/polyglot.js"></script>
 	<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>
 
 	<script type="text/javascript" src="events.js"></script>

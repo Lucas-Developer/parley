@@ -1,45 +1,6 @@
 (function(Parley, $, undefined){
     Parley.vent = Parley.vent || _.extend({}, Backbone.Events);
 
-    // This uses a jquery i18n plugin, there may be better
-    // but this was the easiest to work with at it works fine!
-    Parley.i18n = Backbone.Model.extend({
-        defaults: function () {
-            return {
-                lang: 'en'
-            }
-        },
-        dict_files: {
-            // Make sure the actual files are '.json'
-            en: 'dict.en',
-            fr: 'dict.fr'
-        },
-        dict_path: 'lang/',
-        initialize: function (l,p) {
-            // Freeze up the app for the split second it takes to load
-            // the first language files
-            this.loadDictionary({lang:'en',sync:true});
-        },
-        loadDictionary: function (opts) {
-            var lang = opts.lang || Parley.currentUser && Parley.currentUser.get('lang') || 'en';
-            var path = opts.path || this.dict_path + this.dict_files[lang] || dict_path + 'dict.en';
-            var model = this;
-
-            $.ajax({
-                type: 'GET',
-                async: !opts.sync,
-                url: path + '.json',
-                success: function (dict) {
-                    $.i18n.setDictionary(dict);
-                },
-                dataType: 'json'
-            });
-        },
-        _t: function (message) {
-            return $.i18n._(message);
-        }
-    });
-
 	Parley.Contact = Backbone.Model.extend({
 	    defaults: function () {
 			return {
@@ -57,16 +18,6 @@
 
             if (!_.has(attrs, 'isCurrentUser'))
                 Parley.vent.trigger('contact:userinfo', this);
-        },
-        addMessage: function (message) {
-            message = message.toJSON ? message.toJSON() : message;
-            this.set({
-                last_received: this.attributes.last_received + 1,
-                count: this.attributes.count + 1
-            });
-            //this.get('messages').push(message);
-
-            return this;
         }
 	});
 
@@ -114,7 +65,7 @@
 
             if (_.has(data.person_info, from.email)) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
 
-            this.set('from', from_obj.addMessage(this));
+            this.set('from', from_obj);
 
             // If it's not encrypted, we can just populate the decrypted message array
             this.decryptedMessage = this.decryptedMessage || [];
@@ -171,9 +122,7 @@
 	    tagName: 'tr',
 	    template: Mustache.compile($('#messageTemplate').html()),
 	    events: {
-            'click .from':          'openContact',
-			'click .subject':		'openMessage',
-            'click .selector':      'toggleSelect'
+            'click':          'openMessage'
 	    },
 	    initialize: function (options) {
 			this.listenTo(this.model, 'add', this.render);
@@ -251,12 +200,12 @@
                 'click #registerAction': function (e) {
                     e.preventDefault();
                     Parley.app.dialog('show info keygenConfirm', {
-                        header: Parley.app.i18n._t('Are You Sure?'),
-                        message: Parley.app.i18n._t('keygen-confirm'),
+                        header: _t('are you sure'),
+                        message: _t('message-keygen-confirm'),
                         buttons: [
                             {
                                 id: "registerConfirmed",
-                                text: Parley.app.i18n._t('Generate'),
+                                text: _t('generate'),
                                 handler: function () { Parley.vent.trigger('setup:register', e); }
                             },
                             'cancel'
@@ -266,13 +215,13 @@
                 'click #importKeyDialogAction': function (e) {
                     e.preventDefault();
                     Parley.app.dialog('show info importkey', {
-                        header: Parley.app.i18n._t('Import Key'),
-                        message: Parley.app.i18n._t('message-import-key'),
+                        header: _t('import key'),
+                        message: _t('message-import-key'),
                         extra_html: '<textarea name="key" rows="6"></textarea>',
                         buttons: [
                             {
                                 id: "importKeyAction",
-                                text: Parley.app.i18n._t('Import Key'),
+                                text: _t('import key'),
                                 handler: function (e) {
                                     var key = $('#importKeyField').val();
                                     /*
@@ -292,10 +241,7 @@
             model: {
                 slug: 'setup',
                 opts: { dialogClass: 'no-close' },
-                title: 'Welcome to Parley',
-                loaded: function (view) {
-                    view.$('#text_message')._t('welcome');
-                }
+                title: 'Welcome to Parley'
             },
         },
         {   
@@ -306,13 +252,32 @@
                 title: 'Parley Settings',
                 init: function () {
                     _.extend(this, Parley.currentUser.toJSON());
+                },
+                loaded: function (view) {
+/*
+                    view.on('change blur focus', '#curPasswordField', function (e) {
+                        if (e.type == 'blur' && !e.target.value)
+                            $('#newPasswordFields').fadeOut();
+                        else
+                            $('#newPasswordFields').fadeIn();
+                        if (e.type == 'focus')
+                        else if (e.target.value != '')
+                            $('#newPasswordFields').fadeIn();
+                    });
+*/
                 }
             }
         },
         {   id: 'dialog_contacts',
             template: Mustache.compile($('#contactsDialogTemplate').html()),
             events: {
+                'click .reply': function (e) {
+                    e.preventDefault();
+                    var $this = $(this);
+                    var recipient = Parley.contacts.findWhere({email:$this.data('email')});
+                },
                 'click #newContact': function (e) { e.preventDefault(); Parley.app.dialog('contacts newcontact'); },
+                'click #backToContactlist': function (e) { e.preventDefault(); Parley.app.dialog('contacts contactlist'); },
                 'click #addContact': function (e) {
                     e.preventDefault();
                     var formdata = this.$('form[name=newcontact]').serializeArray();
@@ -333,7 +298,7 @@
             model: {
                 slug: 'contacts',
                 title: 'Contacts',
-                opts: { minHeight: 300 },
+                opts: { minHeight: 300, minWidth: 600, resizable: false },
                 init: function () {
                     this.contacts = Parley.contacts.toJSON();
                 },
@@ -409,7 +374,8 @@
         **/
         events: {
             'keydown': 'clickSubmit',
-            'click .ui-dialog-titlebar-close': 'hide'
+            'click .ui-dialog-titlebar-close': 'hide',
+            'click #cancelButton': 'hide'
         },
 
         initialize: function (options) {
@@ -463,6 +429,8 @@
             return this;
         },
         hide: function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+
             this.$el.dialog('close');
             return this;
         },
@@ -500,12 +468,12 @@
             'click #contactsAction': function () {
                 this.dialog('contacts');
             },
+            'click #refreshAction': function (e) { e.preventDefault(); Parley.vent.trigger('message:sync'); },
             'click .hidden': 'showHidden'
 	    },
 
 	    initialize: function () {
 			console.log('Initializing Parley.');
-            this.i18n = new Parley.i18n;
 
             this._dialogs = [];
             for (var i=0,l=Parley._dialogs.length; i<l; i++) {
@@ -522,27 +490,27 @@
 
             (function (user,app) {
                 if (!Parley.installed()){
-                    app.dialog('info installing',{
+                    app.dialog('show info installing', {
                         buttons:[{
                             id:'install_pgp', text:'ok',
                             handler: _.bind(function(){
                                 Parley.install(_.bind(function(){
                                     console.log('No user logged in. Showing setup dialog.');
-                                    this.dialog('hide installing');
-                                    this.dialog('setup', { message: this.i18n._t('welcome') });
+                                    this.dialog('hide info installing');
+                                    this.dialog('setup');
                                 }, this));
                             }, app)
                         }],
-                        message: app.i18n._t('installing')
+                        message: _t('message-installing')
                     });
                 }else{
                     if (!user) {
                         console.log('No user logged in. Showing setup dialog.');
-                        app.dialog('setup', { message: app.i18n._t('welcome') });
+                        app.dialog('setup');
                     } else {
                         console.log('User logged in: ' + user);
                         Parley.currentUser = new Parley.Contact(JSON.parse(user));
-                        app.dialog('setup login', _.extend({}, Parley.currentUser.toJSON(), { message: app.i18n._t('login') }));
+                        app.dialog('setup login', _.extend({}, Parley.currentUser.toJSON()) );
                     }
                 }
             })(false /* localStorage.getItem('currentUser') */,this);
@@ -580,8 +548,8 @@
         **/
         dialog: function (opts,data) {
             var _buttons = {
-                "okay": { id: "okayButton", text: "Okay", handler: function(e){ this.dialog('close'); } },
-                "cancel": { id: "cancelButton", text: "Cancel", handler: function(e){ this.dialog('close'); } }
+                "okay": { id: "okayButton", text: _t('okay'), handler: function(e){ this.dialog('close'); } },
+                "cancel": { id: "cancelButton", text: _t("cancel"), handler: function(e){ this.dialog('close'); } }
             };
             if (_.has(data, 'buttons')) {
                 data.buttons = _.map(data.buttons, function (ele) {
@@ -674,7 +642,12 @@
 			this.inbox.append(view.render().el);
 	    }
 	});
-	
+
+    // Just grab the '_phrases' object from the dictionary file
+    Parley.polyglot = new Polyglot({phrases: window._phrases, locale: 'en'});
+    window._t = function (key,data) { return Parley.polyglot.t(key,data); };
+    window._T = function (key,data) { var word = Parley.polyglot.t(key,data); return word.charAt(0).toUpperCase() + word.slice(1); };
+
     Parley.inbox = new MessageList;
     Parley.contacts = new ContactList;
 	Parley.app = new AppView;

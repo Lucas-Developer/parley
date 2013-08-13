@@ -1,16 +1,49 @@
-{
-"welcome":
-"Bonjour!",
+/*
+This file is, unfortunately, not in French. But it should be!
+*/
+window._phrases = { 
+// Words
+"welcome": "Bienvenue",
+"generate": "Generate",
+"password": "Password",
+"submit": "Submit",
+"email": "Email",
+"registering": "Registering",
+"name": "Name",
 
-"inbox-forbidden":
-"Ahh, le inbox est forbidden!",
+// Short phrases
+"are you sure": "Are you sure?",
+"import key": "Import key",
+"password mismatch": "Password mismatch",
+"enter your email": "Enter your email",
+"log in": "Log in",
 
-"register-wait":
-"It take, how you say, a little while. S'il vous plait to waiting.",
+// Messages: setup
+"message-installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait.",
+"message-welcome": "Bienvenue to the Parley Pre-Beta! It's still obviously a work in progress, but we hope you find it useful and look forward to your feedback.",
+"message-login": "Enter your password to access the magic of Parley!",
+"message-login-wait": "It takes a while to log in! We've downloaded your encrypted keys and contacts from the Parley server, and they take a little while to decrypt. We should be able to speed this process up significantly with the next release.",
+"message-register": "Register for Parley! Keep in mind, this will only work if you have already signed up for the service at http://parley.co",
+"message-keygen-confirm": "Do not generate a new key if you already have a public PGP key. If you do not have a public PGP key, or if you are unsure about it, generate yourself a new one! (You would know if you had one).",
+"message-import-key": "Paste your key in the box the below to import it into your Parley client.",
+"message-register-wait": "Right now, we're generating your encryption keys and sending an encrypted version of them to the Parley server. It takes a little while; sorry about that. It may sound weird, but for once it will actually go faster if you move your mouse and use your keyboard while you wait - it increases system entropy during the key generation process.",
 
-"login-wait":
-"It take, how you say, a little while. S'il vous plait to waiting.",
+// Messages: inbox
+"message-inbox-loading": "We are loading your inbox. This may take a minute or two, but again we will be able to improve that with the next release. Please be patient. Thanks! You are the best.",
 
-"saving-contacts":
-"Nous le saverons les contacts."
-}
+"message-message-sending": "Encrypting and sending...",
+"message-message-sent": "Your message was encrypted and sent on its way!",
+
+// Messages: contacts
+"message-contacts-saving": "Please wait while we save your contacts to the server! Again, the encryption process takes some time, but we will be speeding it up with the next release.",
+
+// Messages: etc etc etc
+
+// Errors
+"error-register": "We encountered some type of registration error, but we're not totally sure exactly what happened.",
+"error-login": "We have encountered an error trying to log you in to Parley. Please try again.",
+"error-password-nomatch": "Your passwords don't match. Please retype one, or the other, or both.",
+"error-inbox-forbidden": "We haven't been able to access your account through context.io yet. We'll keep trying, or click \"Retry\" below to change your settings with context.io.",
+
+// No trailing comma!
+"":""}
