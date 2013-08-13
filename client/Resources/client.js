@@ -18,16 +18,6 @@
 
             if (!_.has(attrs, 'isCurrentUser'))
                 Parley.vent.trigger('contact:userinfo', this);
-        },
-        addMessage: function (message) {
-            message = message.toJSON ? message.toJSON() : message;
-            this.set({
-                last_received: this.attributes.last_received + 1,
-                count: this.attributes.count + 1
-            });
-            //this.get('messages').push(message);
-
-            return this;
         }
 	});
 
@@ -75,7 +65,7 @@
 
             if (_.has(data.person_info, from.email)) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
 
-            this.set('from', from_obj.addMessage(this));
+            this.set('from', from_obj);
 
             // If it's not encrypted, we can just populate the decrypted message array
             this.decryptedMessage = this.decryptedMessage || [];
