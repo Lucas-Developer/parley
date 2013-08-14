@@ -143,7 +143,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
   email. This function will take some time to execute, and may block during the key-gen phase, so
   decorate the UI accordingly.
   Accepts email, cleartext password, finished callback */
-  Parley.registerUser = function (name, email, clearTextPassword, finished) {
+  Parley.registerUser = function (name, email, clearTextPassword, sendKey, finished) {
+    sendKey = !!sendKey;
     Parley.currentUser = Parley.currentUser || new Parley.Contact({isCurrentUser:true});
     Parley.currentUser.set('name', name);
     Parley.currentUser.set('email', email);
@@ -159,7 +160,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         'p':Parley.currentUser.get('passwords').remote
       },
       success: function() {
-        window.PYgenKey(); //this is super slow
+        window.PYgenKey(sendKey); //this is super slow
         Parley.storeKeyring(finished);
       },
       error: function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},

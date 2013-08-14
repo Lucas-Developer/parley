@@ -75,7 +75,7 @@ window.PYinstalled = PYinstalled
 window.PYinstall = PYinstall
 
 
-def PYgenKey():
+def PYgenKey(send_key = False):
   PYclearKeys()
   input_data = gpg.gen_key_input(
       key_type="RSA",
@@ -86,7 +86,8 @@ def PYgenKey():
       expire_date=0,
       passphrase=window.Parley.currentUser.attributes.passwords.local)
   key_data = gpg.gen_key(input_data)
-  gpg.send_keys('pgp.mit.edu',key_data.fingerprint)
+  if send_key:
+    gpg.send_keys('pgp.mit.edu',key_data.fingerprint)
   return key_data
 
 window.PYgenKey = PYgenKey
