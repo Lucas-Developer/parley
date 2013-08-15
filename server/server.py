@@ -127,12 +127,13 @@ def deleteUser(email):
 
 def get_header_params(headers, email):
   params = {}
-  if 'Authorization' in headers:
+  if 'Authorization' in headers and 'X-Time' in headers:
     pair = headers['Authorization'].split()[-1]
     pieces = pair.split(':')
     authemail = ':'.join(pieces[:-1])
     if authemail == email:
       params['sig'] = pieces[-1]
+      params['time'] = headers['X-Time']
   return params
 
 
