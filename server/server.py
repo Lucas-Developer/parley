@@ -125,12 +125,25 @@ def deleteUser(email):
   return {"success":True} #TODO: this should be more informative
 
 
+def get_header_params(headers, email):
+  params = {}
+  if 'Authorization' in headers:
+    pair = headers['Authorization'].split()[-1]
+    pieces = pair.split(':')
+    authemail = ':'.join(pieces[:-1])
+    if authemail == email:
+      params['sig'] = pieces[-1]
+  return params
+
+
 @app.route("/u/<email>", methods=['GET','POST','DELETE'])
 def user(email):
   email = unquote(email) 
   user = getUser(email)
+  params = get_header_params(request.headers, email)
   if request.method == 'GET':
-    if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
+    params.update(request.args)
+    if user and not user["pending"] and 'sig' in params and verifySignature(request.base_url, request.method, params, user["secret"]):
       #authenticated. return all info
       return jsonify(**user), 200
     elif user and not user["pending"]:
@@ -139,28 +152,29 @@ def user(email):
     else:
       abort(404)
   elif request.method == 'POST':
-    if user and not user["pending"] and 'keyring' in request.form and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
+    params.update(request.form)
+    if user and not user["pending"] and 'keyring' in params and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
       #update active user
       new_user = {}
       for key in ["keyring","public_key","secret"]:
-        if key in request.form:
-          new_user[key] = request.form[key]
+        if key in params:
+          new_user[key] = params[key]
       user = setUser(email,new_user)
       return jsonify(**user), 201
-    elif user and user["pending"] and 'p' in request.form:
+    elif user and user["pending"] and 'p' in params:
       #activate pending user
       meta = json.loads(user['meta'])
       if 'verified' in meta and meta['verified'] == True:
-        new_user = {"pending":False,"secret":request.form['p']}
+        new_user = {"pending":False,"secret":params['p']}
         for key in ["name","public_key","keyring"]:
-          if key in request.form:
-            new_user[key] = request.form[key]
+          if key in params:
+            new_user[key] = params[key]
         user = setUser(email,new_user)
         return jsonify(**user), 201
       else:
         abort(403)
   elif request.method == 'DELETE':
-    if user and not user["pending"] and 'keyring' in request.form and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
+    if user and not user["pending"] and 'sig' in params and verifySignature(request.base_url, request.method, params, user["secret"]):
       resp = deleteUser(email)
       return jsonify(**resp), 200 #TODO: use proper HTTP code
   abort(400)
@@ -169,12 +183,14 @@ def user(email):
 @app.route("/purchase/<email>", methods=['POST'])
 def purchase(email):
   email = unquote(email)
-  if request.form['user'] == 'PARLEY.CO' and compare_hashes(request.form["sig"], config["parley_website_key"]):
+  params = get_header_params(request.headers, email)
+  params.update(request.form)
+  if params['user'] == 'PARLEY.CO' and compare_hashes(request.form["sig"], config["parley_website_key"]):
     user = setUser(
         email,
         {
           "account_type":2,
-          "customer_id":request.form["customer_id"]
+          "customer_id":params["customer_id"]
         }
         )
     return jsonify({'email':user['email']}), 201
@@ -188,7 +204,7 @@ def verify(email):
   user = getUser(email)
   meta = json.loads(user['meta'])
   if user and user['pending'] and not 'verified' in meta:
-    if compare_hashes(request.form['token'], meta['verification_token']):
+    if compare_hashes(params['token'], meta['verification_token']):
       user = setUser(email,{'verified':True})
       return jsonify(**user), 201
     else:
@@ -202,12 +218,14 @@ def invite(to):
   to = unquote(to)
   #TODO: implement paid invites!
   to_user = getUser(to)
+  params = get_header_params(request.headers, request.form['user'])
+  params.update(request.form)
 
   # if this is the result of a registration from the website
-  if request.form["user"] == 'PARLEY.CO' and 'sig' in request.form:
-    if compare_hashes(request.form["sig"], config["parley_website_key"]):
+  if params["user"] == 'PARLEY.CO' and 'sig' in request.form:
+    if compare_hashes(params["sig"], config["parley_website_key"]):
       token = ''.join(random.choice(string.ascii_lowercase+string.digits) for x in range(20))
-      if 'customer_id' in request.form:
+      if 'customer_id' in params:
         if to_user:
           meta = json.loads(to_user['meta'])
           token = meta['verification_token']
@@ -220,7 +238,7 @@ def invite(to):
               "account_type":2,
               "invited_by":"PARLEY.CO",
               "verification_token":token,
-              "customer_id":request.form['customer_id']
+              "customer_id":params['customer_id']
             }
             )
         message = {"from": "Dave Noel <dave@blackchair.net>",
@@ -282,15 +300,15 @@ www.blackchair.net
 
 
   #otherwise, this is a user-to-user invite
-  from_user = getUser(request.form["user"])
+  from_user = getUser(params["user"])
 
   '''
   paid_invites = from_user["paid_invites"] or 0
-  if not paid_invites and 'sig' in request.form:
+  if not paid_invites and 'sig' in params:
     paid_invites = -1 #if the user is trying to send a paid invite but has none
 
   #TODO: modify the following if/else to accomodate for the situation where someone is trying to send a paid invite to an already pending user--if the account type is better than their current invite, it should send the new one. either way it should send a reminder
-  if from_user and not from_user["pending"] and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, from_user["secret"]) and not to_user and paid_invites > 0:
+  if from_user and not from_user["pending"] and 'sig' in params and verifySignature(request.base_url, request.method, request.form, from_user["secret"]) and not to_user and paid_invites > 0:
     new_user = setUser(
         to,
         {
@@ -358,8 +376,10 @@ MAILGUN_API_KEY = config["mailgun_api_key"]
 @app.route("/smtp/send", methods=['POST'])
 def smtp_send():
   user = getUser(request.form["user"])
-  if user and not user["pending"] and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
-    message = json.loads(request.form['message'])
+  params = get_header_params(request.headers, request.form['user'])
+  params.update(request.form)
+  if user and not user["pending"] and 'sig' in params and verifySignature(request.base_url, request.method, request.form, user["secret"]):
+    message = json.loads(params['message'])
     message['from'] = "%s <%s>" % (user["name"], user["email"])
     response = HTTP.post(
         "https://api.mailgun.net/v2/parley.co/messages",
@@ -379,6 +399,8 @@ context_io = contextio.ContextIO(
 def imap_connect(email):
   email = unquote(email)
   user = getUser(email)
+  params = get_header_params(request.headers, email)
+  params.update(request.args)
   if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     time = request.args["time"]
     sig = hmac.new(
@@ -433,6 +455,8 @@ window.close();
 @app.route("/imap/get", methods=['GET'])
 def imap_get():
   user = getUser(request.args["user"])
+  params = get_header_params(request.headers, request.args['user'])
+  params.update(request.args)
   if user and not user["pending"] and user["imap_account"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     account_dict = json.loads(user["imap_account"])
     params = {'id':account_dict["id"]}
