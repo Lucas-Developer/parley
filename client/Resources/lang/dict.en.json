@@ -22,28 +22,34 @@ window._phrases = {
 
 // Short phrases
 "are you sure": "Are you sure?",
-"import key": "Import key",
+
 "password mismatch": "Password mismatch",
 "choose password": "Choose password",
 "new password": "New password",
 "change password": "Change password",
 "current password": "Current password",
 "confirm password": "Confirm password",
+
 "enter your email": "Enter your email",
 "log in": "Log in",
 "logging in": "Logging in",
 "loading inbox": "Loading inbox",
 "error logging in": "Error logging in",
+
+"import key": "Import key",
+"revoke key": "Revoke key",
 "generate new key": "Generate New Key",
 "import private key": "Import Private Key",
+"publish my key": "Publish my key",
+
 "personal information": "Personal information",
+
 "new contact": "New contact",
 "add new contact": "Add new contact",
 "save contact": "Save contact",
 "save settings": "Save settings",
 "revoke and delete": "Revoke and delete",
 "destroy parley account": "Destroy Parley account",
-"revoke key": "Revoke key",
 "welcome to parley": "Welcome to Parley",
 "parley settings": "Parley settings",
 "send email": "Send email",
@@ -54,10 +60,13 @@ window._phrases = {
 "message-login": "Enter your password to access the magic of Parley!",
 "message-login-wait": "It takes a while to log in! We've downloaded your encrypted keys and contacts from the Parley server, and they take a little while to decrypt. We should be able to speed this process up significantly with the next release.",
 "message-register": "Register for Parley! Keep in mind, this will only work if you have already signed up for the service at http://parley.co",
+
 "message-keygen": "To use encrypted email, you must have a <strong>secret key</strong>. If you have never used PGP encryption, select <strong>Generate New Key</strong> and the Parley client will set you up. If you have an existing key, I don't need to tell you to click <strong>Import Private Key</strong>.",
 "message-keygen-confirm": "Do not generate a new key if you already have a public PGP key. If you do not have a public PGP key, or if you are unsure about it, generate yourself a new one! (You would know if you had one).",
 "message-key-revoke": "Revoking your key will clear your user account with Parley along with revoking it from the public PGP key servers. Use with caution.",
 "message-key-notfound": "Public PGP keys not found",
+"message-key-sendpublic": "If you check the box below, the public key that the Parley client generates for you will be distributed to public PGP key servers. Only check this box if you are absolutely sure that you don't already have a public key out there. You can always publish your key at a later time.",
+
 "message-import-key": "Paste your key in the box the below to import it into your Parley client.",
 "message-register-wait": "Right now, we're generating your encryption keys and sending an encrypted version of them to the Parley server. It takes a little while; sorry about that. It may sound weird, but for once it will actually go faster if you move your mouse and use your keyboard while you wait - it increases system entropy during the key generation process.",
 

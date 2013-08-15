@@ -98,10 +98,22 @@
                 </label>
             </div>
 
+            <div class="row">
+                <p class="small-text">{{t_message-key-sendpublic}}</p>
+                <label for="send_key">
+                    <input type="checkbox" name="send_key">
+                    {{t_publish_my_key}}
+                </label>
+            </div>
+
+            <button id="registerAction">{{t_register}}</button>
+
+<!--
             <p>{{t_message-keygen}}</p>
             <p>
                 <button id="registerAction">{{t_generate_new_key}}</button> {{t_or}} <button id="importKeyDialogAction">{{t_import_private_key}}</button>
             </p>
+-->
         </form>
     </div>
 </script>

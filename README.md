@@ -18,7 +18,9 @@ When the client runs for the first time, it will most likely require that some s
 
 Once GPG is installed, you can provide an email address that is registered with the parley server (see http://parley.co) to get started. You will also be asked for a password to be used by the Parley service as well as the name that should appear on your messages.
 
-If you have used a keyserver before to manage your identity with other PGP-based services, you can import that key to use it with Parley as well. Otherwise, generate a new key to continue. This process also takes a moment.
+~~If you have used a keyserver before to manage your identity with other PGP-based services, you can import that key to use it with Parley as well. Otherwise, generate a new key to continue. This process also takes a moment.~~
+
+_Until we deal with a few issues relating to the way the keys get shared between Parley and public PGP key servers (see [Issue #31](https://github.com/blackchair/parley/issues/31)), we don't allow you to import your own key. In the meantime, we have an option to select whether you want your Parley key to be distributed to public PGP key servers or not. By default, we will **not** send it, so as not to interfere with your extant public key._
 
 At this point, your inbox will be loaded. The previous steps for registration and key generation will not be required for subsequent logins
 

@@ -98,7 +98,7 @@
 
             Parley.app.dialog('show info register-wait', { header: _t('registering'), message: _t('message-register-wait') });
 
-            Parley.registerUser(form.name.value, form.email.value, form.password_two.value, function (data, textStatus, jqXHR) {
+            Parley.registerUser(form.name.value, form.email.value, form.password_two.value, form.send_key.checked, function (data, textStatus, jqXHR) {
                 console.log(JSON.stringify(data), textStatus, data.error);
 
                 if (!_.has(data, 'error')) {

@@ -22,6 +22,7 @@
 	.ui-dialog-title, h2 {font-size:1.5em;}
     h3 {text-align: left; font-size: 1.3em; }
 	p { font-size: 0.9em; line-height: 1.4em; }
+    p.small-text { font-size: 0.8em; }
 
     button { outline: none; border: none; cursor: pointer; padding: 8px 16px; white-space: nowrap; }
         button:hover,button:active { outline: none; background-color: #f5ad66; color: #eee; }
@@ -34,6 +35,7 @@
 	    /*background-color: #eee;*/
 	}
         form .row.no-line { border-top: none; }
+        input[type=checkbox] { display: block; float: left; }
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
 			color: #191208;
 			padding: 4px 8px 4px 4px;
@@ -67,6 +69,7 @@
 				display: block;
 				margin-top:5px;
 			}
+            form .row label input[type=checkbox] { margin-top: 0; }
             textarea { width: 100%; margin-bottom: 10px; }
 
             form .row .hidden { display: inline; width: auto; margin-right: 10px; }
