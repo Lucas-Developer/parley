@@ -206,17 +206,20 @@ are massaged to fit. The arguments to finished on ajax error look like:
       });
     }
   }
-  
-  /* Stores (encrypted) local keyring on the server.
-  Accepts finished callback. */
-  Parley.storeKeyring = _.debounce(function(finished) {
+
+  /*
+   * Save user data (such as settings/preferences) to server.
+   * Ideally "data" is a shallow object (ie. a dict with only
+   * strings/numbers for values) since I haven't tested anything
+   * else.
+   * */
+  Parley.saveUser = function(data,finished) {
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
       var email = Parley.currentUser.get('email');
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
-      var keyring = window.PYgetEncryptedKeyring();
-      var data = {'time': Math.floor((new Date())/1000), 'keyring':keyring, 'public_key':window.PYgetPublicKey()};
+      _(data).extend({'time': Math.floor((new Date())/1000)});
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
       $.ajax({
@@ -229,6 +232,13 @@ are massaged to fit. The arguments to finished on ajax error look like:
         dataType:'json'
       });
     }
+  };
+  
+  /* Stores (encrypted) local keyring on the server.
+  Accepts finished callback. */
+  Parley.storeKeyring = _.debounce(function(finished) {
+    var keyring = window.PYgetEncryptedKeyring();
+    Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey()});
   }, 1000*3);
   
   /* Requests the public key corresponding to an email address from public keyservers.
