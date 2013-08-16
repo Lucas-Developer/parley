@@ -208,7 +208,7 @@ window.PYdecryptAndVerify = PYdecryptAndVerify
 
 
 def PYchangePass(newPass):
-  oldPass = Parley.currentUser.attributes.passwords.local
+  oldPass = window.Parley.currentUser.attributes.passwords.local
   private_key = gpg.list_keys(True)
   keyid = private_key[0]['keyid']
   return gpg.change_pass(keyid,oldPass,newPass)
@@ -219,7 +219,7 @@ window.PYchangePass = PYchangePass
 def PYrevokeKey():
   private_key = gpg.list_keys(True)
   keyid = private_key[0]['keyid']
-  revocation  = gpg.gen_revoke(keyid,Parley.currentUser.attributes.passwords.local)
+  revocation  = gpg.gen_revoke(keyid,window.Parley.currentUser.attributes.passwords.local)
   gpg.import_keys(revocation)
   return gpg.send_keys('pgp.mit.edu',keyid)
 

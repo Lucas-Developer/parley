@@ -191,6 +191,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       $.ajax({
         type:'GET',
         url:url,
+        headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+sig, 'Sig-Time' : time},
         data:{'time':time,'sig':sig},
         success:function(data, textStatus, jqXHR) {
           if (data.keyring) {
@@ -221,6 +222,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       $.ajax({
         type:'POST',
         url:url,
+        headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time' : data.time},
         data:data,
         success:finished,
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -262,6 +264,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       $.ajax({
         type:'POST',
         url:url,
+        headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time': data.time},
         data:data,
         success:function(a,b,c){
           Parley.currentUser.set('passwords',passwords);
@@ -275,12 +278,13 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   Parley.killUser = function(finished) {
     var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(Parley.currentUser.get('email'));
-    var data = {};
+    var data = {'time':Math.floor((new Date())/1000)};
     data.sig = Parley.signAPIRequest(url, 'DELETE', data);
     $.ajax({
       type:'DELETE',
       url:url,
       data:data,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       success:function(a,b,c) {
         a.revoked = window.PYrevokeKey();
         if (!a.revoked) {
@@ -387,6 +391,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     $.ajax({
       type:'POST',
       url:url,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time': data.time},
       data:data,
       success:finished,
       error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -440,6 +445,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       $.ajax({
         type:'POST',
         url:Parley.BASE_URL+'/invite/'+Parley.encodeEmail(email),
+        headers:data.sig ? {'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time': data.time} : {},
         data:data,
         success:finished,
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -469,6 +475,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     $.ajax({
       type:'GET',
       url:url,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+sig, 'Sig-Time':time},
       data:{'time':time,'sig':sig},
       success:function(data, textStatus, jqXHR) {
         if (data.imap_account) {
@@ -527,6 +534,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     $.ajax({
       type:'GET',
       url:url,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       data:data,
       success:finished,
       error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
