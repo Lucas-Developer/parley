@@ -50,9 +50,9 @@
 	        		<input type="email" name="email">
 				</label>
 			</div>
-
-	        <button id="emailVerify">{{t_submit}}</button>
 	    </form>
+	    
+        <button id="emailVerify">{{t_submit}}</button>
 	</div>
     <div class="page page-login">
         <h2>{{t_log_in}}</h2>
@@ -67,9 +67,9 @@
                 </label>
                 <!--<a href="#" class="extra-link">Forgot password?</a>-->
             </div>
-
-            <button id="loginAction">{{t_log_in}}</button>
         </form>
+
+        <button id="loginAction">{{t_log_in}}</button>
     </div>
     <div class="page page-register">
         <h2>{{t_register}}</h2>
@@ -105,8 +105,9 @@
                     {{t_publish_my_key}}
                 </label>
             </div>
+        </form>
 
-            <button id="registerAction">{{t_register}}</button>
+        <button id="registerAction">{{t_register}}</button>
 
 <!--
             <p>{{t_message-keygen}}</p>
@@ -114,39 +115,35 @@
                 <button id="registerAction">{{t_generate_new_key}}</button> {{t_or}} <button id="importKeyDialogAction">{{t_import_private_key}}</button>
             </p>
 -->
-        </form>
     </div>
 </script>
 
 <script type="text/template" id="settingsDialogTemplate">
-	<form name="settings">
-	    <h4>{{t_personal_information}}</h4>
-	    <div class="row">
-	        <label for="name">{{t_name}}
-	        	<input type="text" value="{{name}}" name="name">
-			</label>
-	    </div>
-
-        <div class="row">
+    <h4>{{t_personal_information}}</h4>
+    <div class="row">
+        <form name="settings">
+            <label for="name">{{t_name}}
+                <input type="text" value="{{name}}" name="name">
+            </label>
             <label for="auto_refresh">
                 <input type="checkbox" name="auto_refresh">
                 {{t_auto_refresh_inbox}}
             </label>
-        </div>
-    </form>
+        </form>
 
-    <button id="saveSettingsAction">{{t_save_settings}}</button>
+        <button id="saveSettingsAction">{{t_save_settings}}</button>
+    </div>
 
-    <form name="settingsUtilitiesForm">
-	    <h4>{{t_change_password}}</h4>
-	    <div class="row">
+    <h4>{{t_change_password}}</h4>
+    <div class="row">
+        <form name="changePassword">
             <div class="half">
                 <label for="cur_password">{{t_current_password}}
                     <input type="text" id="curPasswordField" name="cur_password">
                 </label>
             </div>
 
-            <div class="newPasswordFields half">
+            <div class="half">
                 <label for="new_password_1">{{t_new_password}}
                     <input type="text" name="new_password_1">
                 </label>
@@ -155,18 +152,18 @@
                     <input type="text" name="new_password_2">
                 </label>
             </div>
-	    </div>
+        </form>
 
-        <h4>{{t_revoke_key}}</h4>
-        <div class="row">
-            <p>{{t_message-key-revoke}}</p>
-	        <button id="revokeKeyAction">{{t_revoke_and_delete}}</button>
-        </div>
+        <button id="changePasswordAction">{{t_change_password}}</button>
+    </div>
 
-	</form>
+    <div class="row">  </div>
 
+    <h4>{{t_revoke_key}}</h4>
     <div class="row">
-        <button id="cancelButton">{{t_close}}</button>
+        <p>{{t_message-key-revoke}}</p>
+
+        <button id="revokeKeyAction">{{t_revoke_and_delete}}</button>
     </div>
 </script>
 

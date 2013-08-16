@@ -138,6 +138,9 @@
         Parley.authenticateUser(email, password, function (data, textStatus) {
             if (!_.has(data, 'error')) {
                 console.log('User successfully logged in.');
+
+                Parley.currentUser.set(data);
+
                 Parley.vent.trigger('contact:sync');
                 Parley.vent.trigger('message:sync');
 

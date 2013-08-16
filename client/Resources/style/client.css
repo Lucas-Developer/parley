@@ -27,14 +27,14 @@
     button { outline: none; border: none; cursor: pointer; padding: 8px 16px; white-space: nowrap; }
         button:hover,button:active { outline: none; background-color: #f5ad66; color: #eee; }
 
-    form .row {
+    .ui-dialog h4 { border-bottom: 1px solid #ccc; }
+    .row {
 	    display: table;
 		width: 100%;
 		padding: 10px 0;
-	    border-top: 1px solid #ccc;
 	    /*background-color: #eee;*/
 	}
-        form .row.no-line { border-top: none; }
+        .row.no-line { border-top: none; }
         input[type=checkbox] { display: block; float: left; }
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
 			color: #191208;
@@ -53,11 +53,11 @@
 		}
             input[readonly] { border: none; font-weight: 500; background: none; }
 
-		form .row .half { width: 48%; margin-right: 4%; float: left; }
-            form .row .half:nth-child(even) { margin-right: 0; }
-		form .row .quarter { width: 20%; margin-right: 5%; }
+		.row .half { width: 48%; margin-right: 4%; float: left; }
+            .row .half:nth-child(even) { margin-right: 0; }
+		.row .quarter { width: 20%; margin-right: 5%; }
 
-	    form .row label {
+	    .row label {
             font-size:0.9em;
             display:block;
             width:100%;
@@ -65,28 +65,28 @@
             margin-bottom: 10px;
             text-transform: capitalize;
         }
-			form .row label input, input[type=search] {
+			.row label input, input[type=search] {
 				display: block;
 				margin-top:5px;
 			}
-            form .row label input[type=checkbox] { margin-top: 0; }
+            .row label input[type=checkbox] { margin-top: 0; }
             textarea { width: 100%; margin-bottom: 10px; }
 
-            form .row .hidden { display: inline; width: auto; margin-right: 10px; }
-            form .row .hidden * { display: none; }
-            form .row .hidden:after { content: "\0025BE"; }
+            .row .hidden { display: inline; width: auto; margin-right: 10px; }
+            .row .hidden * { display: none; }
+            .row .hidden:after { content: "\0025BE"; }
 			
-	    form .row span {width:100%;padding:0 10px;}
+	    .row span {width:100%;padding:0 10px;}
 	input[type=search] {
 		background: url(../img/icon_search.png) 4px 4px no-repeat;
 		padding: 4px 4px 4px 24px;
 		margin-bottom: 8px;
 	}
-    form .inset-text { position: relative; }
-    form .full-width { padding: 0 !important; }
-        form .full-width .status { position: relative; top: -1.8em; float: right; right: .2em; }
-        form .full-width .status img { display: none; height: 16px; width: 16px; }
-    form .extra-link { float: right; font-size: 0.7em; }
+    .inset-text { position: relative; }
+    .full-width { padding: 0 !important; }
+        .full-width .status { position: relative; top: -1.8em; float: right; right: .2em; }
+        .full-width .status img { display: none; height: 16px; width: 16px; }
+    .extra-link { float: right; font-size: 0.7em; }
 
 	table td, table th { margin: 1px 0; padding: 4px; text-align: left; cursor: default; }
 	table thead tr { background-color: #191208; color: #eee; }
@@ -213,7 +213,6 @@
 
 		.ui-dialog table .thumbnail { padding: 2px; width: 32px; height: 32px; }
 
-	#settingsDialog form { max-width: 550px; margin: auto; }
 .ui-dialog-titlebar button, .ui-dialog-titlebar span {outline:none;}
 .thumbnail img {width:50px;height:50px;}
 tr.contact td { vertical-align:middle; }
