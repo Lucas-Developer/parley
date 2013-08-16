@@ -56,7 +56,6 @@ def compare_hashes(a, b):
   return rv == 0
 
 def verifySignature(url, method, formData, secret):
-  app.logger.debug(formData['time'])
   if not 'sig' in formData or not 'time' in formData:
     return False
   t = abs(time.time() - int(formData['time']))
@@ -204,6 +203,8 @@ def purchase(email):
 def verify(email):
   email = unquote(email)
   user = getUser(email)
+  params = get_header_params(request.headers, email)
+  params.update(request.form.to_dict())
   meta = json.loads(user['meta'])
   if user and user['pending'] and not 'verified' in meta:
     if compare_hashes(params['token'], meta['verification_token']):
@@ -403,8 +404,8 @@ def imap_connect(email):
   user = getUser(email)
   params = get_header_params(request.headers, email)
   params.update(request.args.to_dict())
-  if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
-    time = request.args["time"]
+  if user and not user["pending"] and 'sig' in params and verifySignature(request.base_url, request.method, params, user["secret"]):
+    time = params["time"]
     sig = hmac.new(
         key=config["contextio_api_secret"]+user["secret"],
         msg=email+'|'+time,
@@ -430,8 +431,8 @@ def imap_new(email, timestamp, sig):
         digestmod=hashlib.sha256).digest()
   new_sig = base64.b64encode(new_sig,'-_').strip('=')
   if compare_hashes(sig, new_sig) and t < 30*60:
-    params = {'token':request.args['contextio_token']}
-    token = contextio.ConnectToken(context_io,params)
+    cio_params = {'token':request.args['contextio_token']}
+    token = contextio.ConnectToken(context_io,cio_params)
     token.get()
     account = token.account
     accountDict = {}
@@ -459,11 +460,11 @@ def imap_get():
   user = getUser(request.args["user"])
   params = get_header_params(request.headers, request.args['user'])
   params.update(request.args.to_dict())
-  if user and not user["pending"] and user["imap_account"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
+  if user and not user["pending"] and user["imap_account"] and 'sig' in params and verifySignature(request.base_url, request.method, params, user["secret"]):
     account_dict = json.loads(user["imap_account"])
-    params = {'id':account_dict["id"]}
-    account = contextio.Account(context_io, params)
-    messages =  account.get_messages(include_body=1,body_type='text/plain',limit=100,offset=request.args["offset"])
+    cio_params = {'id':account_dict["id"]}
+    account = contextio.Account(context_io, cio_params)
+    messages =  account.get_messages(include_body=1,body_type='text/plain',limit=100,offset=params["offset"])
 
     #filter out unencrypted mail, and create an array of serialized messages
     serialized_messages = []

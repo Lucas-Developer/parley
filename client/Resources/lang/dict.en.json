@@ -65,7 +65,7 @@ window._phrases = {
 "message-keygen-confirm": "Do not generate a new key if you already have a public PGP key. If you do not have a public PGP key, or if you are unsure about it, generate yourself a new one! (You would know if you had one).",
 "message-key-revoke": "Revoking your key will clear your user account with Parley along with revoking it from the public PGP key servers. Use with caution.",
 "message-key-notfound": "Public PGP keys not found",
-"message-key-sendpublic": "If you check the box below, the public key that the Parley client generates for you will be distributed to public PGP key servers. Only check this box if you are absolutely sure that you don't already have a public key out there. You can always publish your key at a later time.",
+"message-key-sendpublic": "If you check the box below, the public key that the Parley client generates for you will be distributed to public PGP key servers. This isn't necessary for communicating with other Parley users, but it will make it much easier to interact with people who use PGP encryption outside of Parley. If you're unsure, just leave it unchecked for now. You can always publish your key at a later time.",
 
 "message-import-key": "Paste your key in the box the below to import it into your Parley client.",
 "message-register-wait": "Right now, we're generating your encryption keys and sending an encrypted version of them to the Parley server. It takes a little while; sorry about that. It may sound weird, but for once it will actually go faster if you move your mouse and use your keyboard while you wait - it increases system entropy during the key generation process.",
