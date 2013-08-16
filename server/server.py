@@ -32,7 +32,7 @@ if app.debug is not True:
   import logging
   from logging.handlers import RotatingFileHandler
   file_handler = RotatingFileHandler('python.log', maxBytes=1024 * 1024 * 100, backupCount=20)
-  file_handler.setLevel(logging.ERROR)
+  file_handler.setLevel(logging.DEBUG)
   app.logger.addHandler(file_handler)
 
 config = dict()
@@ -56,6 +56,7 @@ def compare_hashes(a, b):
   return rv == 0
 
 def verifySignature(url, method, formData, secret):
+  app.logger.debug(formData['time'])
   if not 'sig' in formData or not 'time' in formData:
     return False
   t = abs(time.time() - int(formData['time']))
@@ -127,13 +128,13 @@ def deleteUser(email):
 
 def get_header_params(headers, email):
   params = {}
-  if 'Authorization' in headers and 'X-Time' in headers:
+  if 'Authorization' in headers and 'Sig-Time' in headers:
     pair = headers['Authorization'].split()[-1]
     pieces = pair.split(':')
     authemail = ':'.join(pieces[:-1])
     if authemail == email:
       params['sig'] = pieces[-1]
-      params['time'] = headers['X-Time']
+      params['time'] = headers['Sig-Time']
   return params
 
 
@@ -143,7 +144,7 @@ def user(email):
   user = getUser(email)
   params = get_header_params(request.headers, email)
   if request.method == 'GET':
-    params.update(request.args)
+    params.update(request.args.to_dict())
     if user and not user["pending"] and 'sig' in params and verifySignature(request.base_url, request.method, params, user["secret"]):
       #authenticated. return all info
       return jsonify(**user), 200
@@ -153,7 +154,7 @@ def user(email):
     else:
       abort(404)
   elif request.method == 'POST':
-    params.update(request.form)
+    params.update(request.form.to_dict())
     if user and not user["pending"] and 'keyring' in params and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
       #update active user
       new_user = {}
@@ -185,7 +186,7 @@ def user(email):
 def purchase(email):
   email = unquote(email)
   params = get_header_params(request.headers, email)
-  params.update(request.form)
+  params.update(request.form.to_dict())
   if params['user'] == 'PARLEY.CO' and compare_hashes(request.form["sig"], config["parley_website_key"]):
     user = setUser(
         email,
@@ -220,7 +221,7 @@ def invite(to):
   #TODO: implement paid invites!
   to_user = getUser(to)
   params = get_header_params(request.headers, request.form['user'])
-  params.update(request.form)
+  params.update(request.form.to_dict())
 
   # if this is the result of a registration from the website
   if params["user"] == 'PARLEY.CO' and 'sig' in request.form:
@@ -378,7 +379,7 @@ MAILGUN_API_KEY = config["mailgun_api_key"]
 def smtp_send():
   user = getUser(request.form["user"])
   params = get_header_params(request.headers, request.form['user'])
-  params.update(request.form)
+  params.update(request.form.to_dict())
   if user and not user["pending"] and 'sig' in params and verifySignature(request.base_url, request.method, request.form, user["secret"]):
     message = json.loads(params['message'])
     message['from'] = "%s <%s>" % (user["name"], user["email"])
@@ -401,7 +402,7 @@ def imap_connect(email):
   email = unquote(email)
   user = getUser(email)
   params = get_header_params(request.headers, email)
-  params.update(request.args)
+  params.update(request.args.to_dict())
   if user and not user["pending"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     time = request.args["time"]
     sig = hmac.new(
@@ -457,7 +458,7 @@ window.close();
 def imap_get():
   user = getUser(request.args["user"])
   params = get_header_params(request.headers, request.args['user'])
-  params.update(request.args)
+  params.update(request.args.to_dict())
   if user and not user["pending"] and user["imap_account"] and 'sig' in request.args and verifySignature(request.base_url, request.method, request.args, user["secret"]):
     account_dict = json.loads(user["imap_account"])
     params = {'id':account_dict["id"]}
