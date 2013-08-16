@@ -236,6 +236,12 @@
         {   
             id: 'dialog_settings',
             template: Mustache.compile($('#settingsDialogTemplate').html()),
+            events: {
+                'click #revokeKeyAction': function (e) {
+                    e.preventDefault();
+                    Parley.vent.trigger('user:kill');
+                }
+            },
             model: {
                 slug: 'settings',
                 title: 'Parley Settings',
@@ -629,7 +635,21 @@
 	    addMessage: function (message) {
 			var view = new MessageView({model: message});
 			this.inbox.append(view.render().el);
-	    }
+	    },
+
+        kill: function () {
+            // Clear local storage
+			this.$el.addClass('loggedout').removeClass('loggedin');
+			this.$('.email').text(Parley.currentUser.get('email'));
+
+            this.inbox.empty();
+            Parley.inbox.reset();
+
+            this.contactsList.empty();
+            Parley.contacts.reset();
+
+            Parley.app.dialog('setup');
+        }
 	});
 
     // Just grab the '_phrases' object from the dictionary file

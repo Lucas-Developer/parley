@@ -4,6 +4,7 @@ window._phrases = {
 "generate": "generate",
 "password": "password",
 "submit": "submit",
+"reply": "reply",
 "email": "email",
 "compose": "compose",
 "register": "register",
@@ -19,6 +20,7 @@ window._phrases = {
 "bcc": "bcc",
 "subject": "subject",
 "send": "send",
+"confirm": "confirm",
 
 // Short phrases
 "are you sure": "Are you sure?",
@@ -66,6 +68,9 @@ window._phrases = {
 "message-key-revoke": "Revoking your key will clear your user account with Parley along with revoking it from the public PGP key servers. Use with caution.",
 "message-key-notfound": "Public PGP keys not found",
 "message-key-sendpublic": "If you check the box below, the public key that the Parley client generates for you will be distributed to public PGP key servers. This isn't necessary for communicating with other Parley users, but it will make it much easier to interact with people who use PGP encryption outside of Parley. If you're unsure, just leave it unchecked for now. You can always publish your key at a later time.",
+"message-key-revokesuccess": "We have successfully revoked your key and killed your account. Good bye!",
+"message-key-revokeerror": "We have experienced some kind of error while killing your account. You can check out any time you want, but...",
+"message-key-revokeconfirm": "Are you _sure_ that you want to revoke your key and permanently kill your account? We don't mean delete the way F---book does, we will actually remove the data from our servers (so that this Parley client is no longer able to access your email) and send out revocation certificates. (this tells all other PGP users that your public key is no longer valid, and they should not use it.)",
 
 "message-import-key": "Paste your key in the box the below to import it into your Parley client.",
 "message-register-wait": "Right now, we're generating your encryption keys and sending an encrypted version of them to the Parley server. It takes a little while; sorry about that. It may sound weird, but for once it will actually go faster if you move your mouse and use your keyboard while you wait - it increases system entropy during the key generation process.",

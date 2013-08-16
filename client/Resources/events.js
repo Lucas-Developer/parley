@@ -245,6 +245,32 @@
         */
     });
 
+    Parley.vent.on('user:kill', function (callback) {
+        console.log('VENT: user:kill');
+        callback = callback || function () {};
+
+        Parley.app.dialog('show info revoke-confirm', {
+            message: _t('message-key-revokeconfirm'),
+            buttons: [ {
+                id: 'confirmRevokeKeyAction',
+                text: _t('confirm'),
+                handler: function () {
+                    Parley.killUser(function (data, status) {
+                        Parley.app.dialog('hide info revoke-confirm');
+                        if (!_.has(data, 'error')) {
+                            Parley.app.kill();
+                        } else {
+                            Parley.app.dialog('show info revoke-info', {
+                                message: _t('message-key-revokeerror'),
+                                buttons: [ 'okay' ]
+                            });
+                        }
+                    });
+                }
+            }, 'cancel' ]
+        });
+    });
+
 /*
         inviteAction: function (e) {
             var email,selected = this.$('.selector a.clicked').parent();
