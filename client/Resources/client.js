@@ -27,20 +27,14 @@
 	var ContactView = Backbone.View.extend({
 	    tagName: 'tr',
 	    template: Mustache.compile($('#contactTemplate').html()),
-	    events: {
-            "click" :     "sendMessage"
+        initialize: function () {
+            this.listenTo(this.model, 'change', this.render);
         },
 		render: function () {
 			var data = this.model.toJSON();
-
-            this.listenTo(this.model, 'change', this.render);
-
 			this.$el.addClass('contact').html(this.template(data));
+
 			return this;
-	    },
-        sendMessage: function () {
-                       console.log('sendMessage');
-            Parley.app.dialog('compose', {from:this.model});
         }
 	});
 
@@ -191,7 +185,7 @@
 	    }
 	});
 
-    Parley._dialogs = [
+    Parley._initialDialogs = [
         {   id: 'dialog_setup',
             template: Mustache.compile($('#setupDialogTemplate').html()),
             events: {
@@ -244,32 +238,16 @@
             },
             model: {
                 slug: 'settings',
-                title: 'Parley Settings',
-                init: function () {
-                    _.extend(this, Parley.currentUser.toJSON());
-                },
-                loaded: function (view) {
-/*
-                    view.on('change blur focus', '#curPasswordField', function (e) {
-                        if (e.type == 'blur' && !e.target.value)
-                            $('#newPasswordFields').fadeOut();
-                        else
-                            $('#newPasswordFields').fadeIn();
-                        if (e.type == 'focus')
-                        else if (e.target.value != '')
-                            $('#newPasswordFields').fadeIn();
-                    });
-*/
-                }
+                title: 'Parley Settings'
             }
         },
         {   id: 'dialog_contacts',
             template: Mustache.compile($('#contactsDialogTemplate').html()),
             events: {
-                'click .reply': function (e) {
+                'click .send': function (e) {
                     e.preventDefault();
-                    var $this = $(this);
-                    var recipient = Parley.contacts.findWhere({email:$this.data('email')});
+                    var from_obj = Parley.contacts.findWhere({email: $(e.target).data('email')});
+                    Parley.app.dialog('compose', {from: from_obj});
                 },
                 'click #newContact': function (e) { e.preventDefault(); Parley.app.dialog('contacts newcontact'); },
                 'click #backToContactlist': function (e) { e.preventDefault(); Parley.app.dialog('contacts contactlist'); },
@@ -405,7 +383,6 @@
             } else {
                 this.$('.page').hide().filter('.page-'+page).show();
             }
-
             this.delegateEvents(this.events);
 
             return this;
@@ -418,7 +395,11 @@
             return this;
         },
         show: function () {
-            this.render().$el.dialog( this.opts );
+            var $this = this.render().$el;
+            if ($this.hasClass('ui-dialog'))
+                $this.dialog('moveToTop');
+            else
+                $this.dialog( this.opts );
 
             if (loaded = this.model.get('loaded')) loaded.call(this.model.toJSON(), this);
             return this;
@@ -458,7 +439,8 @@
                 Parley.app.dialog('compose', reply_to.toJSON());
             },
 			'click #settingsAction': function () {
-                this.dialog('settings');
+                var userdata = Parley.currentUser.toJSON();
+                this.dialog('settings', userdata);
             },
             'click #contactsAction': function () {
                 this.dialog('contacts');
@@ -471,9 +453,9 @@
 			console.log('Initializing Parley.');
 
             this._dialogs = [];
-            for (var i=0,l=Parley._dialogs.length; i<l; i++) {
-                var view = new DialogView(Parley._dialogs[i]);
-                var slug = Parley._dialogs[i].model.slug;
+            for (var i=0,l=Parley._initialDialogs.length; i<l; i++) {
+                var view = new DialogView(Parley._initialDialogs[i]);
+                var slug = Parley._initialDialogs[i].model.slug;
                 this._dialogs.push({slug:slug,view:view});
             }
 
@@ -559,6 +541,8 @@
                 "logo_big": "img/logo_big.png"
             };
 
+            var _blankOpts = { resizable: false, dialogClass: 'no-close', minWidth: '400' };
+
             if (data && _.has(_images, data.image)) data.image = _images[data.image];
 
             if (_.isString(opts)) {
@@ -591,11 +575,7 @@
                                 var dialog = this.tempDialogs[page];
                                 dialog.html(this.blankTemplate(data));
                             } else {
-                                var dialog = $(this.blankTemplate(data)).dialog({
-                                    resizable: false,
-                                    dialogClass: 'no-close',
-                                    minWidth: '400'
-                                });
+                                var dialog = $(this.blankTemplate(data)).dialog(_blankOpts);
                                 this.tempDialogs[page] = dialog;
 
                                 _.each(data.buttons, function (ele) {
