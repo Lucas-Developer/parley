@@ -223,6 +223,7 @@ tr.contact { cursor:pointer; }
     .as-selections input { background-color: transparent !important; }
 
 .splash-logo { margin: 30px auto; height: 200px; width: 155px; }
+    .splash-logo img { width: 100%; }
 
 .newPasswordFields { display: none; }
 

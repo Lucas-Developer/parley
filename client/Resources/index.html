@@ -50,9 +50,9 @@
 	        		<input type="email" name="email">
 				</label>
 			</div>
-
-	        <button id="emailVerify">{{t_submit}}</button>
 	    </form>
+
+	    <button id="emailVerify">{{t_submit}}</button>
 	</div>
     <div class="page page-login">
         <h2>{{t_log_in}}</h2>
@@ -67,9 +67,9 @@
                 </label>
                 <!--<a href="#" class="extra-link">Forgot password?</a>-->
             </div>
-
-            <button id="loginAction">{{t_log_in}}</button>
         </form>
+
+        <button id="loginAction">{{t_log_in}}</button>
     </div>
     <div class="page page-register">
         <h2>{{t_register}}</h2>
@@ -105,8 +105,9 @@
                     {{t_publish_my_key}}
                 </label>
             </div>
+        </form>
 
-            <button id="registerAction">{{t_register}}</button>
+        <button id="registerAction">{{t_register}}</button>
 
 <!--
             <p>{{t_message-keygen}}</p>
@@ -114,7 +115,6 @@
                 <button id="registerAction">{{t_generate_new_key}}</button> {{t_or}} <button id="importKeyDialogAction">{{t_import_private_key}}</button>
             </p>
 -->
-        </form>
     </div>
 </script>
 
@@ -149,12 +149,12 @@
             <p>{{t_message-key-revoke}}</p>
 	        <button id="revokeKeyAction">{{t_revoke_and_delete}}</button>
         </div>
-
-        <div class="row">
-            <button id="saveSettings">{{t_save_settings}}</button>
-            <button id="cancelButton">{{t_cancel}}</button>
-        </div>
 	</form>
+
+    <div class="row">
+        <button id="saveSettings">{{t_save_settings}}</button>
+        <button id="cancelButton">{{t_cancel}}</button>
+    </div>
 </script>
 
 <script type="text/template" id="contactsDialogTemplate">
@@ -181,23 +181,25 @@
 				<input type="text" name="name">
                               </label>-->
 	    </div>
-        <button id="addContact">{{t_save_contact}}</button>
-        <button id="backToContactlist">{{t_cancel}}</button>
     </form>
+
+    <button id="addContact">{{t_save_contact}}</button>
+    <button id="backToContactlist">{{t_cancel}}</button>
+
     </div>
 </script>
 
     <script type="text/template" id="nokeyDialogTemplate">
         <p>{{t_message-nokey}}</p>
         <table class="sortable">
-        <thead>
-            <tr><th class="selector sorttable_nosort"><a class="clicked"></th><th>Email</th><th class="buttons"></th></tr>
-        </thead>
-        <tbody id="noKeyEmailsList">
-            {{#emails}}
-                <tr><td class="selector"><a></a></td><td class="email">{{email}}</td><td></td></tr>
-            {{/emails}}
-        </tbody>
+            <thead>
+                <tr><th class="selector sorttable_nosort"><a class="clicked"></th><th>Email</th><th class="buttons"></th></tr>
+            </thead>
+            <tbody id="noKeyEmailsList">
+                {{#nokeys}}
+                    <tr><td class="selector"><a></a></td><td class="email">{{email}}</td><td></td></tr>
+                {{/nokeys}}
+            </tbody>
         </table>
         <button id="inviteAction" name="invite">{{t_invite}}</button>
     </script>
@@ -222,10 +224,9 @@
               <textarea rows="6" name="body">{{plainText}}</textarea>
             </label>
         </div>
+	    </form>
 
 	    <button id="sendAction">{{t_send}}</button>
-
-	    </form>
 	</script>
 
 	<script type="text/template" id="messageTemplate">

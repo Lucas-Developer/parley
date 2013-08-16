@@ -19,6 +19,7 @@ window._phrases = {
 "bcc": "bcc",
 "subject": "subject",
 "send": "send",
+"invite": "invite",
 
 // Short phrases
 "are you sure": "Are you sure?",
@@ -66,6 +67,7 @@ window._phrases = {
 "message-key-revoke": "Revoking your key will clear your user account with Parley along with revoking it from the public PGP key servers. Use with caution.",
 "message-key-notfound": "Public PGP keys not found",
 "message-key-sendpublic": "If you check the box below, the public key that the Parley client generates for you will be distributed to public PGP key servers. Only check this box if you are absolutely sure that you don't already have a public key out there. You can always publish your key at a later time.",
+"message-nokey": "We could find no public PGP key for the following users.",
 
 "message-import-key": "Paste your key in the box the below to import it into your Parley client.",
 "message-register-wait": "Right now, we're generating your encryption keys and sending an encrypted version of them to the Parley server. It takes a little while; sorry about that. It may sound weird, but for once it will actually go faster if you move your mouse and use your keyboard while you wait - it increases system entropy during the key generation process.",

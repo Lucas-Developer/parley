@@ -19,47 +19,66 @@
         Parley.vent.trigger('contact:userinfo', {email:form.contact_email.value, name:form.contact_name.value});
     });
 
-    Parley.vent.on('contact:userinfo', function (contact, callback) {
-        console.log('VENT: contact:userinfo');
-        var callback = callback || function () {};
-        var email = contact.get('email');
+    Parley.getUserInfo = function (contact, callback) {
+        if (typeof contact == 'string') {
+            var email = contact;
 
-        var planA = function(userinfo) {
+            // Instantiated without arguments so as not to trigger a certain event
+            contact = new Parley.Contact;
+
+            contact.set({email:email});
+        } else {
+            var email = contact.get('email'),
+                fingerprint = contact.get('fingerprint');
+        }
+
+        var planA = function(data) {
             console.log("A");
-            if (!_(userinfo).has('public_key')) {
+            if (!_.has(data, 'public_key')) {
                 planB();
             } else {
-                var key = Parley.importKey(userinfo.public_key);
+                var key = Parley.importKey(data.public_key);
                 var fingerprint = key.fingerprints[0];
-                contact.set( _.extend(userinfo, Parley.AFIS(fingerprint)) );
-                if (!Parley.contacts.findWhere({email: userinfo.email}))
-                    Parley.contacts.add(contact);
+                contact.set( _.extend(data, Parley.AFIS(fingerprint)) );
+                callback && callback(contact);
             }
-            Parley.storeKeyring(console.log);
         }
         var planB = function(data, textStatus) {
             console.log("B");
-            var fingerprint = contact.get('fingerprint') || Parley.requestPublicKey(email);
-            var userinfo = Parley.AFIS(fingerprint);
+            if (!email && !fingerprint)
+                callback({error: 'User not found'});
 
+            fingerprint = fingerprint || Parley.requestPublicKey(email);
+            var userinfo = Parley.AFIS(fingerprint);
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
 
-            if (!_(userinfo).has('uids')) {
-
+            if (!_.has(userinfo, 'uids')) {
+                callback({error: 'User not found'});
             } else {
                 var parsed = Parley.parseUID(userinfo.uids[0]);
                 userinfo.name = parsed.name;
                 userinfo.email = parsed.email;
                 contact.set(userinfo);
-                if (!Parley.contacts.findWhere({email: userinfo.email}))
-                    Parley.contacts.add(contact);
+                callback && callback(contact);
             }
-            Parley.storeKeyring(console.log);
         }
+
         if (email) {
-            Parley.requestUser(email, callback).success(planA).error(planB);
+            return Parley.requestUser(email).success(planA).error(planB);
         } else {
-            planB();
+            return planB();
+        }
+    }
+
+    Parley.vent.on('contact:userinfo', function (contact, callback) {
+        console.log('VENT: contact:userinfo');
+        console.log('Checking user: ' + JSON.stringify(contact));
+        var callback = callback || function () {};
+
+        contact = Parley.getUserInfo(contact);
+
+        if (contact) {
+            callback(contact);
         }
     });
 
@@ -157,6 +176,7 @@
 
     Parley.vent.on('message:sync', function (e, callback) {
         console.log('VENT: message:sync');
+return false;
         Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
         Parley.requestInbox(function (data, textStatus) {
             if (data.error == 'FORBIDDEN') {
@@ -195,27 +215,51 @@
         });
     });
 
-    Parley.vent.on('message:send', function (e, callback) {
-        e.preventDefault();
+    Parley.vent.on('message:nokey', function (data, callback) {
+        console.log('Unknown emails in recipients list');
 
-        var formdata = $('#composeForm').serializeArray();
+        var message = data.message,
+            nokeys = data.nokeys,
+            recipient;
 
-        var recipients = [], nokeyRecipients = [];
-        var recipient = _.findWhere(formdata, {name:'as_values_to'}),
-            subject = _.findWhere(formdata, {name:'subject'}),
-            body = _.findWhere(formdata, {name:'body'});
-        
-        _.each(recipient.value.split(','), function (ele, i) {
-            if (recipient = Parley.contacts.findWhere({email:ele}))
-                recipients.push(recipient);
-            else if (!_.isEmpty(ele))
-                nokeyRecipients.push({email:ele});
+        var nokeysBuilder = _.map(nokeys, function (ele, key) {
+            var dfd = $.Deferred();
+
+            Parley.getUserInfo(ele.email, function (recipient) {
+                if (!recipient.error) {
+                    message.recipients.push(recipient);
+                    delete nokeys[key];
+                }
+                dfd.resolve();
+            });
+
+            return dfd.promise();
         });
 
-        console.log('Sending email to: ', recipients);
+        $.when.apply($, nokeysBuilder).then(function () {
+            Parley.vent.trigger('message:send', message, callback);
+        }).complete(function () {
+            if (!_.isEmpty(nokeys)) {
+                // Couldn't find public key, open invite dialog
+                Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
+            }
+        });
+    });
+
+    Parley.vent.on('message:send', function (message, callback) {
+        console.log('Sending email to: ' + JSON.stringify( message ));
         Parley.app.dialog('info send-message', { message: _t('message-message-sending') })
-        
-        if (!_.isEmpty(recipients)) {
+
+        // This is the callback from encryptAndSend
+            Parley.app.dialog('hide compose');
+            Parley.app.dialog('hide info send-message');
+            Parley.app.dialog('info sent-message', {
+                message: _t('message-message-sent'),
+                buttons: [ 'okay' ]
+            });
+        // End callback
+
+/*
             Parley.encryptAndSend(subject.value, body.value, recipients, function (data, textStatus) {
                 if (textStatus != 'error') {
                     console.log('Message successfully sent.');
@@ -232,17 +276,8 @@
                     return false;
                 }
             });
-        } else {
-            alert('You have not entered any valid email addresses! Recipients must have a PGP key associated with their email address.');
-            return false;
-        }
+*/
 
-        /*
-        if (nokeyRecipients.length > 0) {
-            console.log('We have no keys for these recipients: ', nokeyRecipients);
-            Parley.app.dialog('setup nokey', {emails:nokeyRecipients});
-        }
-        */
     });
 
 /*

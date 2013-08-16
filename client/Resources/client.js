@@ -16,8 +16,15 @@
         initialize: function (attrs) {
             console.log('Initializing contact.');
 
-            if (!_.has(attrs, 'isCurrentUser'))
-                Parley.vent.trigger('contact:userinfo', this);
+            if (attrs && !_.has(attrs, 'isCurrentUser'))
+                Parley.vent.trigger('contact:userinfo', this, function (contact) {
+                    var data = contact.toJSON();
+                    if (!Parley.contacts.findWhere({email: data.email})) {
+                        Parley.contacts.add(contact);
+                        Parley.storeKeyring(console.log);
+                    }
+                    console.log( JSON.stringify(data) );
+                });
         }
 	});
 
@@ -322,7 +329,34 @@
             id: 'dialog_compose',
             template: Mustache.compile($('#composeDialogTemplate').html()),
             events: {
-                'click #sendAction': function (e) { Parley.vent.trigger('message:send', e); }
+                'click #sendAction': function (e) {
+                    e.preventDefault();
+
+                    var formdata = $('#composeForm').serializeArray()
+
+                    var recipient, recipients = [], nokeyRecipients = [];
+                    var to = _.findWhere(formdata, {name:'as_values_to'}),
+                        subject = _.findWhere(formdata, {name:'subject'}),
+                        body = _.findWhere(formdata, {name:'body'});
+     
+                    _.each(to.value.split(','), function (ele, i) {
+                        if (recipient = Parley.contacts.findWhere({email:ele}))
+                            recipients.push(recipient);
+                        else if (!_.isEmpty(ele))
+                            nokeyRecipients.push({email:ele});
+                    });
+
+                    var messagedata = {
+                        subject: subject.value,
+                        body: body.value,
+                        recipients: recipients
+                    };
+
+                    if (_.isEmpty(nokeyRecipients))
+                        Parley.vent.trigger('message:send', { message: messagedata });
+                    else
+                        Parley.vent.trigger('message:nokey', { message: messagedata, nokeys: nokeyRecipients });
+                }
             },
             model: {
                 slug: 'compose',
