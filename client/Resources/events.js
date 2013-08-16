@@ -104,7 +104,7 @@
                 if (!_.has(data, 'error')) {
                     console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
                     console.log('Registering new inbox with Context.io');
-                
+
                     Parley.registerInbox();
                     Parley.waitForRegisteredInbox(function(success) {
                         Parley.app.dialog('hide info inbox-error');

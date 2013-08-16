@@ -13,6 +13,7 @@ window._phrases = {
 "or": "or",
 "okay": "okay",
 "cancel": "cancel",
+"close": "close",
 "error": "error",
 "contacts": "contacts",
 "to": "to",
@@ -55,6 +56,8 @@ window._phrases = {
 "welcome to parley": "Welcome to Parley",
 "parley settings": "Parley settings",
 "send email": "Send email",
+"auto refresh inbox": "Automatically refresh mailbox",
+"inbox updates": "Inbox updates",
 
 // Messages: setup
 "message-installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait.",
@@ -83,6 +86,10 @@ window._phrases = {
 
 // Messages: contacts
 "message-contacts-saving": "Please wait while we save your contacts to the server! Again, the encryption process takes some time, but we will be speeding it up with the next release.",
+
+// Messages: settings
+"message-settings-saveerror": "We have encountered an error trying to save your settings.",
+"message-settings-saved": "Your personal settings have been updates.",
 
 // Messages: etc etc etc
 

@@ -126,6 +126,18 @@
 	        	<input type="text" value="{{name}}" name="name">
 			</label>
 	    </div>
+
+        <div class="row">
+            <label for="auto_refresh">
+                <input type="checkbox" name="auto_refresh">
+                {{t_auto_refresh_inbox}}
+            </label>
+        </div>
+    </form>
+
+    <button id="saveSettingsAction">{{t_save_settings}}</button>
+
+    <form name="settingsUtilitiesForm">
 	    <h4>{{t_change_password}}</h4>
 	    <div class="row">
             <div class="half">
@@ -144,17 +156,18 @@
                 </label>
             </div>
 	    </div>
+
         <h4>{{t_revoke_key}}</h4>
         <div class="row">
             <p>{{t_message-key-revoke}}</p>
 	        <button id="revokeKeyAction">{{t_revoke_and_delete}}</button>
         </div>
 
-        <div class="row">
-            <button id="saveSettings">{{t_save_settings}}</button>
-            <button id="cancelButton">{{t_cancel}}</button>
-        </div>
 	</form>
+
+    <div class="row">
+        <button id="cancelButton">{{t_close}}</button>
+    </div>
 </script>
 
 <script type="text/template" id="contactsDialogTemplate">

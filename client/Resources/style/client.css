@@ -224,8 +224,6 @@ tr.contact { cursor:pointer; }
 
 .splash-logo { margin: 30px auto; height: 200px; width: 155px; }
 
-.newPasswordFields { display: none; }
-
 /* Gonna start putting responsive stuff here */
 @media screen and (max-width: 9000px) and (min-width: 0px) {
 }

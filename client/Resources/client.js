@@ -240,6 +240,30 @@
                 'click #revokeKeyAction': function (e) {
                     e.preventDefault();
                     Parley.vent.trigger('user:kill');
+                },
+                'click #saveSettingsAction': function (e) {
+                    e.preventDefault();
+                    var form = document.forms.settings;
+                    var formdata = {
+                        name: form.name.value,
+                        auto_refresh: form.auto_refresh.checked
+                    };
+                    
+                    Parley.updateUser(formdata, function (data) {
+                        if (!_.has(data, 'error')) {
+                            Parley.app.dialog('show info settings-saved', {
+                                header: _t('success'),
+                                message: _t('message-settings-saved'),
+                                buttons: [ 'okay' ]
+                            });
+                        } else {
+                            Parley.app.dialog('show info settings-saveerror', {
+                                header: _t('error'),
+                                message: _t('message-settings-saveerror') + "\n" + data.error,
+                                buttons: [ 'okay' ]
+                            });
+                        }
+                    });
                 }
             },
             model: {
@@ -458,7 +482,8 @@
                 Parley.app.dialog('compose', reply_to.toJSON());
             },
 			'click #settingsAction': function () {
-                this.dialog('settings');
+                var userdata = Parley.currentUser.toJSON();
+                this.dialog('settings', userdata);
             },
             'click #contactsAction': function () {
                 this.dialog('contacts');
