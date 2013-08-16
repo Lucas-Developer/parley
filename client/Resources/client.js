@@ -199,18 +199,7 @@
                 'click #loginAction': function (e) { Parley.vent.trigger('setup:login', e); },
                 'click #registerAction': function (e) {
                     e.preventDefault();
-                    Parley.app.dialog('show info keygenConfirm', {
-                        header: _t('are you sure'),
-                        message: _t('message-keygen-confirm'),
-                        buttons: [
-                            {
-                                id: "registerConfirmed",
-                                text: _t('generate'),
-                                handler: function () { Parley.vent.trigger('setup:register', e); }
-                            },
-                            'cancel'
-                        ]
-                    });
+                    Parley.vent.trigger('setup:register', e);
                 },
                 'click #importKeyDialogAction': function (e) {
                     e.preventDefault();
