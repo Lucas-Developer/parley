@@ -231,13 +231,6 @@
             id: 'dialog_settings',
             template: Mustache.compile($('#settingsDialogTemplate').html()),
             events: {
-                'click #revokeKeyAction': function (e) {
-                    e.preventDefault();
-                    Parley.vent.trigger('user:kill');
-                },
-                'click #changePasswordAction': function (e) {
-                    e.preventDefault();
-                },
                 'click #saveSettingsAction': function (e) {
                     e.preventDefault();
                     var form = document.forms.settings;
@@ -246,7 +239,7 @@
                         auto_refresh: form.auto_refresh.checked
                     };
                     
-                    Parley.updateUser(formdata, function (data) {
+                    Parley.saveUser(formdata, function (data) {
                         if (!_.has(data, 'error')) {
                             Parley.app.dialog('show info settings-saved', {
                                 header: _t('success'),
@@ -261,6 +254,31 @@
                             });
                         }
                     });
+                },
+                'click #changePasswordAction': function (e) {
+                    e.preventDefault();
+                    var form = document.forms.changePassword;
+                    if (form.new_password_2.value == form.new_password_1.value) {
+                        Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
+                            if (!_.has(data, 'error')) {
+                                Parley.app.dialog('show info password-changed', {
+                                    header: _t('password changed'),
+                                    message: _t('message-password-changed'),
+                                    buttons: [ 'okay' ]
+                                });
+                            } else {
+                                Parley.app.dialog('show info password-changeerror', {
+                                    header: _t('error'),
+                                    message: _t('message-password-changeerror') + "\n" + data.error,
+                                    buttons: [ 'okay' ]
+                                });
+                            }
+                        });
+                    }
+                },
+                'click #revokeKeyAction': function (e) {
+                    e.preventDefault();
+                    Parley.vent.trigger('user:kill');
                 }
             },
             model: {
