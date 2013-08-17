@@ -1,6 +1,24 @@
 (function(Parley, $, undefined){
     Parley.vent = Parley.vent || _.extend({}, Backbone.Events);
 
+    Parley.rex = {
+        email: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g
+    };
+
+    Parley.formErrors = function (fname, errors) {
+        if (!_.isObject(errors) || !document.forms[fname]) return false;
+
+        var form = $(document.forms[fname]), err, errSpan;
+        _.each(form.find('input'), function (v) {
+            errSpan = $(v).parents('label').find('.error');
+            if (err = errors[v.name]) {
+                errSpan.text(err);
+            } else {
+                errSpan.text('');
+            }
+        });
+    }
+
 	Parley.Contact = Backbone.Model.extend({
 	    defaults: function () {
 			return {
@@ -299,7 +317,10 @@
                         emails.push(this.name.split('_')[1]);
                     });
 
-                    Parley.vent.trigger('invite', emails);
+                    Parley.vent.trigger('invite', emails, function () {
+                        Parley.app.dialog('hide nokey');
+                        
+                    });
                 }
             },
             model: {
@@ -317,7 +338,7 @@
 
                     var formdata = $('#composeForm').serializeArray()
 
-                    var recipient, recipients = [], nokeyRecipients = [];
+                    var recipient, recipients = [], nokeyRecipients = [], errors = {};
                     var to = _.findWhere(formdata, {name:'as_values_to'}),
                         subject = _.findWhere(formdata, {name:'subject'}),
                         body = _.findWhere(formdata, {name:'body'});
@@ -325,9 +346,15 @@
                     _.each(to.value.split(','), function (ele, i) {
                         if (recipient = Parley.contacts.findWhere({email:ele}))
                             recipients.push(recipient);
-                        else if (!_.isEmpty(ele))
+                        else if (Parley.rex.email.test(ele))
                             nokeyRecipients.push({email:ele});
                     });
+
+                    if (_.isEmpty(recipients) && _.isEmpty(nokeyRecipients)) {
+                        errors.as_values_to = _t('error-email-novalid');
+                    }
+
+                    // Other validation here. Just add elements to 'errors' array.
 
                     var messagedata = {
                         subject: subject.value,
@@ -335,7 +362,12 @@
                         recipients: recipients
                     };
 
-                    if (_.isEmpty(nokeyRecipients))
+                    if (!_.isEmpty(errors)) {
+                        Parley.formErrors('compose', errors);
+                        return false;
+                    }
+
+                    if (nokeyRecipients.length == 0)
                         Parley.vent.trigger('message:send', { message: messagedata });
                     else
                         Parley.vent.trigger('message:nokey', { message: messagedata, nokeys: nokeyRecipients });

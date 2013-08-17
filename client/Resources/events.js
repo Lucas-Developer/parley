@@ -86,7 +86,10 @@
         e.preventDefault();
         var form = document.forms.emailVerify;
 
-        if (_.isUndefined(form.email.value)) return false;
+        if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
+            Parley.formErrors('emailVerify', {email:_t('error-email-novalid')});
+            return false;
+        }
         console.log('Verifying email address: ' + form.email.value);
 
         Parley.requestUser(form.email.value, function (data, textStatus) {
@@ -240,12 +243,13 @@
         });
 
         $.when.apply($, nokeysBuilder).then(function () {
-            Parley.vent.trigger('message:send', message, callback);
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
                 Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
             }
+            if (!_.isEmpty(message.recipients)) Parley.vent.trigger('message:send', message, callback);
         }, function () {
+            // This gets called if getUserInfo doesn't have a change to fire the callback
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
                 Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
@@ -314,7 +318,7 @@
     });
 
     Parley.vent.on('invite', function (emails, callback) {
-        callback = callback || {};
+        callback = callback || function () {};
 
         if (_.isString(emails))
             emails = [emails];

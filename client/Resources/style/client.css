@@ -24,6 +24,8 @@
 	p { font-size: 0.9em; line-height: 1.4em; }
     p.small-text { font-size: 0.8em; }
 
+    .error { display: block; margin-top: 5px; color: #ff6666; font-weight: 500; }
+
     button { outline: none; border: none; cursor: pointer; padding: 8px 16px; white-space: nowrap; }
         button:hover,button:active { outline: none; background-color: #f5ad66; color: #eee; }
 
@@ -65,6 +67,7 @@
             margin-bottom: 10px;
             text-transform: capitalize;
         }
+            .row label *, .row label span, .row label input { text-transform: none; }
 			.row label input, input[type=search] {
 				display: block;
 				margin-top:5px;

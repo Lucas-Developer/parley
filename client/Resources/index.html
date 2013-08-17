@@ -7,7 +7,7 @@
 	<link rel="stylesheet" type="text/css" href="style/autoSuggest.css">
 	
 	<script type="text/javascript" src="lib/jquery-2.0.2.min.js"></script>
-    <script type="text/javascript" src="lang/dict.en.json"></script>
+    <script charset="UTF-8" type="text/javascript" src="lang/dict.en.json"></script>
 
 	<title>Parley</title>
     </head>
@@ -49,6 +49,7 @@
 			<div class="row">
 	        	<label for="email">{{t_enter_your_email}}
 	        		<input type="email" name="email">
+                    <span class="error"></span>
 				</label>
 			</div>
 	    </form>
@@ -65,6 +66,7 @@
                 </label>
                 <label for="password" class="half">{{t_password}}
                     <input type="password" name="password">
+                    <span class="error"></span>
                 </label>
                 <!--<a href="#" class="extra-link">Forgot password?</a>-->
             </div>
@@ -78,24 +80,25 @@
         <form name="registerAction">
             <div class="row">
                 <label class="tab tab-active" for="email">{{t_email}}
-                    <div class="full-width"><input type="email" name="email" id="registerEmailField" value="{{email}}" readonly>
-                        <div class="status">
-                            <img src="img/ajax-loader.gif" class="loader">
-                        </div>
+                    <div class="full-width">
+                        <input type="email" name="email" id="registerEmailField" value="{{email}}" readonly>
                     </div>
                 </label>
             </div>
             <div class="row">
                 <label for="name">{{t_name}}
                     <input type="text" name="name">
+                    <span class="error"></span>
                 </label>
             </div>
             <div class="row" id="passwordInfo">
                 <label for="password_one" class="half">{{t_choose_password}}
                     <input type="password" name="password_one">
+                    <span class="error"></span>
                 </label>
                 <label for="password_two" class="half">{{t_confirm_password}}
                     <input type="password" name="password_two">
+                    <span class="error"></span>
                 </label>
             </div>
 
@@ -125,6 +128,7 @@
         <form name="settings">
             <label for="name">{{t_name}}
                 <input type="text" value="{{name}}" name="name">
+                <span class="error"></span>
             </label>
             <label for="auto_refresh">
                 <input type="checkbox" name="auto_refresh">
@@ -141,16 +145,19 @@
             <div class="half">
                 <label for="cur_password">{{t_current_password}}
                     <input type="text" id="curPasswordField" name="cur_password">
+                    <span class="error"></span>
                 </label>
             </div>
 
             <div class="half">
                 <label for="new_password_1">{{t_new_password}}
                     <input type="text" name="new_password_1">
+                    <span class="error"></span>
                 </label>
 
                 <label for="new_password_2">{{t_confirm_password}}
                     <input type="text" name="new_password_2">
+                    <span class="error"></span>
                 </label>
             </div>
         </form>
@@ -184,6 +191,7 @@
 	    <div class="row">
 			<label for="contact_email">{{t_email}}
 				<input type="text" name="email">
+                <span class="error"></span>
 			</label>
 
 			<!--<label for="contact_name">{{t_name}}
@@ -215,26 +223,28 @@
         <button id="inviteAction" name="invite">{{t_invite}}</button>
     </script>
 	<script type="text/template" id="composeDialogTemplate">
-	    <form id="composeForm">
-		<div class="no-line row" id="recipients">
-			<label for="to">{{t_to}}
-				<input type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
-			</label>
-			<!--<label {{^cc}}class="hidden" {{/cc}}for="cc">{{t_cc}}
-				<input type="text" name="cc"{{#cc}} value="{{email}}"{{/cc}}>
-			</label>
-			<label {{^bcc}}class="hidden" {{/bcc}}for="bcc">{{t_bcc}}
-				<input type="text" name="bcc">
-			</label>-->
-        </div>
-        <div class="row">
-			<label for="subject">{{t_subject}}
-				<input type="text" name="subject" value="{{subject}}">
-			</label>
-            <label for="body">
-              <textarea rows="6" name="body">{{plainText}}</textarea>
-            </label>
-        </div>
+	    <form name="compose" id="composeForm">
+            <div class="no-line row" id="recipients">
+                <label for="to">{{t_to}}
+                    <input type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
+                    <span class="error"></span>
+                </label>
+                <!--<label {{^cc}}class="hidden" {{/cc}}for="cc">{{t_cc}}
+                    <input type="text" name="cc"{{#cc}} value="{{email}}"{{/cc}}>
+                </label>
+                <label {{^bcc}}class="hidden" {{/bcc}}for="bcc">{{t_bcc}}
+                    <input type="text" name="bcc">
+                </label>-->
+            </div>
+            <div class="row">
+                <label for="subject">{{t_subject}}
+                    <input type="text" name="subject" value="{{subject}}">
+                    <span class="error"></span>
+                </label>
+                <label for="body">
+                  <textarea rows="6" name="body">{{plainText}}</textarea>
+                </label>
+            </div>
 	    </form>
 
 	    <button id="sendAction">{{t_send}}</button>
