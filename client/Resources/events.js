@@ -183,12 +183,15 @@
     Parley.vent.on('message:sync', function (e, callback) {
         console.log('VENT: message:sync');
 
-        Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
+        $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
+        //Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
+
         Parley.requestInbox(function (data, textStatus) {
+            $('#refreshAction').removeAttr('disabled').removeClass('refreshing').animate({width:200,height:50,opacity:1}).text( _t('refresh inbox') );
             if (data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
 
-                Parley.app.dialog('hide info inbox-loading');
+                //Parley.app.dialog('hide info inbox-loading');
                 Parley.app.dialog('info inbox-error', {
                     message: _t('error-inbox-forbidden'),
                     buttons: [ {
@@ -207,7 +210,8 @@
                 return false;
             } else if (!_.has(data, 'error')) {
                 console.log('Inbox loaded', data.messages);
-                Parley.app.dialog('hide info inbox-loading');
+
+                //Parley.app.dialog('hide info inbox-loading');
 
                 Parley.inbox = Parley.inbox || new MessageList;
                 if (_.has(data, 'messages')) {

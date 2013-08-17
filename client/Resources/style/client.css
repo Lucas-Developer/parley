@@ -18,7 +18,7 @@ main #eb9c21
 
     header {
 		background: #f0f0f0;
-        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,rgba(255,255,255,0.9)), color-stop(50%,rgba(255,232,198,0.35))); /* Chrome,Safari4+ */
+        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#f0f0f0), color-stop(100%,#fef3ec)); /* Chrome,Safari4+ */
 		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
 		border-bottom: 1px solid rgba(16,20,0,0.35);
     }
@@ -26,7 +26,9 @@ main #eb9c21
 
     .error { color: #ff6666; }
 
+        button { background-color: #dec39c; color: #121208; }
         button:hover,button:active { background-color: #f0961e; color: #f0f0f0; }
+        #refreshAction.refreshing:hover { background-color: #dec39c; cursor: default; color: #121208; }
 
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
 			color: #191208;
@@ -39,7 +41,6 @@ main #eb9c21
 	    	background-color: #fff;
 		}
         input[readonly] { background-color: transparent; }
-
 
 	table tbody tr:hover { background-color: #eee; }
 	table thead tr { background-color: #191208; color: #eee; }
@@ -54,14 +55,20 @@ main #eb9c21
         box-shadow: 0 0 10px rgba(50,50,50,0.5);
     }
     .ui-dialog .section { border-bottom: 1px solid #eee; }
-    .ui-dialog-titlebar, h2 { border-bottom: 1px solid #edbd71; }
+    .ui-dialog-titlebar, h2 { border-bottom: 1px solid #f0961e; color: #f0961e; }
 
         .ui-dialog button.default-btn { border: 1px solid #f0961e; }
 
+    #contactsListTable tr:nth-child(odd) { background-color: #f0f0f0; }
+
     #composeAction:hover,
     #settingsAction:hover,
-    #contactsAction:hover
-        { background-color: rgba(0,0,0,0.8); border-radius: 9999px; }
+    #contactsAction:hover {
+        border: 4px solid rgba(237, 189, 113, 1);
+        border-radius: 9999px;
+        background-position: -2px -2px;
+        background-color: rgba(237, 189, 113, 1);
+    } 
 
     #inbox tr {
 		border-top: 1px solid #ddd;
@@ -159,8 +166,9 @@ main #eb9c21
 	table td, table th { margin: 1px 0; padding: 4px; text-align: left; cursor: default; }
 	table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.1); }
 
-    #contactsListWrapper { max-height: 500px; overflow: hidden auto; }
-    #contactsListTable { background-color: transparent; }
+    .page-contactlist { min-height: 400px; }
+    #contactsListWrapper { height: 500px; overflow: hidden scroll; }
+    #contactsListTable { width: 100%; min-width: 600px; background-color: transparent; }
 
     .ui-state-default { background-color: transparent; background-image: none; }
     .ui-dialog { border-radius: 3px; }
@@ -175,8 +183,6 @@ main #eb9c21
     
     .close-button { display: inline-block; float: right; }
 
-    .page-contactlist { min-height: 400px; }
-    #contactListTable { width: 100%; min-width: 600px; }
 
     header {
 		width: 100%;
@@ -263,6 +269,9 @@ main #eb9c21
         #inbox tr.unread { font-weight: 500; }
 
     #refreshAction { width: 200px; margin: 20px auto; display: block; }
+
+        #refreshAction.refreshing { }
+
 
     .ui-dialog .page, .ui-dialog .tab { display: none; clear; both; }
         .ui-dialog .page-active, .ui-dialog .tab-active { display: block; }

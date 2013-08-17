@@ -37,7 +37,6 @@ window._phrases = {
 "enter your email": "Enter your email",
 "log in": "Log in",
 "logging in": "Logging in",
-"loading inbox": "Loading inbox",
 "error logging in": "Error logging in",
 
 "import key": "Import key",
@@ -56,7 +55,10 @@ window._phrases = {
 "destroy parley account": "Destroy Parley account",
 "welcome to parley": "Welcome to Parley",
 "parley settings": "Parley settings",
+
 "send email": "Send email",
+"loading inbox": "Loading inbox",
+"refresh inbox": "Refresh inbox",
 "auto refresh inbox": "Automatically refresh mailbox",
 "inbox updates": "Inbox updates",
 
