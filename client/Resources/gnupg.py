@@ -1220,7 +1220,7 @@ class GPG(object):
         return result
 
     '''
-    The following two functions require interacting with the process.
+    The following functions require interacting with the process.
     They don't follow the same model as the rest of this module, and
     are shoehorned into Parley's use case.
     They probably should conform to the rest of the file at some point,
@@ -1236,12 +1236,24 @@ class GPG(object):
         (stdout, stderr) = proc.communicate(input.encode(self.encoding))
         return stdout
 
+    def add_uid(self, fingerprint, name, email, comment, passphrase):
+        cmd = [self.gpgbinary]
+        cmd.append('--homedir "%s"' % self.gnupghome)
+        cmd.append("--status-fd 2 --command-fd 0")
+        cmd.append("--edit %s" % fingerprint)
+        proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        input = "adduid\n%s\n%s\n%s\no\n%s\nsave\n" % (name, email, comment, passphrase)
+        print input
+        (stdout, stderr) = proc.communicate(input.encode(self.encoding))
+        return (stdout,stderr)
+
     def change_pass(self, fingerprint, old, new):
         cmd = [self.gpgbinary]
         cmd.append('--homedir "%s"' % self.gnupghome)
         cmd.append("--status-fd 2 --command-fd 0")
         cmd.append("--edit %s" % fingerprint)
         proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        input = "passwd\n%s\n%s\nsave\n" % (old, new)
+        #input = "passwd\n%s\n%s\n%s\nsave\n" % (old, new, new)
+        input = "passwd\n%s\n%s\nsave\n" % (old,  new)
         (stdout, stderr) = proc.communicate(input.encode(self.encoding))
         return (stdout,stderr)
