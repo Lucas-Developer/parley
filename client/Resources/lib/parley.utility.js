@@ -130,6 +130,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* Check if a user is already registered with Parley.
   Accepts email address, finished callback */
   Parley.requestUser = function (email, finished) {
+    finished = finished || function(){};
     return $.ajax({
       type:'GET',
       url:Parley.BASE_URL+'/u/'+Parley.encodeEmail(email),

@@ -21,6 +21,7 @@ window._phrases = {
 "subject": "subject",
 "send": "send",
 "confirm": "confirm",
+"invite": "invite",
 
 // Short phrases
 "are you sure": "Are you sure?",
