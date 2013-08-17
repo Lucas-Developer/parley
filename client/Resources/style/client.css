@@ -133,12 +133,14 @@
 
     .loggedin header,
     .loggedin header .email,
-    .loggedin header nav { display: block; }
+    .loggedin header nav,
+    .loggedin #inbox { display: block; }
 
     #dialogWrapper { display: none; }
 
     #inbox .header-info,
     #inbox {
+        display: none;
         width: 96%;
         margin-top: 10px;
         margin-bottom: 10px;
@@ -222,6 +224,7 @@ tr.contact { cursor:pointer; }
     .as-selections input { background-color: transparent !important; }
 
 .splash-logo { margin: 30px auto; height: 200px; width: 155px; }
+    .splash-logo img { width: 100%; }
 
 /* Gonna start putting responsive stuff here */
 @media screen and (max-width: 9000px) and (min-width: 0px) {

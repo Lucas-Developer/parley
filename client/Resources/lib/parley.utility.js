@@ -130,6 +130,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* Check if a user is already registered with Parley.
   Accepts email address, finished callback */
   Parley.requestUser = function (email, finished) {
+    finished = finished || function(){};
     return $.ajax({
       type:'GET',
       url:Parley.BASE_URL+'/u/'+Parley.encodeEmail(email),
@@ -441,6 +442,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   via the Parley API's invite method.
   Accepts email as string, finished callback, and optional "gift" boolean. */
   Parley.invite = function(email, finished, gift) {
+    finished = finished || {};
     if (!Parley.currentUser) {
       throw "Error: There is no currently authenticated user.";
     } else {
@@ -452,6 +454,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         var sig = Parley.signAPIRequest(url,'POST',data);
         data.sig = sig;
       }
+
       $.ajax({
         type:'POST',
         url:Parley.BASE_URL+'/invite/'+Parley.encodeEmail(email),
