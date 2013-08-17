@@ -74,6 +74,7 @@
         idAttribute: 'message_id',
         initialize: function () {
             var data = this.toJSON();
+
             var from = data.addresses.from;
             var from_obj = Parley.contacts.findWhere({email: from.email});
 
@@ -87,14 +88,10 @@
 
             this.set('from', from_obj);
 
+            this.set('formattedDate', moment(data.date * 1000).fromNow());
+
             // If it's not encrypted, we can just populate the decrypted message array
             this.decryptedMessage = this.decryptedMessage || [];
-/*
-            _.each(data.body, function (v,k) {
-                if (v.type == 'text/plain' && !!~v.content.indexOf('-----BEGIN PGP MESSAGE-----'))
-                    this.decryptedMessage.push(v.content);
-            }, this);
-*/
         },
         readMessage: function (parseLinks, insertBRs, quote) {
             // parseLinks is an optional boolean for whether or not to convert URLs to HTML anchors
@@ -257,6 +254,72 @@
             id: 'dialog_settings',
             template: Mustache.compile($('#settingsDialogTemplate').html()),
             events: {
+                'click #saveSettingsAction': function (e) {
+                    e.preventDefault();
+                    var form = document.forms.settings;
+                    var formdata = {
+                        name: form.name.value,
+                        auto_refresh: form.auto_refresh.checked
+                    };
+
+                    if (!formdata.name) {
+                        Parley.formError('settings', { name: _t('error-settings-invalidname') });
+                        return false;
+                    }
+                    
+                    Parley.saveUser(formdata, function (data) {
+                        if (!_.has(data, 'error')) {
+                            Parley.app.dialog('show info settings-saved', {
+                                header: _t('success'),
+                                message: _t('message-settings-saved'),
+                                buttons: [ 'okay' ]
+                            });
+                        } else {
+                            Parley.app.dialog('show info settings-saveerror', {
+                                header: _t('error'),
+                                message: _t('message-settings-saveerror') + "\n" + data.error,
+                                buttons: [ 'okay' ]
+                            });
+                        }
+                    });
+                },
+                'click #changePasswordAction': function (e) {
+                    e.preventDefault();
+                    var form = document.forms.changePassword;
+
+                    if (!form.cur_password.value) {
+                        Parley.formError('settings', { cur_password: _t('error-settings-invalidpassword') });
+                        return false;
+                    }
+
+                    if (!form.new_password_1.value) {
+                        Parley.formError('settings', { new_password_1: _t('error-settings-invalidpassword') });
+                        return false;
+                    }
+
+                    if (form.new_password_2.value == form.new_password_1.value) {
+                        Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
+                            if (!_.has(data, 'error')) {
+                                Parley.app.dialog('show info password-changed', {
+                                    header: _t('password changed'),
+                                    message: _t('message-password-changed'),
+                                    buttons: [ 'okay' ]
+                                });
+                            } else {
+                                Parley.app.dialog('show info password-changeerror', {
+                                    header: _t('error'),
+                                    message: _t('message-password-changeerror') + "\n" + data.error,
+                                    buttons: [ 'okay' ]
+                                });
+                            }
+                        });
+                    } else {
+                        Parley.formErrors('changePassword', {
+                            new_password_1: _t('error-settings-invalidpassword'),
+                            new_password_2: _t('error-settings-invalidpassword')
+                        });
+                    }
+                },
                 'click #revokeKeyAction': function (e) {
                     e.preventDefault();
                     Parley.vent.trigger('user:kill');

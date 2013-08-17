@@ -42,6 +42,7 @@
 			color: #191208;
 			padding: 4px 8px 4px 4px;
             border: 1px inset #ccc;
+            border-radius: 1px;
             background-color: #fdf8f8;
 		}
             .as-selections, input[type=text], input[type=search], input[type=email], input[type=password] {
@@ -120,7 +121,8 @@
 		overflow: hidden;
         position: relative;
 		line-height: 58px;
-		background-color: #fff;
+		background: #fff;
+        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,rgba(255,255,255,0.9)), color-stop(50%,rgba(255,232,198,0.35))); /* Chrome,Safari4+ */
 		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
 		border-bottom: 1px solid rgba(16,20,0,0.35);
     }
@@ -154,9 +156,13 @@
     #inbox-utilities { height: 40px; display: inline-block; }
         #inbox .header-info { display:none; font-size:.8em; line-height:1.2em; }
 
-        #composeAction { width:48px; height: 48px; background: url(../img/pen.png) 0 0 no-repeat; }
-        #settingsAction { width:48px; height: 48px; background: url(../img/tools.png) 0 0 no-repeat; }
-        #contactsAction { width:48px; height: 48px; background: url(../img/id.png) 0 0 no-repeat; }
+        #composeAction { margin-right: 48px; width:48px; height: 48px; background: url(../img/pen.png) 6px 6px no-repeat; }
+        #settingsAction { width:48px; height: 48px; background: url(../img/tools.png) 6px 6px no-repeat; }
+        #contactsAction { width:48px; height: 48px; background: url(../img/id.png) 6px 6px no-repeat; }
+            #composeAction:hover,
+            #settingsAction:hover,
+            #contactsAction:hover
+                { background-color: rgba(255,255,255,0.4); border-radius: 2px; }
 
     #inbox table { width: 100%; }
 	
@@ -180,7 +186,7 @@
             table .selector a.clicked { background-color: #191208; box-shadow: 0 0 -10px 1px #f4f0ec inset; }
                 table thead .selector a.clicked { background-color: #f4f0ec; box-shadow: 0 0 -10px 1px #191208 inset; }
         #inbox .from { min-width: 250px; width: 22%; }
-        #inbox .date { min-width: 110px; width: 10%; }
+        #inbox .date { min-width: 110px; width: 15%; text-align: right; }
 
         #inbox .message { background-color: transparent; }
         #inbox .message td { white-space: normal; background-color: rgba(255, 255, 255, 0.8); }
@@ -205,6 +211,7 @@
         .ui-dialog .page-active, .ui-dialog .tab-active { display: block; }
 
     .ui-dialog button { display: inline-block; }
+        .ui-dialog button.clear-btn { display: block; clear: left; }
 
         .ui-dialog p { margin: 5px 0 10px; }
         .ui-dialog input[type=text],

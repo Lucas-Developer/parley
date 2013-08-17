@@ -17,9 +17,9 @@
             <!--<span class="email loggedin"></span>-->
 
             <nav>
-                <button class="loggedin" name="compose" id="composeAction"></button>
-                <button class="loggedin" name="open-contacts" id="contactsAction"></button>
-                <button class="loggedin" name="settings" id="settingsAction"></button>
+                <button class="loggedin" title="Compose" name="compose" id="composeAction"></button>
+                <button class="loggedin" title="Contacts" name="open-contacts" id="contactsAction"></button>
+                <button class="loggedin" title="Settings" name="settings" id="settingsAction"></button>
             </nav>
         </header>
 	    <section id="inbox" class="loggedin"><table cellspacing=2><tbody></tbody></table>
@@ -148,13 +148,14 @@
                     <span class="error"></span>
                 </label>
             </div>
-
+            <br>
             <div class="half">
                 <label for="new_password_1">{{t_new_password}}
                     <input type="text" name="new_password_1">
                     <span class="error"></span>
                 </label>
-
+            </div>
+            <div class="half">
                 <label for="new_password_2">{{t_confirm_password}}
                     <input type="text" name="new_password_2">
                     <span class="error"></span>
@@ -162,7 +163,7 @@
             </div>
         </form>
 
-        <button id="changePasswordAction">{{t_change_password}}</button>
+        <button class="clear-btn" id="changePasswordAction">{{t_change_password}}</button>
     </div>
 
     <h4>{{t_revoke_key}}</h4>
@@ -254,7 +255,7 @@
         <td class="selector"><a {{#selected}}class="clicked"{{/selected}}></a></td>
 		<td class="from">{{#addresses}}{{#from}}{{name}}{{^name}}{{email}}{{/name}}{{/from}}{{/addresses}}</td>
 		<td class="subject">{{subject}}</td>
-		<td class="date"></td>
+		<td class="date">{{formattedDate}}</td>
 	</script>
 	<script type="text/template" id="readMessageTemplate">
           <td colspan="4"><div class="buttons"><button class="reply">{{t_reply}}</button></div>{{{body}}}</td>

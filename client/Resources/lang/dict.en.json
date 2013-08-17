@@ -13,6 +13,7 @@ window._phrases = {
 "or": "or",
 "okay": "okay",
 "cancel": "cancel",
+"close": "close",
 "error": "error",
 "contacts": "contacts",
 "to": "to",
@@ -56,6 +57,8 @@ window._phrases = {
 "welcome to parley": "Welcome to Parley",
 "parley settings": "Parley settings",
 "send email": "Send email",
+"auto refresh inbox": "Automatically refresh mailbox",
+"inbox updates": "Inbox updates",
 
 "invite users": "Invite users",
 
@@ -87,6 +90,14 @@ window._phrases = {
 
 // Messages: contacts
 "message-contacts-saving": "Please wait while we save your contacts to the server! Again, the encryption process takes some time, but we will be speeding it up with the next release.",
+
+// Messages: settings
+"message-settings-saveerror": "We have encountered an error trying to save your settings.",
+"message-settings-saved": "Your personal settings have been updates.",
+"message-settings-invalidname": "Please enter a valid name.",
+"message-password-invalidpassword": "Please enter a valid password.",
+"message-password-changeerror": "We encountered a strange error while trying to change your password.",
+"message-password-changed": "Your password has been successfully changed from \"abcde\" to \"password\"",
 
 // Messages: etc etc etc
 

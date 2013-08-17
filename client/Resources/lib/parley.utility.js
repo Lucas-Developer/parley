@@ -179,6 +179,48 @@ are massaged to fit. The arguments to finished on ajax error look like:
     Parley.requestKeyring(finished);
   }
   
+  Parley.updateUser = function (data, finished) {
+    data = data || {};
+
+    _.each(data, function (v,k) { Parley.currentUser.set(k,v); });
+
+    var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(Parley.currentUser.get('email'));
+    data.time = Math.floor((new Date())/1000);
+    data.sig = Parley.signAPIRequest(url, 'POST', data);
+
+    $.ajax({
+      type:'POST',
+      url:url,
+      data:data,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
+      success:finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
+  }
+
+  Parley.killUser = function(finished) {
+    var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(Parley.currentUser.get('email'));
+    var data = {'time':Math.floor((new Date())/1000)};
+    data.sig = Parley.signAPIRequest(url, 'DELETE', data);
+
+    $.ajax({
+      type:'DELETE',
+      url:url,
+      data:data,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
+      success:function(a,b,c) {
+        a.revoked = window.PYrevokeKey();
+        if (!a.revoked) {
+          a.error = 'Failed to revoke key';
+        }
+        finished(a,b,c);
+      },
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
+  }
+
   /* Requests keyring of currrently authenticated user.
   Accepts finished callback */
   Parley.requestKeyring = function(finished) {
@@ -292,26 +334,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
     }
   }
 
-  Parley.killUser = function(finished) {
-    var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(Parley.currentUser.get('email'));
-    var data = {'time':Math.floor((new Date())/1000)};
-    data.sig = Parley.signAPIRequest(url, 'DELETE', data);
-    $.ajax({
-      type:'DELETE',
-      url:url,
-      data:data,
-      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
-      success:function(a,b,c) {
-        a.revoked = window.PYrevokeKey();
-        if (!a.revoked) {
-          a.error = 'Failed to revoke key';
-        }
-        finished(a,b,c);
-      },
-      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
-      dataType:'json'
-    });
-  }
 
   //This function could be used to build Parley.Contacts from a keyring
   //after importing it or adding a new key.
