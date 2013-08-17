@@ -200,16 +200,18 @@
 
     <script type="text/template" id="nokeyDialogTemplate">
         <p>{{t_message-nokey}}</p>
-        <table class="sortable">
-            <thead>
-                <tr><th class="selector sorttable_nosort"><a class="clicked"></th><th>Email</th><th class="buttons"></th></tr>
-            </thead>
-            <tbody id="noKeyEmailsList">
+    
+        <form name="nokeys" id="nokeysForm">
+            <h4>{{t_invite_users}}</h4>
+            <div class="row"> <ul>
                 {{#nokeys}}
-                    <tr><td class="selector"><a></a></td><td class="email">{{email}}</td><td></td></tr>
+                    <li> <label for="invite_{{email}}">
+                        <input type="checkbox" name="invite_{{email}}">
+                        {{email}}
+                    </label> </li>
                 {{/nokeys}}
-            </tbody>
-        </table>
+            </ul> </div>
+        </form>
         <button id="inviteAction" name="invite">{{t_invite}}</button>
     </script>
 	<script type="text/template" id="composeDialogTemplate">

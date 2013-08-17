@@ -179,7 +179,7 @@
 
     Parley.vent.on('message:sync', function (e, callback) {
         console.log('VENT: message:sync');
-return false;
+
         Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
         Parley.requestInbox(function (data, textStatus) {
             if (data.error == 'FORBIDDEN') {
@@ -241,7 +241,11 @@ return false;
 
         $.when.apply($, nokeysBuilder).then(function () {
             Parley.vent.trigger('message:send', message, callback);
-        }).complete(function () {
+            if (!_.isEmpty(nokeys)) {
+                // Couldn't find public key, open invite dialog
+                Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
+            }
+        }, function () {
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
                 Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
@@ -309,14 +313,27 @@ return false;
         });
     });
 
-/*
-        inviteAction: function (e) {
-            var email,selected = this.$('.selector a.clicked').parent();
-            selected.each(function (i,e) {
-                var $e = $(e);
-                email = $e.find('.email').text();
-                Parley.invite(email, function () {});
+    Parley.vent.on('invite', function (emails, callback) {
+        callback = callback || {};
+
+        if (_.isString(emails))
+            emails = [emails];
+        else if (!_.isArray(emails))
+            return false;
+
+        var inviteBuilder = _.map(emails, function (ele, key) {
+            var dfd = $.Deferred();
+
+            Parley.invite(ele, function (recipient) {
+                if (!_.has(recipient, 'error'))
+                    dfd.resolve();
             });
-        }
-*/
+
+            return dfd.promise();
+        });
+
+        $.when.apply($, inviteBuilder).then(function () {
+            callback();
+        });
+    });
 }(window.Parley = window.Parley || {}, jQuery));

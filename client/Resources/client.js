@@ -291,7 +291,16 @@
         {   id: 'dialog_nokey',
             template: Mustache.compile($('#nokeyDialogTemplate').html()),
             events: {
-                'click #inviteAction': function (e) {}
+                'click #inviteAction': function (e) {
+                    e.preventDefault();
+                    var emails = [], selected = $('#nokeysForm input:checked');
+
+                    selected.each(function (e) {
+                        emails.push(this.name.split('_')[1]);
+                    });
+
+                    Parley.vent.trigger('invite', emails);
+                }
             },
             model: {
                 slug: 'nokey',
