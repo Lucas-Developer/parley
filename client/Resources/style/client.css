@@ -133,12 +133,14 @@
 
     .loggedin header,
     .loggedin header .email,
-    .loggedin header nav { display: block; }
+    .loggedin header nav,
+    .loggedin #inbox { display: block; }
 
     #dialogWrapper { display: none; }
 
     #inbox .header-info,
     #inbox {
+        display: none;
         width: 96%;
         margin-top: 10px;
         margin-bottom: 10px;

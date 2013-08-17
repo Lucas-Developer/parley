@@ -46,6 +46,7 @@
                 selected: false
             };
         },
+        idAttribute: 'message_id',
         initialize: function () {
             var data = this.toJSON();
             var from = data.addresses.from;
