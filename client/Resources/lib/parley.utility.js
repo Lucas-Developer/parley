@@ -228,7 +228,12 @@ are massaged to fit. The arguments to finished on ajax error look like:
         url:url,
         headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time' : data.time},
         data:data,
-        success:finished,
+        success:function(a,b,c) {
+          if (data.name) {
+            a.changedName = window.PYchangeName(data.name);
+          }
+          finished(a,b,c);
+        },
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
         dataType:'json'
       });
