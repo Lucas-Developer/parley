@@ -214,6 +214,7 @@
             events: {
                 'click #emailVerify': function (e) { Parley.vent.trigger('setup:verify', e); },
                 'click #loginAction': function (e) { Parley.vent.trigger('setup:login', e); },
+                'click .setupBackButton': function (e) { Parley.app.dialog('setup splash'); },
                 'click #registerAction': function (e) {
                     e.preventDefault();
                     Parley.vent.trigger('setup:register', e);
@@ -241,8 +242,7 @@
                             'cancel'
                         ]
                     });
-                },
-                'keydown': 'clickSubmit'
+                }
             },
             model: {
                 slug: 'setup',
@@ -263,7 +263,7 @@
                     };
 
                     if (!formdata.name) {
-                        Parley.formError('settings', { name: _t('error-settings-invalidname') });
+                        Parley.formErrors('settings', { name: _t('error-settings-invalidname') });
                         return false;
                     }
                     
@@ -288,12 +288,12 @@
                     var form = document.forms.changePassword;
 
                     if (!form.cur_password.value) {
-                        Parley.formError('settings', { cur_password: _t('error-settings-invalidpassword') });
+                        Parley.formErrors('settings', { cur_password: _t('error-settings-invalidpassword') });
                         return false;
                     }
 
                     if (!form.new_password_1.value) {
-                        Parley.formError('settings', { new_password_1: _t('error-settings-invalidpassword') });
+                        Parley.formErrors('settings', { new_password_1: _t('error-settings-invalidpassword') });
                         return false;
                     }
 
@@ -346,15 +346,6 @@
                     var email = _.findWhere(formdata, {name:'email'});
                     Parley.contacts.add({email: email.value});
                     Parley.app.dialog('contacts contactlist');
-                },
-                'keydown': function (e) {
-                  switch (e.keyCode) {
-                    case 13:
-                      this.$('input[type=submit],button:visible').first().click();
-                    case 27:
-                      e.preventDefault();
-                      break;
-                    }
                 }
             },
             model: {
@@ -480,22 +471,18 @@
     var DialogView = Backbone.View.extend({
         tagName: 'div',
 
-        /**
-        This will be handled through the fancy vent
-        but for now, it's like this...
-        **/
-        events: {
-            'keydown': 'clickSubmit',
-            'click .ui-dialog-titlebar-close': 'hide',
-            'click #cancelButton': 'hide'
-        },
-
         initialize: function (options) {
             console.log('Initializing');
 
+            var _defaultEvents = {
+                'keydown':                          'clickSubmit',
+                'click .ui-dialog-titlebar-close':  'hide',
+                'click #cancelButton':              'hide'
+            };
+
             this.model = new Backbone.Model(options.model);
             this.template = options.template;
-            this.events = _.extend(this.events, options.events);
+            this.events = _.extend(_defaultEvents, options.events);
             this.opts = _.extend({
                 position: { my: 'center', at: 'center' },
                 autoOpen: true,
@@ -518,9 +505,9 @@
 
             var page = this.model.get('page');
             if (!page) {
-                this.$('.page').hide().first().show();
+                this.$('.page').removeClass('page-active').first().addClass('page-active');
             } else {
-                this.$('.page').hide().filter('.page-'+page).show();
+                this.$('.page').removeClass('page-active').filter('.page-'+page).addClass('page-active');
             }
             this.delegateEvents(this.events);
 
@@ -551,9 +538,15 @@
         },
 
         clickSubmit: function (e) {
+            var toClick;
             switch (e.keyCode) {
                 case 13:
-                    this.$('input[type=submit],button:visible').first().click();
+                    e.preventDefault();
+                    toClick = this.$('.page-active .default-btn');
+                    if (toClick.length == 0)
+                        this.$('.default-btn').click();
+                    else
+                        toClick.click();
                 case 27:
                     e.preventDefault();
                     break;

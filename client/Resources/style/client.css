@@ -7,10 +7,78 @@
 @font-face { font-family: "Open Sans"; src: url(OpenSans-Italic.otf) format("opentype"); font-weight: 400; font-style: italic; }
 @font-face { font-family: "Open Sans"; src: url(OpenSans-SemiboldItalic.otf) format("opentype"); font-weight: 600; font-style: italic; }
 
+/*
+light #eeba69
+main #eb9c21
+
+*/
+/** COLOURS **/
+    body { color: #191208; }
+    h1, h2, h3, h4, h5, h6 { color: #191208; }
+
+    header {
+		background: #f0f0f0;
+        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,rgba(255,255,255,0.9)), color-stop(50%,rgba(255,232,198,0.35))); /* Chrome,Safari4+ */
+		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
+		border-bottom: 1px solid rgba(16,20,0,0.35);
+    }
+    header .email { color: #191208; }
+
+    .error { color: #ff6666; }
+
+        button:hover,button:active { background-color: #f0961e; color: #f0f0f0; }
+
+		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
+			color: #191208;
+            background-color: #f0f0f0;
+        }
+
+        textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
+			outline: none;
+			border-color: #dec39c;
+	    	background-color: #fff;
+		}
+        input[readonly] { background-color: transparent; }
+
+
+	table tbody tr:hover { background-color: #eee; }
+	table thead tr { background-color: #191208; color: #eee; }
+
+    table .selector a { border: 1px solid #191208; }
+    table thead .selector a { border-color: #f4f0ec; }
+    table .selector a.clicked { background-color: #191208; box-shadow: 0 0 -10px 1px #f4f0ec inset; }
+    table thead .selector a.clicked { background-color: #f4f0ec; box-shadow: 0 0 -10px 1px #191208 inset; }
+
+    .ui-dialog {
+        border: 1px solid #edbd71;
+        box-shadow: 0 0 10px rgba(50,50,50,0.5);
+    }
+    .ui-dialog .section { border-bottom: 1px solid #eee; }
+    .ui-dialog-titlebar, h2 { border-bottom: 1px solid #edbd71; }
+
+        .ui-dialog button.default-btn { border: 1px solid #f0961e; }
+
+    #composeAction:hover,
+    #settingsAction:hover,
+    #contactsAction:hover
+        { background-color: rgba(0,0,0,0.8); border-radius: 9999px; }
+
+    #inbox tr {
+		border-top: 1px solid #ddd;
+		border-left: 1px solid #ddd;
+		border-bottom: 1px solid #aaa;
+		border-right: 1px solid #aaa;
+		background-color: #fff;
+    }
+    #inbox .message td { background-color: rgba(255, 255, 255, 0.8); }
+    #inbox .message-body {
+        background: rgba(255, 250, 240, 1);
+    }
+/** END COLOURS **/
+
 * {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
     body {
 		font-size: 100%;
-		color: #191208;
 		background: url(../img/cartographer.png) 0 0 repeat;
     }
     body, p, .ui-widget { font-family: "Raleway"; }
@@ -18,32 +86,30 @@
     input, textarea { font-family: "Open Sans"; }
 
     .ui-dialog-title,
-    h1, h2, h3, h4, h5, h6 { color: #191208; font-weight: 300; text-transform: capitalize; }
+    h1, h2, h3, h4, h5, h6 { font-weight: 300; text-transform: capitalize; }
 	.ui-dialog-title, h2 {font-size:1.5em;}
     h3 {text-align: left; font-size: 1.3em; }
+    .ui-dialog h4 { border-bottom: 1px solid #ccc; }
+
 	p { font-size: 0.9em; line-height: 1.4em; }
     p.small-text { font-size: 0.8em; }
 
-    .error { display: block; margin-top: 5px; color: #ff6666; font-weight: 500; }
+    .error { display: block; margin-top: 5px; font-weight: 500; }
 
     button { outline: none; border: none; cursor: pointer; padding: 8px 16px; white-space: nowrap; }
-        button:hover,button:active { outline: none; background-color: #f5ad66; color: #eee; }
+        button:hover,button:active { outline: none; }
 
-    .ui-dialog h4 { border-bottom: 1px solid #ccc; }
     .row {
 	    display: table;
 		width: 100%;
 		padding: 10px 0;
-	    /*background-color: #eee;*/
 	}
         .row.no-line { border-top: none; }
         input[type=checkbox] { display: block; float: left; }
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
-			color: #191208;
 			padding: 4px 8px 4px 4px;
             border: 1px inset #ccc;
             border-radius: 1px;
-            background-color: #fdf8f8;
 		}
             .as-selections, input[type=text], input[type=search], input[type=email], input[type=password] {
                 height: 2em;
@@ -51,8 +117,6 @@
 
         textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
 			outline: none;
-			border-color: #f5ad66;
-	    	background-color: #fff;
 		}
             input[readonly] { border: none; font-weight: 500; background: none; }
 
@@ -93,16 +157,17 @@
     .extra-link { float: right; font-size: 0.7em; }
 
 	table td, table th { margin: 1px 0; padding: 4px; text-align: left; cursor: default; }
-	table thead tr { background-color: #191208; color: #eee; }
 	table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.1); }
-		table tbody tr:hover { background-color: #eee; }
+
+    #contactsListWrapper { max-height: 500px; overflow: hidden auto; }
+    #contactsListTable { background-color: transparent; }
 
     .ui-state-default { background-color: transparent; background-image: none; }
-    .ui-dialog { border-radius: 3px; box-shadow: 0 0 10px rgba(50,50,50,0.5); border: 1px solid #f5ad66; }
-    .ui-dialog .section { width: 100%; border-bottom: 1px solid #eee; }
+    .ui-dialog { border-radius: 3px; }
+    .ui-dialog .section { width: 100%; }
     .no-close .ui-dialog-titlebar { display: none; }
         
-        .ui-dialog-titlebar, h2 { background: none; border: none; padding-bottom: 5px; border-bottom: 1px solid #f5ad66; margin-bottom: 15px; }
+        .ui-dialog-titlebar, h2 { background: none; border: none; padding-bottom: 5px; margin-bottom: 15px; }
     .hidetext { display: block; text-indent: -9999px; }
 
     .ui-dialog .image-wrapper { max-width: 400px; margin: 5px auto; }
@@ -114,17 +179,12 @@
     #contactListTable { width: 100%; min-width: 600px; }
 
     header {
-        display: none;
 		width: 100%;
 		padding: 0 10px;
 		height: 62px;
 		overflow: hidden;
         position: relative;
 		line-height: 58px;
-		background: #fff;
-        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,rgba(255,255,255,0.9)), color-stop(50%,rgba(255,232,198,0.35))); /* Chrome,Safari4+ */
-		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
-		border-bottom: 1px solid rgba(16,20,0,0.35);
     }
     header h1 {
         float: left;
@@ -132,7 +192,7 @@
         height: 60px;
         background: url(../img/logo.png) no-repeat 0 6px;
     }
-    header .email { color: #191208; padding: 12px 0 0 20px; font-weight: 500; display: inline-block; float: left; }
+    header .email { padding: 12px 0 0 20px; font-weight: 500; display: inline-block; float: left; }
     header nav { display: inline-block; float: right; }
         header nav button { display: inline-block; float: left; margin: 6px; }
 
@@ -155,14 +215,20 @@
 
     #inbox-utilities { height: 40px; display: inline-block; }
         #inbox .header-info { display:none; font-size:.8em; line-height:1.2em; }
+        
+        #composeAction,
+        #settingsAction,
+        #contactsAction {
+            width: 52px;
+            height: 52px;
+            background-color: transparent;
+            background-position: 2px 2px;
+            background-repeat: no-repeat;
+        }
 
-        #composeAction { margin-right: 48px; width:48px; height: 48px; background: url(../img/pen.png) 6px 6px no-repeat; }
-        #settingsAction { width:48px; height: 48px; background: url(../img/tools.png) 6px 6px no-repeat; }
-        #contactsAction { width:48px; height: 48px; background: url(../img/id.png) 6px 6px no-repeat; }
-            #composeAction:hover,
-            #settingsAction:hover,
-            #contactsAction:hover
-                { background-color: rgba(255,255,255,0.4); border-radius: 2px; }
+        #composeAction { margin-right: 48px; background-image: url(../img/compose.png); }
+        #settingsAction { background-image: url(../img/settings.png); }
+        #contactsAction { background-image: url(../img/contacts.png); }
 
     #inbox table { width: 100%; }
 	
@@ -171,30 +237,21 @@
         min-width: 500px;
 		padding: 5px 10px;
 		margin-bottom: 2px;
-		border-top: 1px solid #ddd;
-		border-left: 1px solid #ddd;
-		border-bottom: 1px solid #aaa;
-		border-right: 1px solid #aaa;
-		background-color: #fff;
 	}
         #inbox tr td { vertical-align: middle; white-space: nowrap; }
         #inbox tr.message-body td { white-space: normal; }
 
         table .selector { width: 18px; }
-            table .selector a { display: block; width: 14px; height: 14px; border: 1px solid #191208; }
-                table thead .selector a { border-color: #f4f0ec; }
-            table .selector a.clicked { background-color: #191208; box-shadow: 0 0 -10px 1px #f4f0ec inset; }
-                table thead .selector a.clicked { background-color: #f4f0ec; box-shadow: 0 0 -10px 1px #191208 inset; }
+            table .selector a { display: block; width: 14px; height: 14px; }
         #inbox .from { min-width: 250px; width: 22%; }
         #inbox .date { min-width: 110px; width: 15%; text-align: right; }
 
         #inbox .message { background-color: transparent; }
-        #inbox .message td { white-space: normal; background-color: rgba(255, 255, 255, 0.8); }
+        #inbox .message td { white-space: normal; }
             #inbox .message .details { margin: 0 5px; }
 
             #inbox .message-body {
                 margin: 5px;
-                background: rgba(255, 250, 240, 1);
                 padding: 10px 10px 5px;
                 line-height: 1.2em;
             }
@@ -212,6 +269,7 @@
 
     .ui-dialog button { display: inline-block; }
         .ui-dialog button.clear-btn { display: block; clear: left; }
+        .ui-dialog button.right-btn { float: right; }
 
         .ui-dialog p { margin: 5px 0 10px; }
         .ui-dialog input[type=text],
@@ -219,7 +277,7 @@
         .ui-dialog input[type=email]
         { width: 100%; }
 
-	.ui-dialog table { width: 100%; background-color: #fff; }
+	.ui-dialog table { width: 100%; }
 		.ui-dialog table td { vertical-align: top; }
 		.ui-dialog input[type=search] { width: 100%; }
 

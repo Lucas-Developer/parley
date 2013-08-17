@@ -54,7 +54,7 @@
 			</div>
 	    </form>
 
-	    <button id="emailVerify">{{t_submit}}</button>
+	    <button class="default-btn" id="emailVerify">{{t_submit}}</button>
 	</div>
     <div class="page page-login">
         <h2>{{t_log_in}}</h2>
@@ -72,7 +72,8 @@
             </div>
         </form>
 
-        <button id="loginAction">{{t_log_in}}</button>
+        <button class="default-btn" id="loginAction">{{t_log_in}}</button>
+	    <button class="right-btn setupBackButton">{{t_back}}</button>
     </div>
     <div class="page page-register">
         <h2>{{t_register}}</h2>
@@ -111,7 +112,8 @@
             </div>
         </form>
 
-        <button id="registerAction">{{t_register}}</button>
+        <button class="default-btn" id="registerAction">{{t_register}}</button>
+	    <button class="right-btn setupBackButton">{{t_back}}</button>
 
 <!--
             <p>{{t_message-keygen}}</p>
@@ -144,20 +146,20 @@
         <form name="changePassword">
             <div class="half">
                 <label for="cur_password">{{t_current_password}}
-                    <input type="text" id="curPasswordField" name="cur_password">
+                    <input type="password" id="curPasswordField" name="cur_password">
                     <span class="error"></span>
                 </label>
             </div>
             <br>
             <div class="half">
                 <label for="new_password_1">{{t_new_password}}
-                    <input type="text" name="new_password_1">
+                    <input type="password" name="new_password_1">
                     <span class="error"></span>
                 </label>
             </div>
             <div class="half">
                 <label for="new_password_2">{{t_confirm_password}}
-                    <input type="text" name="new_password_2">
+                    <input type="password" name="new_password_2">
                     <span class="error"></span>
                 </label>
             </div>
@@ -176,15 +178,17 @@
 
 <script type="text/template" id="contactsDialogTemplate">
     <div class="page page-contactlist page-active">
-	<input type="search" placeholder="Search..." name="contactSearch">
-	<table id="contactsListTable" class="sortable">
-	    <!--<thead>
-		<tr><th class="thumbnail"></th><th>{{t_name}}</th><th>{{t_email}}</th><th class="buttons"></th></tr>
-              </thead>-->
-	    <tbody id="contactsList">
-	    </tbody>
-	</table>
-    <button id="newContact">{{t_new_contact}}</button>
+        <!-- <input type="search" placeholder="Search..." name="contactSearch"> -->
+        <div id="contactsListWrapper">
+            <table id="contactsListTable" class="sortable">
+                <!--<thead>
+                <tr><th class="thumbnail"></th><th>{{t_name}}</th><th>{{t_email}}</th><th class="buttons"></th></tr>
+                      </thead>-->
+                <tbody id="contactsList">
+                </tbody>
+            </table>
+        </div>
+        <button id="newContact">{{t_new_contact}}</button>
     </div>
     <div class="page page-newcontact">
     <form name="newcontact">
@@ -236,8 +240,6 @@
                 <label {{^bcc}}class="hidden" {{/bcc}}for="bcc">{{t_bcc}}
                     <input type="text" name="bcc">
                 </label>-->
-            </div>
-            <div class="row">
                 <label for="subject">{{t_subject}}
                     <input type="text" name="subject" value="{{subject}}">
                     <span class="error"></span>
