@@ -103,7 +103,7 @@ def setUser(email,info):
 
   #extract separated fields from meta
   fields = dict()
-  for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites"]:
+  for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites","auto_refresh"]:
     if key in meta:
       fields[key] = meta[key]
       del meta[key]
