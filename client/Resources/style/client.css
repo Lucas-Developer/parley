@@ -179,6 +179,7 @@ main #eb9c21
     #contactListTable { width: 100%; min-width: 600px; }
 
     header {
+        display: none;
 		width: 100%;
 		padding: 0 10px;
 		height: 62px;
