@@ -7,18 +7,13 @@
 @font-face { font-family: "Open Sans"; src: url(OpenSans-Italic.otf) format("opentype"); font-weight: 400; font-style: italic; }
 @font-face { font-family: "Open Sans"; src: url(OpenSans-SemiboldItalic.otf) format("opentype"); font-weight: 600; font-style: italic; }
 
-/*
-light #eeba69
-main #eb9c21
-
-*/
 /** COLOURS **/
     body { color: #191208; }
     h1, h2, h3, h4, h5, h6 { color: #191208; }
 
     header {
 		background: #f0f0f0;
-        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#f0f0f0), color-stop(100%,#fef3ec)); /* Chrome,Safari4+ */
+        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(240,240,240,.7)), color-stop(100%, rgba(200,200,200,.35))); /* Chrome,Safari4+ */
 		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
 		border-bottom: 1px solid rgba(16,20,0,0.35);
     }
@@ -26,19 +21,20 @@ main #eb9c21
 
     .error { color: #ff6666; }
 
-        button { background-color: #dec39c; color: #121208; }
+    button.send { background-color: transparent; color: #dec39c; }
+    button { background-color: #dec39c; color: #121208; }
+
         button:hover,button:active { background-color: #f0961e; color: #f0f0f0; }
-        #refreshAction.refreshing:hover { background-color: #dec39c; cursor: default; color: #121208; }
+            #refreshAction.refreshing:hover { background-color: #dec39c; cursor: default; color: #121208; }
 
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
 			color: #191208;
-            background-color: #f0f0f0;
+            background-color: #fff;
         }
 
         textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
 			outline: none;
 			border-color: #dec39c;
-	    	background-color: #fff;
 		}
         input[readonly] { background-color: transparent; }
 
@@ -51,9 +47,11 @@ main #eb9c21
     table thead .selector a.clicked { background-color: #f4f0ec; box-shadow: 0 0 -10px 1px #191208 inset; }
 
     .ui-dialog {
+        background-color: rgba(240,240,240,.9) !important;
         border: 1px solid #edbd71;
         box-shadow: 0 0 10px rgba(50,50,50,0.5);
     }
+        .ui-dialog-content { background: transparent none !important; }
     .ui-dialog .section { border-bottom: 1px solid #eee; }
     .ui-dialog-titlebar, h2 { border-bottom: 1px solid #f0961e; color: #f0961e; }
 
@@ -64,10 +62,8 @@ main #eb9c21
     #composeAction:hover,
     #settingsAction:hover,
     #contactsAction:hover {
-        border: 4px solid rgba(237, 189, 113, 1);
         border-radius: 9999px;
-        background-position: -2px -2px;
-        background-color: rgba(237, 189, 113, 1);
+        background-color: rgba(240,240,240,.8);
     } 
 
     #inbox tr {
@@ -78,15 +74,13 @@ main #eb9c21
 		background-color: #fff;
     }
     #inbox .message td { background-color: rgba(255, 255, 255, 0.8); }
-    #inbox .message-body {
-        background: rgba(255, 250, 240, 1);
-    }
+    .message-body { margin-top: 10px; }
 /** END COLOURS **/
 
 * {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
     body {
 		font-size: 100%;
-		background: url(../img/cartographer.png) 0 0 repeat;
+		background: url(../img/pixel_weave.png) 0 0 repeat;
     }
     body, p, .ui-widget { font-family: "Raleway"; }
     button { font-weight: 500; text-transform: capitalize; }
@@ -166,8 +160,7 @@ main #eb9c21
 	table td, table th { margin: 1px 0; padding: 4px; text-align: left; cursor: default; }
 	table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.1); }
 
-    .page-contactlist { min-height: 400px; }
-    #contactsListWrapper { height: 500px; overflow: hidden scroll; }
+    #contactsListWrapper { height: 350px; overflow-y: scroll; overflow-x: visible; }
     #contactsListTable { width: 100%; min-width: 600px; background-color: transparent; }
 
     .ui-state-default { background-color: transparent; background-image: none; }
@@ -175,7 +168,7 @@ main #eb9c21
     .ui-dialog .section { width: 100%; }
     .no-close .ui-dialog-titlebar { display: none; }
         
-        .ui-dialog-titlebar, h2 { background: none; border: none; padding-bottom: 5px; margin-bottom: 15px; }
+        .ui-dialog-titlebar, h2 { background: none; border: none; padding-bottom: 15px; margin-bottom: 15px; }
     .hidetext { display: block; text-indent: -9999px; }
 
     .ui-dialog .image-wrapper { max-width: 400px; margin: 5px auto; }
@@ -199,7 +192,7 @@ main #eb9c21
         background: url(../img/logo.png) no-repeat 0 6px;
     }
     header .email { padding: 12px 0 0 20px; font-weight: 500; display: inline-block; float: left; }
-    header nav { display: inline-block; float: right; }
+    header nav { padding: 4px; display: inline-block; float: right; }
         header nav button { display: inline-block; float: left; margin: 6px; }
 
     .loggedin header,
@@ -225,14 +218,15 @@ main #eb9c21
         #composeAction,
         #settingsAction,
         #contactsAction {
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
             background-color: transparent;
-            background-position: 2px 2px;
+            background-position: 6px 6px;
             background-repeat: no-repeat;
         }
 
-        #composeAction { margin-right: 48px; background-image: url(../img/compose.png); }
+        #composeAction { margin-right: 40px; background-image: url(../img/compose.png); }
         #settingsAction { background-image: url(../img/settings.png); }
         #contactsAction { background-image: url(../img/contacts.png); }
 

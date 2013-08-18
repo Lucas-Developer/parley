@@ -2,7 +2,7 @@
 <html>
     <head>
 	<link rel="stylesheet" type="text/css" href="style/html5-doctor-reset-stylesheet.min.css">
-	<link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.10.3.custom/css/humanity/jquery-ui.min.css">
+	<link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.10.3.custom/css/humanity/jquery-ui.css">
 	<link rel="stylesheet" type="text/css" href="style/client.css">
 	<link rel="stylesheet" type="text/css" href="style/autoSuggest.css">
 	
@@ -179,6 +179,9 @@
 <script type="text/template" id="contactsDialogTemplate">
     <div class="page page-contactlist page-active">
         <!-- <input type="search" placeholder="Search..." name="contactSearch"> -->
+        <div class="row">
+            <button id="newContact">{{t_new_contact}}</button>
+        </div>
         <div id="contactsListWrapper">
             <table id="contactsListTable" class="sortable">
                 <!--<thead>
@@ -188,7 +191,6 @@
                 </tbody>
             </table>
         </div>
-        <button id="newContact">{{t_new_contact}}</button>
     </div>
     <div class="page page-newcontact">
     <form name="newcontact">
