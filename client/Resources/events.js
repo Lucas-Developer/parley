@@ -261,34 +261,25 @@
         console.log('Sending email to: ' + JSON.stringify( message ));
         Parley.app.dialog('info send-message', { message: _t('message-message-sending') })
 
-        // This is the callback from encryptAndSend
-            Parley.app.dialog('hide compose');
-            Parley.app.dialog('hide info send-message');
-            Parley.app.dialog('info sent-message', {
-                message: _t('message-message-sent'),
-                buttons: [ 'okay' ]
-            });
-        // End callback
-
-/*
-            Parley.encryptAndSend(subject.value, body.value, recipients, function (data, textStatus) {
-                if (textStatus != 'error') {
-                    console.log('Message successfully sent.');
-                    console.log( JSON.stringify(data) );
-                    Parley.app.dialog('hide compose');
-                    Parley.app.dialog('hide info send-message');
-                    Parley.app.dialog('info sent-message', {
-                        message: _t('message-message-sent'),
-                        buttons: [ 'okay' ]
-                    });
-                } else {
-                    // Error
-                    alert('We encountered an error sending your email.');
-                    return false;
-                }
-            });
-*/
-
+        Parley.encryptAndSend(message.subject, message.body, message.recipients, function (data, textStatus) {
+            if (textStatus != 'error') {
+                console.log('Message successfully sent.');
+                console.log( JSON.stringify(data) );
+                Parley.app.dialog('hide compose');
+                Parley.app.dialog('hide info send-message');
+                Parley.app.dialog('info sent-message', {
+                    message: _t('message-message-sent'),
+                    buttons: [ 'okay' ]
+                });
+            } else {
+                console.log('Message not sent.');
+                Parley.app.dialog('info sent-message', {
+                    message: _t('error-message-notsent'),
+                    buttons: [ 'okay' ]
+                });
+                return false;
+            }
+        });
     });
 
     Parley.vent.on('user:kill', function (callback) {

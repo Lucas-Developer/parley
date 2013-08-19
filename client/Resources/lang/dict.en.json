@@ -12,6 +12,7 @@ window._phrases = {
 "name": "name",
 "or": "or",
 "okay": "okay",
+"back": "back",
 "cancel": "cancel",
 "close": "close",
 "error": "error",
@@ -107,6 +108,7 @@ window._phrases = {
 "error-password-nomatch": "Your passwords don't match. Please retype one, or the other, or both.",
 "error-inbox-forbidden": "We haven't been able to access your account through context.io yet. We'll keep trying, or click \"Retry\" below to change your settings with context.io.",
 "error-email-novalid": "Please enter a valid email address.",
+"error-message-notsent": "We encountered an error trying to send your message. Sorry for the inconvenience.",
 
 // No trailing comma!
 "":""}

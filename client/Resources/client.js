@@ -422,7 +422,7 @@
                     }
 
                     if (nokeyRecipients.length == 0)
-                        Parley.vent.trigger('message:send', { message: messagedata });
+                        Parley.vent.trigger('message:send', messagedata);
                     else
                         Parley.vent.trigger('message:nokey', { message: messagedata, nokeys: nokeyRecipients });
                 }
@@ -460,7 +460,7 @@
                         searchObjProps: 'name,value',
                         preFill: [preFill]
                     };
-                    view.$('#recipients input[type=text]').each(function (){
+                    view.$('#recipient_to').each(function (){
                         $(this).autoSuggest(items, _.extend({asHtmlID: this.name}, opts));
                     });
                 }

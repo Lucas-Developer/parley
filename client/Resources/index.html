@@ -231,7 +231,7 @@
 	    <form name="compose" id="composeForm">
             <div class="no-line row" id="recipients">
                 <label for="to">{{t_to}}
-                    <input type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
+                    <input id="recipient_to" type="text" name="to"{{#to}} value="{{email}}"{{/to}}>
                     <span class="error"></span>
                 </label>
                 <!--<label {{^cc}}class="hidden" {{/cc}}for="cc">{{t_cc}}
