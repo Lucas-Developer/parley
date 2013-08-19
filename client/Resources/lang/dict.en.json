@@ -93,7 +93,7 @@ window._phrases = {
 
 // Messages: settings
 "message-settings-saveerror": "We have encountered an error trying to save your settings.",
-"message-settings-saved": "Your personal settings have been updates.",
+"message-settings-saved": "Your personal settings have been updated.",
 "message-settings-invalidname": "Please enter a valid name.",
 "message-password-invalidpassword": "Please enter a valid password.",
 "message-password-changeerror": "We encountered a strange error while trying to change your password.",
