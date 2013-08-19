@@ -103,7 +103,7 @@ def setUser(email,info):
 
   #extract separated fields from meta
   fields = dict()
-  for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites","auto_refresh"]:
+  for key in ["name","secret","keyring","public_key","pending","email","account_type","imap_account","paid_invites"]:
     if key in meta:
       fields[key] = meta[key]
       del meta[key]
@@ -154,10 +154,10 @@ def user(email):
       abort(404)
   elif request.method == 'POST':
     params.update(request.form.to_dict())
-    if user and not user["pending"] and 'keyring' in params and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
+    if user and not user["pending"] and 'sig' in request.form and verifySignature(request.base_url, request.method, request.form, user["secret"]):
       #update active user
       new_user = {}
-      for key in ["keyring","public_key","secret"]:
+      for key in ["keyring","public_key","secret","name","auto_refresh"]:
         if key in params:
           new_user[key] = params[key]
       user = setUser(email,new_user)
