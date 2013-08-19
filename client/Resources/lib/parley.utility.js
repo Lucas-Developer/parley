@@ -271,7 +271,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time' : data.time},
         data:data,
         success:function(a,b,c) {
-          if (data.name) {
+          if (data.name != Parley.currentUser.get('name')) {
             a.changedName = window.PYchangeName(data.name);
           }
           finished(a,b,c);
