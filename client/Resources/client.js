@@ -269,6 +269,7 @@
                     
                     Parley.saveUser(formdata, function (data) {
                         if (!_.has(data, 'error')) {
+                            Parley.currentUser.set(data);
                             Parley.app.dialog('show info settings-saved', {
                                 header: _t('success'),
                                 message: _t('message-settings-saved'),
