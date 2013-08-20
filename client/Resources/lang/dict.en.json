@@ -13,6 +13,7 @@ window._phrases = {
 "or": "or",
 "okay": "okay",
 "cancel": "cancel",
+"back": "back",
 "close": "close",
 "error": "error",
 "contacts": "contacts",

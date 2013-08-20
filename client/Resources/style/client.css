@@ -12,20 +12,24 @@
     h1, h2, h3, h4, h5, h6 { color: #191208; }
 
     header {
-		background: #f0f0f0;
-        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(240,240,240,.7)), color-stop(100%, rgba(200,200,200,.35))); /* Chrome,Safari4+ */
+		background: #fff;
+        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255,255,255,.9)), color-stop(100%, rgba(255,255,255,.5))); /* Chrome,Safari4+ */
 		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
-		border-bottom: 1px solid rgba(16,20,0,0.35);
+		/*border-bottom: 1px solid rgba(16,20,0,0.35);*/
     }
     header .email { color: #191208; }
+        header nav button span { color: #191208; text-shadow: 0 0 1px #f0f0f0; }
 
     .error { color: #ff6666; }
 
     button.send { background-color: transparent; color: #dec39c; }
+    button, #refreshAction.refreshing:hover  { background-color: rgba(255,255,255,.8); color: #f0961e; }
+    #refreshAction.refreshing:hover { cursor: default; }
+    /*
     button { background-color: #dec39c; color: #121208; }
+    */
 
         button:hover,button:active { background-color: #f0961e; color: #f0f0f0; }
-            #refreshAction.refreshing:hover { background-color: #dec39c; cursor: default; color: #121208; }
 
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
 			color: #191208;
@@ -47,8 +51,8 @@
     table thead .selector a.clicked { background-color: #f4f0ec; box-shadow: 0 0 -10px 1px #191208 inset; }
 
     .ui-dialog {
-        background-color: rgba(240,240,240,.9) !important;
-        border: 1px solid #edbd71;
+        background-color: rgba(240,240,240,.95) !important;
+        border: 1px solid rgba(77, 104, 141, .3);
         box-shadow: 0 0 10px rgba(50,50,50,0.5);
     }
         .ui-dialog-content { background: transparent none !important; }
@@ -62,8 +66,11 @@
     #composeAction:hover,
     #settingsAction:hover,
     #contactsAction:hover {
+/*
         border-radius: 9999px;
         background-color: rgba(240,240,240,.8);
+*/
+        background-color: transparent;
     } 
 
     #inbox tr {
@@ -169,6 +176,7 @@
     .no-close .ui-dialog-titlebar { display: none; }
         
         .ui-dialog-titlebar, h2 { background: none; border: none; padding-bottom: 15px; margin-bottom: 15px; }
+        .ui-dialog-titlebar { height: 48px; }
     .hidetext { display: block; text-indent: -9999px; }
 
     .ui-dialog .image-wrapper { max-width: 400px; margin: 5px auto; }
@@ -178,11 +186,9 @@
 
 
     header {
-        display: none;
 		width: 100%;
-		padding: 0 10px;
-		height: 62px;
-		overflow: hidden;
+		padding: 0 20px;
+		height: 72px;
         position: relative;
 		line-height: 58px;
     }
@@ -190,11 +196,27 @@
         float: left;
         width: 250px;
         height: 60px;
-        background: url(../img/logo.png) no-repeat 0 6px;
+        background: url(../img/logo.png) no-repeat 0 12px;
     }
     header .email { padding: 12px 0 0 20px; font-weight: 500; display: inline-block; float: left; }
-    header nav { padding: 4px; display: inline-block; float: right; }
-        header nav button { display: inline-block; float: left; margin: 6px; }
+    header nav { overflow: visible; padding: 8px 0; display: inline-block; float: right; }
+        header nav button {
+            display: inline-block;
+            text-align: center;
+            float: left;
+            width: 80px;
+            height: 60px;
+            border-radius: 4px;
+            padding: 36px 0 0 0;
+            background-color: transparent;
+            background-position: top center;
+            background-repeat: no-repeat;
+        }
+        header nav button span { visibility: hidden; text-align: center; font-size: 0.8em; }
+        header nav button:hover span { visibility: visible; }
+        #composeAction { background-image: url(../img/compose.png); }
+        #settingsAction { background-image: url(../img/settings.png); }
+        #contactsAction { background-image: url(../img/contacts.png); }
 
     .loggedin header,
     .loggedin header .email,
@@ -212,25 +234,12 @@
         margin-left: 2%;
         margin-right: 2%;
     }
+        #inbox table { border-collapse: collapse; }
+        #inbox tr { margin-top: 1px; }
 
     #inbox-utilities { height: 40px; display: inline-block; }
         #inbox .header-info { display:none; font-size:.8em; line-height:1.2em; }
         
-        #composeAction,
-        #settingsAction,
-        #contactsAction {
-            width: 48px;
-            height: 48px;
-            border-radius: 4px;
-            background-color: transparent;
-            background-position: 6px 6px;
-            background-repeat: no-repeat;
-        }
-
-        #composeAction { margin-right: 40px; background-image: url(../img/compose.png); }
-        #settingsAction { background-image: url(../img/settings.png); }
-        #contactsAction { background-image: url(../img/contacts.png); }
-
     #inbox table { width: 100%; }
 	
     #inbox tr {
