@@ -262,7 +262,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
     } else {
       var email = Parley.currentUser.get('email');
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
-      _(data).extend({'time': Math.floor((new Date())/1000)});
+      data.time = Math.floor((new Date())/1000);
+      if (data.name) {
+        window.PYchangeName(data.name);
+        data.keyring = window.PYgetEncryptedKeyring();
+      }
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
       $.ajax({
@@ -270,12 +274,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         url:url,
         headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time' : data.time},
         data:data,
-        success:function(a,b,c) {
-          if (data.name != Parley.currentUser.get('name')) {
-            a.changedName = window.PYchangeName(data.name);
-          }
-          finished(a,b,c);
-        },
+        success: finished,
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
         dataType:'json'
       });
@@ -310,7 +309,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       oldLocal = passwords.local;
       oldRemote = passwords.remote;
       passwords.local = newLocal = Parley.pbkdf2(newPass);
-      passwords.remote = newRemote = Parley.pbkdf2(newRemote);
+      passwords.remote = newRemote = Parley.pbkdf2(newLocal);
       window.PYchangePass(newLocal); //change keyring passphrase
       //update passwords on server along with keyring
       var email = Parley.currentUser.get('email');
