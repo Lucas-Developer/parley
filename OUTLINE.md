@@ -7,7 +7,7 @@ We still have a long way to go, but this document aims to describe Parley's core
 First, though, a few general notes:
 
 - We're not cryptographers, and we didn't invent any wild new encryption techniques. Emails are sent using PGP, everything is transferred over SSL/TLS, passwords are hashed with PBKDF2, API authentication is done using SHA-256 HMAC, and we use AES 256 once.
-- All of our code is open sourced, available at [github.com/blackchair/parley(https://github.com/blackchair/parley).
+- All of our code is open sourced, available at [github.com/blackchair/parley](https://github.com/blackchair/parley).
 - Parley is built around two important compromises. Namely:
 	- Keyrings need to be stored on the server, because our target users are the sort who don't want to deal with them manually (via USB drives or whatnot). They're encrypted before they ever reach the server, and quite resilient to bruteforce attacks, but it's a major compromise nonetheless.
 	- We, the Parley creators and administrators, are not interested in fighting law enforcement over your data. We've designed the system so that we couldn't decrypt your data even if we wanted to, and it would be difficult to distribute a malicious client (because everything is open sourced and updates are not automatic) but we intend to comply with law enforcement agencies when asked. This is actually a pretty minor compromise in our books--the whole point of Parley is that even if our server gets rooted entirely it would be exceptionally difficult to crack even a single user's keys.
