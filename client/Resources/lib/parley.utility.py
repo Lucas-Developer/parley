@@ -220,8 +220,15 @@ def PYrevokeKey():
   private_key = gpg.list_keys(True)
   keyid = private_key[0]['fingerprint']
   revocation  = gpg.gen_revoke(keyid,window.Parley.currentUser.attributes.passwords.local)
-  gpg.import_keys(revocation)
-  return gpg.send_keys('pgp.mit.edu',keyid)
+  if revocation[0]:
+    revoked = gpg.import_keys(revocation[0])
+    if revoked.count:
+      gpg.send_keys('pgp.mit.edu',keyid)
+      return revocation
+    else:
+      return False
+  else:
+    return False
 
 window.PYrevokeKey = PYrevokeKey
 
