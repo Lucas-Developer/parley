@@ -1229,7 +1229,7 @@ class GPG(object):
     def gen_revoke(self, fingerprint, passphrase):
         cmd = [self.gpgbinary]
         cmd.append('--homedir "%s"' % self.gnupghome)
-        cmd.append("--status-fd 2 --command-fd 0")
+        cmd.append("--status-fd 2 --command-fd 0 --no-tty")
         cmd.append("--gen-revoke %s" % fingerprint)
         proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         input = "y\n3\n\ny\n%s\n" % passphrase
@@ -1239,7 +1239,7 @@ class GPG(object):
     def add_uid(self, fingerprint, name, email, comment, passphrase):
         cmd = [self.gpgbinary]
         cmd.append('--homedir "%s"' % self.gnupghome)
-        cmd.append("--status-fd 2 --command-fd 0")
+        cmd.append("--status-fd 2 --command-fd 0 --no-tty")
         cmd.append("--edit %s" % fingerprint)
         proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         input = "adduid\n%s\n%s\n%s\no\n%s\nsave\n" % (name, email, comment, passphrase)
@@ -1250,7 +1250,7 @@ class GPG(object):
     def change_pass(self, fingerprint, old, new):
         cmd = [self.gpgbinary]
         cmd.append('--homedir "%s"' % self.gnupghome)
-        cmd.append("--status-fd 2 --command-fd 0")
+        cmd.append("--status-fd 2 --command-fd 0 --no-tty")
         cmd.append("--edit %s" % fingerprint)
         proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         #input = "passwd\n%s\n%s\n%s\nsave\n" % (old, new, new)
