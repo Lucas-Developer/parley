@@ -29,7 +29,11 @@
     button { background-color: #dec39c; color: #121208; }
     */
 
-        button:hover,button:active { background-color: #f0961e; color: #f0f0f0; }
+        button:hover,button:active {
+            background-color: #f0961e;
+            color: #f0f0f0;
+            -webkit-transition: background-color 0.4s, color 0.2s;
+        }
 
 		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
 			color: #191208;
@@ -87,7 +91,8 @@
 * {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
     body {
 		font-size: 100%;
-		background: url(../img/pixel_weave.png) 0 0 repeat;
+		/* background: url(../img/pixel_weave.png) 0 0 repeat; */
+		background: url(../img/wavegrid.png) 0 0 repeat;
     }
     body, p, .ui-widget { font-family: "Raleway"; }
     button { font-weight: 500; text-transform: capitalize; }
@@ -186,6 +191,7 @@
 
 
     header {
+        display: none;
 		width: 100%;
 		padding: 0 20px;
 		height: 72px;

@@ -155,6 +155,7 @@
     });
 
     Parley.vent.on('setup:login', function (formdata) {
+        console.log('VENT: setup:login');
         Parley.app.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
 
         Parley.authenticateUser(formdata.email, formdata.password, function (data, textStatus) {

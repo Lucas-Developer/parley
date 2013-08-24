@@ -176,6 +176,7 @@
 
     var ReadMessageView = Backbone.View.extend({
 	    tagName: 'tr',
+        attributes: {id:'readMessageView'},
 	    template: Mustache.compile($('#readMessageTemplate').html()),
 	    events: {
             'click .reply':     'openCompose'
@@ -228,8 +229,8 @@
                     e.preventDefault();
                     var form = document.forms.loginAction;
 
-                    if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
-                        Parley.formErrors('emailVerify', { email: _t('error-email-novalid') });
+                    if (_.isUndefined(form.password.value)) {
+                        Parley.formErrors('loginAction', { password: _t('error-password-novalid') });
                         return false;
                     }
 
@@ -691,7 +692,7 @@
 
         resize: function () {
             console.log('Window resized');
-            this.dialog('show');
+            //this.dialog('show');
         },
 
         /**
