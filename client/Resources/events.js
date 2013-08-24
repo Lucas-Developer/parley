@@ -28,6 +28,8 @@
     @return null
     **/
     Parley.getUserInfo = function (contact, callback) {
+        callback = callback || function () {};
+
         if (typeof contact == 'string') {
             var email = contact;
 
@@ -48,7 +50,7 @@
                 var key = Parley.importKey(data.public_key);
                 var fingerprint = key.fingerprints[0];
                 contact.set( _.extend(data, Parley.AFIS(fingerprint)) );
-                callback && callback(contact);
+                callback(contact);
             }
         }
         var planB = function(data, textStatus) {
@@ -67,7 +69,7 @@
                 userinfo.name = parsed.name;
                 userinfo.email = parsed.email;
                 contact.set(userinfo);
-                callback && callback(contact);
+                callback(contact);
             }
         }
 
@@ -85,16 +87,11 @@
     @param {Object} contact The contact on whom to get information.
     @param {Function} callback
     **/
-    Parley.vent.on('contact:userinfo', function (contact, callback) {
+    Parley.vent.on('contact:userinfo', function (data) {
         console.log('VENT: contact:userinfo');
-        console.log('Checking user: ' + JSON.stringify(contact));
-        var callback = callback || function () {};
+        console.log('Checking user: ' + JSON.stringify(data.contact));
 
-        contact = Parley.getUserInfo(contact);
-
-        if (contact) {
-            callback(contact);
-        }
+        contact = Parley.getUserInfo(data.contact, data.callback);
     });
 
     /**
