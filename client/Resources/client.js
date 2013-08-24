@@ -35,13 +35,16 @@
             console.log('Initializing contact.');
 
             if (attrs && !_.has(attrs, 'isCurrentUser'))
-                Parley.vent.trigger('contact:userinfo', this, function (contact) {
-                    var data = contact.toJSON();
-                    if (!Parley.contacts.findWhere({email: data.email})) {
-                        Parley.contacts.add(contact);
-                        Parley.storeKeyring(console.log);
+                Parley.vent.trigger('contact:userinfo', {
+                    contact: this,
+                    callback: function (contact) {
+                        var data = contact.toJSON();
+                        if (!Parley.contacts.findWhere({email: data.email})) {
+                            Parley.contacts.add(contact);
+                            Parley.storeKeyring(console.log);
+                        }
+                        console.log( JSON.stringify(data) );
                     }
-                    console.log( JSON.stringify(data) );
                 });
         }
 	});
@@ -217,6 +220,7 @@
                     e.preventDefault();
                     var form = document.forms.emailVerify;
                     
+console.log( JSON.stringify(form.email.value) );
                     if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
                         Parley.formErrors('emailVerify', { email: _t('error-email-novalid') });
                         return false;
