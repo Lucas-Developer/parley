@@ -1,7 +1,12 @@
 (function(Parley, $, undefined){
     Parley.vent = Parley.vent || _.extend({}, Backbone.Events);
 
-    Parley.vent.on('contact:sync', function (e) {
+    /**
+    Builds Parley.contacts from the current user's keychain.
+
+    @event contact:sync
+    **/
+    Parley.vent.on('contact:sync', function () {
         console.log('Populating contacts from keychain');
         for (var keychain=[], i=0, list=Parley.listKeys(), max=list.length; i<max; i++) {
             keychain.push(list[i]);
@@ -9,16 +14,19 @@
         Parley.contacts.set(keychain, {parse:true});
     });
 
-    Parley.vent.on('contact:add', function (contact, callback) {
-        console.log('VENT: contact:add');
-        var callback = callback || function () {};
+    /**
+    Gets as much info about a contact as possible. This can take an email or fingerprint, with which it searches:
 
-        var form = document.forms.newcontact;
+        a) Parley servers for an existing user, or; (if no user is found)
+        b) public PGP key servers
 
-        Parley.app.dialog('contacts contactlist');
-        Parley.vent.trigger('contact:userinfo', {email:form.contact_email.value, name:form.contact_name.value});
-    });
+    This will return as much information as it can find.
 
+    @method getUserInfo
+    @param {Object|String} contact Either an email string or an object containing at least one of _email_ or _fingerprint_ as properties.
+    @param {Function} callback
+    @return null
+    **/
     Parley.getUserInfo = function (contact, callback) {
         if (typeof contact == 'string') {
             var email = contact;
@@ -70,6 +78,13 @@
         }
     }
 
+    /**
+    Gets info on a particular contact.
+
+    @event contact:userinfo
+    @param {Object} contact The contact on whom to get information.
+    @param {Function} callback
+    **/
     Parley.vent.on('contact:userinfo', function (contact, callback) {
         console.log('VENT: contact:userinfo');
         console.log('Checking user: ' + JSON.stringify(contact));
@@ -82,82 +97,68 @@
         }
     });
 
-    Parley.vent.on('setup:verify', function (e, callback) {
-        e.preventDefault();
-        var form = document.forms.emailVerify;
+    /**
+    Verify the email that the user submitted.
 
-        if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
-            Parley.formErrors('emailVerify', {email:_t('error-email-novalid')});
-            return false;
-        }
-        console.log('Verifying email address: ' + form.email.value);
+    This is the first event that gets triggered to begin the login/registration flow. 
+    **/
+    Parley.vent.on('setup:verify', function (formdata) {
+        console.log('Verifying email address: ' + formdata.email);
 
-        Parley.requestUser(form.email.value, function (data, textStatus) {
+        Parley.requestUser(formdata.email, function (data, textStatus) {
             if (_.isObject(data) && !_.has(data, 'error')) {
                 console.log('User exists, setting up login form.');
                 Parley.app.dialog('setup login', {
-                    email: form.email.value
+                    email: formdata.email
                 });
             } else {
                 console.log('User doesn\'t exists, showing registration form.');
                 Parley.app.dialog('setup register', {
-                    email: form.email.value
+                    email: formdata.email
                 });
             }
         });
     });
 
-    Parley.vent.on('setup:register', function (e, callback) {
-        e.preventDefault();
-        var form = document.forms.registerAction;
+    Parley.vent.on('setup:register', function (formdata) {
+        console.log('About to register user: ' + formdata.email);
 
-        if (form.password_one.value != form.password_two.value) {
-            // Passwords don't match
-            console.log('Passwords don\'t match.');
-            Parley.app.dialog('show info no-match', { header: _t('password mismatch'), message: _t('error-password-nomatch'), buttons: [ 'okay' ] });
-        } else {
-            console.log('About to register user: ' + form.email.value);
+        Parley.app.dialog('show info register-wait', { header: _t('registering'), message: _t('message-register-wait') });
 
-            Parley.app.dialog('show info register-wait', { header: _t('registering'), message: _t('message-register-wait') });
+        Parley.registerUser(formdata.name, formdata.email, formdata.password, formdata.send_key, function (data, textStatus, jqXHR) {
+            console.log(JSON.stringify(data), textStatus, data.error);
 
-            Parley.registerUser(form.name.value, form.email.value, form.password_two.value, form.send_key.checked, function (data, textStatus, jqXHR) {
-                console.log(JSON.stringify(data), textStatus, data.error);
+            if (!_.has(data, 'error')) {
+                console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
+                console.log('Registering new inbox with Context.io');
 
-                if (!_.has(data, 'error')) {
-                    console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
-                    console.log('Registering new inbox with Context.io');
+                Parley.registerInbox();
+                Parley.waitForRegisteredInbox(function(success) {
+                    Parley.app.dialog('hide info inbox-error');
+                    _.delay(function(){ Parley.vent.trigger('message:sync'); }, 5000);
+                });
 
-                    Parley.registerInbox();
-                    Parley.waitForRegisteredInbox(function(success) {
-                        Parley.app.dialog('hide info inbox-error');
-                        _.delay(function(){ Parley.vent.trigger('message:sync'); }, 5000);
-                    });
-
-                    Parley.app.dialog('hide setup');
-                    Parley.app.dialog('hide info register-wait');
-                    Parley.app.render();
-                } else {
-                    Parley.app.dialog('hide info register-wait');
-                    Parley.app.dialog('info register-error', {
-                        header: 'Error',
-                        message: _t('error-register'),
-                        buttons: [ 'okay' ]
-                    });
-                    console.log('Error registering');
-                    console.log(textStatus);
-                }
-            });
-        }
+                Parley.app.dialog('hide setup');
+                Parley.app.dialog('hide info register-wait');
+                Parley.app.render();
+            } else {
+                Parley.app.dialog('hide info register-wait');
+                Parley.app.dialog('info register-error', {
+                    header: 'Error',
+                    message: _t('error-register'),
+                    buttons: [ 'okay' ]
+                });
+                console.log('Error registering');
+                console.log(textStatus);
+            }
+        });
     });
-    Parley.vent.on('setup:login', function (e, callback) {
-        e.preventDefault();
-        var form = document.forms.loginAction,
-            email = form.email.value,
-            password = form.password.value;
 
+    Parley.vent.on('setup:login', function (formdata) {
+        console.log('VENT: setup:login');
         Parley.app.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
 
-        Parley.authenticateUser(email, password, function (data, textStatus) {
+        Parley.authenticateUser(formdata.email, formdata.password, function (data, textStatus) {
             if (!_.has(data, 'error')) {
                 console.log('User successfully logged in.');
 
@@ -183,12 +184,15 @@
     Parley.vent.on('message:sync', function (e, callback) {
         console.log('VENT: message:sync');
 
-        Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
+        $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
+        //Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
+
         Parley.requestInbox(function (data, textStatus) {
+            $('#refreshAction').removeAttr('disabled').removeClass('refreshing').animate({width:200,height:50,opacity:1}).text( _t('refresh inbox') );
             if (data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
 
-                Parley.app.dialog('hide info inbox-loading');
+                //Parley.app.dialog('hide info inbox-loading');
                 Parley.app.dialog('info inbox-error', {
                     message: _t('error-inbox-forbidden'),
                     buttons: [ {
@@ -207,7 +211,8 @@
                 return false;
             } else if (!_.has(data, 'error')) {
                 console.log('Inbox loaded', data.messages);
-                Parley.app.dialog('hide info inbox-loading');
+
+                //Parley.app.dialog('hide info inbox-loading');
 
                 Parley.inbox = Parley.inbox || new MessageList;
                 if (_.has(data, 'messages')) {

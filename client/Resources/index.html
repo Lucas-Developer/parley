@@ -2,7 +2,7 @@
 <html>
     <head>
 	<link rel="stylesheet" type="text/css" href="style/html5-doctor-reset-stylesheet.min.css">
-	<link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.10.3.custom/css/humanity/jquery-ui.min.css">
+	<link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.10.3.custom/css/humanity/jquery-ui.css">
 	<link rel="stylesheet" type="text/css" href="style/client.css">
 	<link rel="stylesheet" type="text/css" href="style/autoSuggest.css">
 	
@@ -17,15 +17,24 @@
             <!--<span class="email loggedin"></span>-->
 
             <nav>
-                <button class="loggedin" title="Compose" name="compose" id="composeAction"></button>
-                <button class="loggedin" title="Contacts" name="open-contacts" id="contactsAction"></button>
-                <button class="loggedin" title="Settings" name="settings" id="settingsAction"></button>
+                <button class="loggedin" title="Compose" name="compose" id="composeAction"><span>Compose</span></button>
+                <button class="loggedin" title="Contacts" name="open-contacts" id="contactsAction"><span>Contacts</span></button>
+                <button class="loggedin" title="Settings" name="settings" id="settingsAction"><span>Settings</span></button>
             </nav>
         </header>
 	    <section id="inbox" class="loggedin"><table cellspacing=2><tbody></tbody></table>
             <button id="refreshAction">Refresh Inbox</button>
         </section>
         <div id="dialogWrapper"></div>
+
+<!-- IF YOU SEE THIS, I FUCKED UP AND PUSHED THIS CODE. DELETE IT, IT'S BAD. -->
+<!-- IT MUST BE COMMENTED OUT, IT ONLY EXISTS BECAUSE I CAN'T USE THE GODDAMNED FUCKING INSPECTOR ON LINUX -->
+<!--
+<form target="_blank" id="debugMenu" style="width:100%;background-color:rgba(255,255,255,.9);position:absolute;z-index:1000;">
+<input name="cmd" style="width:100%;"><button onclick="javascript:console.log(eval(document.forms.debugMenu.cmd.value));return false;">_</button>
+</form>
+-->
+<!-- -->
 
 
 <script id="blankDialogTemplate" type="text/template">
@@ -140,7 +149,7 @@
 
         <button id="saveSettingsAction">{{t_save_settings}}</button>
     </div>
-
+<!--
     <h4>{{t_change_password}}</h4>
     <div class="row">
         <form name="changePassword">
@@ -167,7 +176,7 @@
 
         <button class="clear-btn" id="changePasswordAction">{{t_change_password}}</button>
     </div>
-
+-->
     <h4>{{t_revoke_key}}</h4>
     <div class="row">
         <p>{{t_message-key-revoke}}</p>
@@ -179,6 +188,9 @@
 <script type="text/template" id="contactsDialogTemplate">
     <div class="page page-contactlist page-active">
         <!-- <input type="search" placeholder="Search..." name="contactSearch"> -->
+        <div class="row">
+            <button id="newContact">{{t_new_contact}}</button>
+        </div>
         <div id="contactsListWrapper">
             <table id="contactsListTable" class="sortable">
                 <!--<thead>
@@ -188,7 +200,6 @@
                 </tbody>
             </table>
         </div>
-        <button id="newContact">{{t_new_contact}}</button>
     </div>
     <div class="page page-newcontact">
     <form name="newcontact">

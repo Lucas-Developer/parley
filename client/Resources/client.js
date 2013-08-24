@@ -176,6 +176,7 @@
 
     var ReadMessageView = Backbone.View.extend({
 	    tagName: 'tr',
+        attributes: {id:'readMessageView'},
 	    template: Mustache.compile($('#readMessageTemplate').html()),
 	    events: {
             'click .reply':     'openCompose'
@@ -212,12 +213,59 @@
         {   id: 'dialog_setup',
             template: Mustache.compile($('#setupDialogTemplate').html()),
             events: {
-                'click #emailVerify': function (e) { Parley.vent.trigger('setup:verify', e); },
-                'click #loginAction': function (e) { Parley.vent.trigger('setup:login', e); },
-                'click .setupBackButton': function (e) { Parley.app.dialog('setup splash'); },
+                'click #emailVerify': function (e) {
+                    e.preventDefault();
+                    var form = document.forms.emailVerify;
+                    
+                    if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
+                        Parley.formErrors('emailVerify', { email: _t('error-email-novalid') });
+                        return false;
+                    }
+
+                    formdata = { email: form.email.value };
+                    Parley.vent.trigger('setup:verify', formdata);
+                },
+                'click #loginAction': function (e) {
+                    e.preventDefault();
+                    var form = document.forms.loginAction;
+
+                    if (_.isUndefined(form.password.value)) {
+                        Parley.formErrors('loginAction', { password: _t('error-password-novalid') });
+                        return false;
+                    }
+
+                    formdata = {
+                        email: form.email.value,
+                        password: form.password.value
+                    }
+                    Parley.vent.trigger('setup:login', formdata);
+                },
+                'click .setupBackButton': function (e) {
+                    Parley.app.dialog('setup splash');
+                },
                 'click #registerAction': function (e) {
                     e.preventDefault();
-                    Parley.vent.trigger('setup:register', e);
+                    var form = document.forms.registerAction,
+                        formdata;
+
+                    if (form.password_one.value != form.password_two.value) {
+                        console.log('Passwords don\'t match.');
+                        Parley.formErrors('registerAction', { password_two: _t('password mismatch') });
+                        return false;
+                    }
+
+                    if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
+                        Parley.formErrors('registerAction', { email: _t('error-email-novalid') });
+                        return false;
+                    }
+
+                    formdata = {
+                        password: form.password_two.value,
+                        name: form.name.value,
+                        email: form.email.value,
+                        send_key: form.send_key.checked
+                    };
+                    Parley.vent.trigger('setup:register', formdata);
                 },
                 'click #importKeyDialogAction': function (e) {
                     e.preventDefault();
@@ -352,7 +400,7 @@
             model: {
                 slug: 'contacts',
                 title: 'Contacts',
-                opts: { minHeight: 300, minWidth: 600, resizable: false },
+                opts: { minHeight: 400, minWidth: 650, resizable: false },
                 init: function () {
                     this.contacts = Parley.contacts.toJSON();
                 },
@@ -499,8 +547,9 @@
         render: function () {
             console.log('Rendering dialog box.'); 
 
-            this.$el
-                .html( this.template(this.model.toJSON()) );
+            this.dialog = this.$el
+                .html( this.template(this.model.toJSON()) )
+                .dialog( this.opts );
 
             this.$('form').trigger('reset');
 
@@ -521,12 +570,18 @@
             if (init = this.model.get('init')) this.model.set(init.call(this.model.toJSON()));
             return this;
         },
+        isOpen: function () {
+            return this.dialog && this.dialog.dialog('isOpen');
+        },
+        moveToTop: function () {
+            return this.dialog && this.dialog.dialog('moveToTop');
+        },
         show: function () {
-            var $this = this.render().$el;
-            if ($this.hasClass('ui-dialog'))
-                $this.dialog('moveToTop');
-            else
-                $this.dialog( this.opts );
+            if (this.isOpen()) {
+                this.render().moveToTop();
+            } else {
+                this.render().dialog.dialog('open');
+            }
 
             if (loaded = this.model.get('loaded')) loaded.call(this.model.toJSON(), this);
             return this;
@@ -534,7 +589,7 @@
         hide: function (e) {
             if (e && e.preventDefault) e.preventDefault();
 
-            this.$el.dialog('close');
+            this.dialog.dialog( 'close' );
             return this;
         },
 
@@ -578,8 +633,7 @@
             'click #contactsAction': function () {
                 this.dialog('contacts');
             },
-            'click #refreshAction': function (e) { e.preventDefault(); Parley.vent.trigger('message:sync'); },
-            'click .hidden': 'showHidden'
+            'click #refreshAction': function (e) { e.preventDefault(); Parley.vent.trigger('message:sync'); }
 	    },
 
 	    initialize: function () {
@@ -594,6 +648,8 @@
 
 			this.inbox = $('#inbox tbody');
 			this.contactsList = $('<div>');
+
+            $(window).on('resize', _.bind(this.resize, this));
 
 			this.listenTo(Parley.inbox, 'add', this.addMessage);
 			this.listenTo(Parley.contacts, 'add', this.addContact);
@@ -635,9 +691,9 @@
             return this;
 		},
 
-	    showHidden: function (e) {
-            console.log(e.target);
-            $(e.target).removeClass('hidden');
+        resize: function () {
+            console.log('Window resized');
+            //this.dialog('show');
         },
 
         /**
@@ -698,13 +754,23 @@
 
                         break;
                     case 'show':
-                        var slug = _a[1],
-                            page = _a[2];
+                        if (opts == 'show') {
+                            _.each(this._dialogs, function (ele) {
+                                if (ele.view.isOpen()) {
+                                    ele.view.show();
+                                }
+                            });
+                            if (this.curDialog) this.curDialog.view.moveToTop();
+                            break;
+                        } else {
+                            var slug = _a[1],
+                                page = _a[2];
+                        }
                     default:
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            if (this.tempDialogs.page) {
+                            if (_.has(this.tempDialogs, page)) {
                                 var dialog = this.tempDialogs[page];
                                 dialog.html(this.blankTemplate(data));
                             } else {
@@ -716,7 +782,7 @@
                                 });
                             }
                         } else {
-                            var dialog = _(this._dialogs).findWhere({slug:slug});
+                            var dialog = this.curDialog = _(this._dialogs).findWhere({slug:slug});
                             if (dialog) {
                                 dialog.view.setData(_.extend({page:page},data)).show();
                             } else {
@@ -725,7 +791,7 @@
                                     template: this.blankTemplate,
                                     id: 'dialog_' + slug
                                 });
-                                dialog = {
+                                dialog = this.curDialog = {
                                     slug: slug,
                                     view: view
                                 }
