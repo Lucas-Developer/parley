@@ -61,7 +61,7 @@ window._phrases = {
 "send email": "Send email",
 "loading inbox": "Loading inbox",
 "refresh inbox": "Refresh inbox",
-"auto refresh inbox": "Automatically refresh mailbox",
+"auto refresh inbox": "Automatically refresh mailbox every 5 minutes.",
 "inbox updates": "Inbox updates",
 
 "invite users": "Invite users",

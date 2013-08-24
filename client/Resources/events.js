@@ -159,7 +159,9 @@
             if (!_.has(data, 'error')) {
                 console.log('User successfully logged in.');
 
-                Parley.currentUser.set(data);
+                var parsed_data = Parley.falseIsFalse(data);
+
+                Parley.currentUser.set(parsed_data);
 
                 Parley.vent.trigger('contact:sync');
                 Parley.vent.trigger('message:sync');

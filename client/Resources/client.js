@@ -5,6 +5,49 @@
         email: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g
     };
 
+    Parley.alarms = [
+        {
+            when: function () { return true; },
+            todo: function () { console.log('TICK'); }
+        },
+        {
+            when: function () { return Parley.currentUser && Parley.currentUser.get('auto_refresh'); },
+            todo: function () { Parley.vent.trigger('message:sync'); }
+        }
+    ]
+
+    Parley.timerDelay = /* 5 minutes, for now */ 300000;
+    Parley.timer = function () {
+        _.each(Parley.alarms, function (alarm) {
+            if (alarm.when()) alarm.todo();
+        });
+
+        window.setTimeout(Parley.timer, Parley.timerDelay);
+    }
+    window.setTimeout(Parley.timer, Parley.timerDelay);
+
+    Parley.falseIsFalse = function (data) {
+        console.log('\'false\' is false');
+        
+        var parsed_data = {};
+
+        _.each(data, function (v,k) {
+            if (v == 'false')
+                v = false;
+
+            if (k=='meta')
+                _.each(JSON.parse(v), function (v,k) {
+                    if (v == 'false')
+                        v = false;
+                    parsed_data[k] = v;
+                });
+            else
+                parsed_data[k] = v;
+        });
+
+        return parsed_data;
+    };
+
     Parley.formErrors = function (fname, errors) {
         if (!_.isObject(errors) || !document.forms[fname]) return false;
 
@@ -38,14 +81,25 @@
                 Parley.vent.trigger('contact:userinfo', {
                     contact: this,
                     callback: function (contact) {
-                        var data = contact.toJSON();
-                        if (!Parley.contacts.findWhere({email: data.email})) {
-                            Parley.contacts.add(contact);
-                            Parley.storeKeyring(console.log);
+                        if (!_.has(data, 'error')) {
+                            var data = contact.toJSON && contact.toJSON();
+                            if (!Parley.contacts.findWhere({email: data.email})) {
+                                Parley.contacts.add(contact);
+                                Parley.storeKeyring(console.log);
+                            }
+                        } else {
+                            console.log(data.error);
                         }
-                        console.log( JSON.stringify(data) );
                     }
                 });
+/*
+        },
+        get: function (attr) {
+            if (!_.has(this.attributes, attr) && _.has(this.attributes, 'meta'))
+                return JSON.parse(this.attributes.meta)[attr];
+            else
+                return this.attributes[attr];
+*/
         }
 	});
 
@@ -220,7 +274,6 @@
                     e.preventDefault();
                     var form = document.forms.emailVerify;
                     
-console.log( JSON.stringify(form.email.value) );
                     if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
                         Parley.formErrors('emailVerify', { email: _t('error-email-novalid') });
                         return false;
@@ -321,7 +374,10 @@ console.log( JSON.stringify(form.email.value) );
                     
                     Parley.saveUser(formdata, function (data) {
                         if (!_.has(data, 'error')) {
-                            Parley.currentUser.set(data);
+                            var parsed_data = Parley.falseIsFalse(data);
+
+                            Parley.currentUser.set(parsed_data);
+
                             Parley.app.dialog('show info settings-saved', {
                                 header: _t('success'),
                                 message: _t('message-settings-saved'),
