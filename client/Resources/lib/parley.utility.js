@@ -285,7 +285,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Accepts finished callback. */
   Parley.storeKeyring = _.debounce(function(finished) {
     var keyring = window.PYgetEncryptedKeyring();
-    Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey()});
+    Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey()}, finished);
   }, 1000*3);
   
   /* Requests the public key corresponding to an email address from public keyservers.
