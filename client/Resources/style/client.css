@@ -1,318 +1,590 @@
-@font-face { font-family: "Raleway"; src: url(Raleway-Medium.ttf) format("truetype"); font-weight: 500; }
-@font-face { font-family: "Raleway"; src: url(Raleway-Regular.ttf) format("truetype"); font-weight: 400; }
-@font-face { font-family: "Raleway"; src: url(Raleway-Light.ttf) format("truetype"); font-weight: 300; }
+@font-face {
+  font-family: "Raleway";
+  src: url(Raleway-Medium.ttf) format("truetype");
+  font-weight: 500; }
 
-@font-face { font-family: "Open Sans"; src: url(OpenSans-Regular.otf) format("opentype"); font-weight: 400; }
-@font-face { font-family: "Open Sans"; src: url(OpenSans-Semibold.otf) format("opentype"); font-weight: 600; }
-@font-face { font-family: "Open Sans"; src: url(OpenSans-Italic.otf) format("opentype"); font-weight: 400; font-style: italic; }
-@font-face { font-family: "Open Sans"; src: url(OpenSans-SemiboldItalic.otf) format("opentype"); font-weight: 600; font-style: italic; }
+@font-face {
+  font-family: "Raleway";
+  src: url(Raleway-Regular.ttf) format("truetype");
+  font-weight: 400; }
+
+@font-face {
+  font-family: "Raleway";
+  src: url(Raleway-Light.ttf) format("truetype");
+  font-weight: 300; }
+
+@font-face {
+  font-family: "Open Sans";
+  src: url(OpenSans-Regular.otf) format("opentype");
+  font-weight: 400; }
+
+@font-face {
+  font-family: "Open Sans";
+  src: url(OpenSans-Semibold.otf) format("opentype");
+  font-weight: 600; }
+
+@font-face {
+  font-family: "Open Sans";
+  src: url(OpenSans-Italic.otf) format("opentype");
+  font-weight: 400;
+  font-style: italic; }
+
+@font-face {
+  font-family: "Open Sans";
+  src: url(OpenSans-SemiboldItalic.otf) format("opentype");
+  font-weight: 600;
+  font-style: italic; }
 
 /** COLOURS **/
-    body { color: #191208; }
-    h1, h2, h3, h4, h5, h6 { color: #191208; }
+body {
+  color: #5b5b5c; }
 
-    header {
-		background: #fff;
-        background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255,255,255,.9)), color-stop(100%, rgba(255,255,255,.5))); /* Chrome,Safari4+ */
-		box-shadow: 0 -5px 5px -5px rgba(16,20,0,0.7) inset;
-		/*border-bottom: 1px solid rgba(16,20,0,0.35);*/
-    }
-    header .email { color: #191208; }
-        header nav button span { color: #191208; text-shadow: 0 0 1px #f0f0f0; }
+h1, h2, h3, h4, h5, h6 {
+  color: #5b5b5c; }
 
-    .error { color: #ff6666; }
+header {
+  background: #fff;
+  background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255, 255, 255, 0.9)), color-stop(100%, rgba(255, 255, 255, 0.5)));
+  /* Chrome,Safari4+ */
+  box-shadow: 0 -5px 5px -5px rgba(16, 20, 0, 0.7) inset;
+  /*border-bottom: 1px solid rgba(16,20,0,0.35);*/ }
+  header .email {
+    color: #5b5b5c; }
+  header nav button span {
+    color: #5b5b5c;
+    text-shadow: 0 0 1px #f0f0f0; }
 
-    button.send { background-color: transparent; color: #dec39c; }
-    button, #refreshAction.refreshing:hover  { background-color: rgba(255,255,255,.8); color: #f0961e; }
-    #refreshAction.refreshing:hover { cursor: default; }
-    /*
-    button { background-color: #dec39c; color: #121208; }
-    */
+.error {
+  color: #ff6666; }
 
-        button:hover,button:active {
-            background-color: #f0961e;
-            color: #f0f0f0;
-            -webkit-transition: background-color 0.4s, color 0.2s;
-        }
+button.send {
+  background-color: transparent;
+  color: #eb9c21; }
 
-		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
-			color: #191208;
-            background-color: #fff;
-        }
+button, #refreshAction.refreshing:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #f0961e; }
 
-        textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
-			outline: none;
-			border-color: #dec39c;
-		}
-        input[readonly] { background-color: transparent; }
+#refreshAction.refreshing:hover {
+  cursor: default; }
 
-	table tbody tr:hover { background-color: #eee; }
-	table thead tr { background-color: #191208; color: #eee; }
-
-    table .selector a { border: 1px solid #191208; }
-    table thead .selector a { border-color: #f4f0ec; }
-    table .selector a.clicked { background-color: #191208; box-shadow: 0 0 -10px 1px #f4f0ec inset; }
-    table thead .selector a.clicked { background-color: #f4f0ec; box-shadow: 0 0 -10px 1px #191208 inset; }
-
-    .ui-dialog {
-        background-color: rgba(240,240,240,.95) !important;
-        border: 1px solid rgba(77, 104, 141, .3);
-        box-shadow: 0 0 10px rgba(50,50,50,0.5);
-    }
-        .ui-dialog-content { background: transparent none !important; }
-    .ui-dialog .section { border-bottom: 1px solid #eee; }
-    .ui-dialog-titlebar, h2 { border-bottom: 1px solid #f0961e; color: #f0961e; }
-
-        .ui-dialog button.default-btn { border: 1px solid #f0961e; }
-
-    #contactsListTable tr:nth-child(odd) { background-color: #f0f0f0; }
-
-    #composeAction:hover,
-    #settingsAction:hover,
-    #contactsAction:hover {
 /*
-        border-radius: 9999px;
-        background-color: rgba(240,240,240,.8);
+button { background-color: $orange; color: $grey; }
 */
-        background-color: transparent;
-    } 
+button:hover, button:active {
+  background-color: #f0961e;
+  color: #f0f0f0;
+  -webkit-transition: background-color 0.4s, color 0.2s; }
 
-    #inbox tr {
-		border-top: 1px solid #ddd;
-		border-left: 1px solid #ddd;
-		border-bottom: 1px solid #aaa;
-		border-right: 1px solid #aaa;
-		background-color: #fff;
-    }
-    #inbox .message td { background-color: rgba(255, 255, 255, 0.8); }
-    .message-body { margin-top: 10px; }
+.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
+  color: #5b5b5c;
+  background-color: #fff; }
+
+textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
+  outline: none;
+  border-color: #eb9c21; }
+
+input[readonly] {
+  background-color: transparent; }
+
+table tbody tr:hover {
+  background-color: #eee; }
+
+table thead tr {
+  background-color: #5b5b5c;
+  color: #eee; }
+
+table .selector a {
+  border: 1px solid #5b5b5c; }
+
+table thead .selector a {
+  border-color: #f4f0ec; }
+
+table .selector a.clicked {
+  background-color: #5b5b5c;
+  box-shadow: 0 0 -10px 1px #f4f0ec inset; }
+
+table thead .selector a.clicked {
+  background-color: #f4f0ec;
+  box-shadow: 0 0 -10px 1px #5b5b5c inset; }
+
+.ui-dialog {
+  background-color: rgba(240, 240, 240, 0.95) !important;
+  border: 1px solid rgba(77, 104, 141, 0.3);
+  box-shadow: 0 0 10px rgba(50, 50, 50, 0.5); }
+
+.ui-dialog-content {
+  background: transparent none !important; }
+
+.ui-dialog .section {
+  border-bottom: 1px solid #eee; }
+
+.ui-dialog-titlebar, h2 {
+  border-bottom: 1px solid #f0961e;
+  color: #f0961e; }
+
+.ui-dialog button.default-btn {
+  border: 1px solid #f0961e; }
+
+#contactsListTable tr:nth-child(odd) {
+  background-color: #f0f0f0; }
+
+#composeAction:hover,
+#settingsAction:hover,
+#contactsAction:hover {
+  /*
+          border-radius: 9999px;
+          background-color: rgba(240,240,240,.8);
+  */
+  background-color: transparent; }
+
+#inbox tr {
+  border-top: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  border-bottom: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+  background-color: #fff; }
+
+#inbox .message td {
+  background-color: rgba(255, 255, 255, 0.8); }
+
+.message-body {
+  margin-top: 10px; }
+
 /** END COLOURS **/
+* {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; }
 
-* {-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;}
-    body {
-		font-size: 100%;
-		/* background: url(../img/pixel_weave.png) 0 0 repeat; */
-		background: url(../img/wavegrid.png) 0 0 repeat;
-    }
-    body, p, .ui-widget { font-family: "Raleway"; }
-    button { font-weight: 500; text-transform: capitalize; }
-    input, textarea { font-family: "Open Sans"; }
+body {
+  font-size: 100%;
+  /* background: url(../img/pixel_weave.png) 0 0 repeat; */
+  background: url(../img/wavegrid.png) 0 0 repeat; }
 
-    .ui-dialog-title,
-    h1, h2, h3, h4, h5, h6 { font-weight: 300; text-transform: capitalize; }
-	.ui-dialog-title, h2 {font-size:1.5em;}
-    h3 {text-align: left; font-size: 1.3em; }
-    .ui-dialog h4 { border-bottom: 1px solid #ccc; }
+body, p, .ui-widget {
+  font-family: "Raleway"; }
 
-	p { font-size: 0.9em; line-height: 1.4em; }
-    p.small-text { font-size: 0.8em; }
+button {
+  font-weight: 500;
+  text-transform: capitalize; }
 
-    .error { display: block; margin-top: 5px; font-weight: 500; }
+input, textarea {
+  font-family: "Open Sans"; }
 
-    button { outline: none; border: none; cursor: pointer; padding: 8px 16px; white-space: nowrap; }
-        button:hover,button:active { outline: none; }
+.ui-dialog-title,
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 300;
+  text-transform: capitalize; }
 
-    .row {
-	    display: table;
-		width: 100%;
-		padding: 10px 0;
-	}
-        .row.no-line { border-top: none; }
-        input[type=checkbox] { display: block; float: left; }
-		.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
-			padding: 4px 8px 4px 4px;
-            border: 1px inset #ccc;
-            border-radius: 1px;
-		}
-            .as-selections, input[type=text], input[type=search], input[type=email], input[type=password] {
-                height: 2em;
-            }
+.ui-dialog-title, h2 {
+  font-size: 1.5em; }
 
-        textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
-			outline: none;
-		}
-            input[readonly] { border: none; font-weight: 500; background: none; }
+h3 {
+  text-align: left;
+  font-size: 1.3em; }
 
-		.row .half { width: 48%; margin-right: 4%; float: left; }
-            .row .half:nth-child(even) { margin-right: 0; }
-		.row .quarter { width: 20%; margin-right: 5%; }
+.ui-dialog h4 {
+  border-bottom: 1px solid #ccc; }
 
-	    .row label {
-            font-size:0.9em;
-            display:block;
-            width:100%;
-            float:left;
-            margin-bottom: 10px;
-            text-transform: capitalize;
-        }
-            .row label *, .row label span, .row label input { text-transform: none; }
-			.row label input, input[type=search] {
-				display: block;
-				margin-top:5px;
-			}
-            .row label input[type=checkbox] { margin-top: 0; }
-            textarea { width: 100%; margin-bottom: 10px; }
+p {
+  font-size: 0.9em;
+  line-height: 1.4em; }
 
-            .row .hidden { display: inline; width: auto; margin-right: 10px; }
-            .row .hidden * { display: none; }
-            .row .hidden:after { content: "\0025BE"; }
-			
-	    .row span {width:100%;padding:0 10px;}
-	input[type=search] {
-		background: url(../img/icon_search.png) 4px 4px no-repeat;
-		padding: 4px 4px 4px 24px;
-		margin-bottom: 8px;
-	}
-    .inset-text { position: relative; }
-    .full-width { padding: 0 !important; }
-        .full-width .status { position: relative; top: -1.8em; float: right; right: .2em; }
-        .full-width .status img { display: none; height: 16px; width: 16px; }
-    .extra-link { float: right; font-size: 0.7em; }
+p.small-text {
+  font-size: 0.8em; }
 
-	table td, table th { margin: 1px 0; padding: 4px; text-align: left; cursor: default; }
-	table tbody tr { border-bottom: 1px solid rgba(0,0,0,0.1); }
+.error {
+  display: block;
+  margin-top: 5px;
+  font-weight: 500; }
 
-    #contactsListWrapper { height: 350px; overflow-y: scroll; overflow-x: visible; }
-    #contactsListTable { width: 100%; min-width: 600px; background-color: transparent; }
+button {
+  outline: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 16px;
+  white-space: nowrap; }
 
-    .ui-state-default { background-color: transparent; background-image: none; }
-    .ui-dialog { border-radius: 3px; }
-    .ui-dialog .section { width: 100%; }
-    .no-close .ui-dialog-titlebar { display: none; }
-        
-        .ui-dialog-titlebar, h2 { background: none; border: none; padding-bottom: 15px; margin-bottom: 15px; }
-        .ui-dialog-titlebar { height: 48px; }
-    .hidetext { display: block; text-indent: -9999px; }
+button:hover, button:active {
+  outline: none; }
 
-    .ui-dialog .image-wrapper { max-width: 400px; margin: 5px auto; }
-        .ui-dialog .image-wrapper img { width: 100%; }
-    
-    .close-button { display: inline-block; float: right; }
+.row {
+  display: table;
+  width: 100%;
+  padding: 10px 0; }
 
+.row.no-line {
+  border-top: none; }
 
-    header {
-        display: none;
-		width: 100%;
-		padding: 0 20px;
-		height: 72px;
-        position: relative;
-		line-height: 58px;
-    }
-    header h1 {
-        float: left;
-        width: 250px;
-        height: 60px;
-        background: url(../img/logo.png) no-repeat 0 12px;
-    }
-    header .email { padding: 12px 0 0 20px; font-weight: 500; display: inline-block; float: left; }
-    header nav { overflow: visible; padding: 8px 0; display: inline-block; float: right; }
-        header nav button {
-            display: inline-block;
-            text-align: center;
-            float: left;
-            width: 80px;
-            height: 60px;
-            border-radius: 4px;
-            padding: 36px 0 0 0;
-            background-color: transparent;
-            background-position: top center;
-            background-repeat: no-repeat;
-        }
-        header nav button span { visibility: hidden; text-align: center; font-size: 0.8em; }
-        header nav button:hover span { visibility: visible; }
-        #composeAction { background-image: url(../img/compose.png); }
-        #settingsAction { background-image: url(../img/settings.png); }
-        #contactsAction { background-image: url(../img/contacts.png); }
+input[type=checkbox] {
+  display: block;
+  float: left; }
 
-    .loggedin header,
-    .loggedin header .email,
-    .loggedin header nav,
-    .loggedin #inbox { display: block; }
+.as-selections, textarea, input[type=text], input[type=search], input[type=email], input[type=password] {
+  padding: 4px 8px 4px 4px;
+  border: 1px inset #ccc;
+  border-radius: 1px; }
 
-    #dialogWrapper { display: none; }
+.as-selections, input[type=text], input[type=search], input[type=email], input[type=password] {
+  height: 2em; }
 
-    #inbox .header-info,
-    #inbox {
-        display: none;
-        width: 96%;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        margin-left: 2%;
-        margin-right: 2%;
-    }
-        #inbox table { border-collapse: collapse; }
-        #inbox tr { margin-top: 1px; }
+textarea:focus, input[type=text]:focus, input[type=search]:focus, input[type=email]:focus, input[type=password]:focus {
+  outline: none; }
 
-    #inbox-utilities { height: 40px; display: inline-block; }
-        #inbox .header-info { display:none; font-size:.8em; line-height:1.2em; }
-        
-    #inbox table { width: 100%; }
-	
-    #inbox tr {
-		width: 100%;
-        min-width: 500px;
-		padding: 5px 10px;
-		margin-bottom: 2px;
-	}
-        #inbox tr td { vertical-align: middle; white-space: nowrap; }
-        #inbox tr.message-body td { white-space: normal; }
+input[readonly] {
+  border: none;
+  font-weight: 500;
+  background: none; }
 
-        table .selector { width: 18px; }
-            table .selector a { display: block; width: 14px; height: 14px; }
-        #inbox .from { min-width: 250px; width: 22%; }
-        #inbox .date { min-width: 110px; width: 15%; text-align: right; }
+.row .half {
+  width: 48%;
+  margin-right: 4%;
+  float: left; }
 
-        #inbox .message { background-color: transparent; }
-        #inbox .message td { white-space: normal; }
-            #inbox .message .details { margin: 0 5px; }
+.row .half:nth-child(even) {
+  margin-right: 0; }
 
-            #inbox .message-body {
-                margin: 5px;
-                padding: 10px 10px 5px;
-                line-height: 1.2em;
-            }
-            #inbox .message-body p { width: 100%; margin-bottom: 10px; }
+.row .quarter {
+  width: 20%;
+  margin-right: 5%; }
 
-            #inbox .message .message-utilities { float: right; }
-                #inbox .message .message-utilities li { display: inline-block; }
+.row label {
+  font-size: 0.9em;
+  display: block;
+  width: 100%;
+  float: left;
+  margin-bottom: 10px;
+  text-transform: capitalize; }
 
-        #inbox tr.unread { font-weight: 500; }
+.row label *, .row label span, .row label input {
+  text-transform: none; }
 
-    #refreshAction { width: 200px; margin: 20px auto; display: block; }
+.row label input, input[type=search] {
+  display: block;
+  margin-top: 5px; }
 
-        #refreshAction.refreshing { }
+.row label input[type=checkbox] {
+  margin-top: 0; }
 
+textarea {
+  width: 100%;
+  margin-bottom: 10px; }
 
-    .ui-dialog .page, .ui-dialog .tab { display: none; clear; both; }
-        .ui-dialog .page-active, .ui-dialog .tab-active { display: block; }
+.row .hidden {
+  display: inline;
+  width: auto;
+  margin-right: 10px; }
 
-    .ui-dialog button { display: inline-block; }
-        .ui-dialog button.clear-btn { display: block; clear: left; }
-        .ui-dialog button.right-btn { float: right; }
+.row .hidden * {
+  display: none; }
 
-        .ui-dialog p { margin: 5px 0 10px; }
-        .ui-dialog input[type=text],
-        .ui-dialog input[type=password],
-        .ui-dialog input[type=email]
-        { width: 100%; }
+.row .hidden:after {
+  content: "\0025BE"; }
 
-	.ui-dialog table { width: 100%; }
-		.ui-dialog table td { vertical-align: top; }
-		.ui-dialog input[type=search] { width: 100%; }
+.row span {
+  width: 100%;
+  padding: 0 10px; }
 
-		.ui-dialog table .thumbnail { padding: 2px; width: 32px; height: 32px; }
+input[type=search] {
+  background: url(../img/icon_search.png) 4px 4px no-repeat;
+  padding: 4px 4px 4px 24px;
+  margin-bottom: 8px; }
 
-.ui-dialog-titlebar button, .ui-dialog-titlebar span {outline:none;}
-.thumbnail img {width:50px;height:50px;}
-tr.contact td { vertical-align:middle; }
-tr.contact { cursor:pointer; }
-    /* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
-    .as-selections input { margin-top: 0 !important; }
-    .as-selections input { background-color: transparent !important; }
+.inset-text {
+  position: relative; }
 
-.splash-logo { margin: 30px auto; height: 200px; width: 155px; }
-    .splash-logo img { width: 100%; }
+.full-width {
+  padding: 0 !important; }
+
+.full-width .status {
+  position: relative;
+  top: -1.8em;
+  float: right;
+  right: .2em; }
+
+.full-width .status img {
+  display: none;
+  height: 16px;
+  width: 16px; }
+
+.extra-link {
+  float: right;
+  font-size: 0.7em; }
+
+table td, table th {
+  margin: 1px 0;
+  padding: 4px;
+  text-align: left;
+  cursor: default; }
+
+table tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+
+#contactsListWrapper {
+  height: 350px;
+  overflow-y: scroll;
+  overflow-x: visible; }
+
+#contactsListTable {
+  width: 100%;
+  min-width: 600px;
+  background-color: transparent; }
+
+.ui-state-default {
+  background-color: transparent;
+  background-image: none; }
+
+.ui-dialog {
+  border-radius: 3px; }
+
+.ui-dialog .section {
+  width: 100%; }
+
+.no-close .ui-dialog-titlebar {
+  display: none; }
+
+.ui-dialog-titlebar, h2 {
+  background: none;
+  border: none;
+  padding-bottom: 15px;
+  margin-bottom: 15px; }
+
+.ui-dialog-titlebar {
+  height: 48px; }
+
+.hidetext {
+  display: block;
+  text-indent: -9999px; }
+
+.ui-dialog .image-wrapper {
+  max-width: 400px;
+  margin: 5px auto; }
+
+.ui-dialog .image-wrapper img {
+  width: 100%; }
+
+.close-button {
+  display: inline-block;
+  float: right; }
+
+header {
+  width: 100%;
+  padding: 10px 20px 0;
+  height: 90px;
+  position: relative;
+  line-height: 58px; }
+
+header h1 {
+  float: left;
+  width: 250px;
+  height: 60px;
+  background: url(../img/logo.png) no-repeat 0 8px; }
+
+header .email {
+  padding: 12px 0 0 20px;
+  font-weight: 500;
+  display: inline-block;
+  float: left; }
+
+header nav {
+  overflow: visible;
+  padding: 8px 0;
+  display: inline-block;
+  float: right; }
+
+header nav button {
+  display: inline-block;
+  text-align: center;
+  float: left;
+  width: 80px;
+  height: 70px;
+  border-radius: 4px;
+  padding: 40px 0 0 0;
+  background-color: transparent;
+  background-position: top center;
+  background-repeat: no-repeat; }
+
+header nav button span {
+  visibility: hidden;
+  text-align: center;
+  font-size: 0.8em; }
+
+header nav button:hover span {
+  visibility: visible; }
+
+#composeAction {
+  background-image: url(../img/compose.png); }
+
+#settingsAction {
+  background-image: url(../img/settings.png); }
+
+#contactsAction {
+  background-image: url(../img/contacts.png); }
+
+.loggedin header,
+.loggedin header .email,
+.loggedin header nav,
+.loggedin #inbox {
+  display: block; }
+
+#dialogWrapper {
+  display: none; }
+
+#inbox .header-info,
+#inbox {
+  display: none;
+  width: 96%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 2%;
+  margin-right: 2%; }
+
+#inbox table {
+  border-collapse: collapse; }
+
+#inbox tr {
+  margin-top: 1px; }
+
+#inbox-utilities {
+  height: 40px;
+  display: inline-block; }
+
+#inbox .header-info {
+  display: none;
+  font-size: .8em;
+  line-height: 1.2em; }
+
+#inbox table {
+  width: 100%; }
+
+#inbox tr {
+  width: 100%;
+  min-width: 500px;
+  padding: 5px 10px;
+  margin-bottom: 2px; }
+
+#inbox tr td {
+  vertical-align: middle;
+  white-space: nowrap; }
+
+#inbox tr.message-body td {
+  white-space: normal; }
+
+table .selector {
+  width: 18px; }
+
+table .selector a {
+  display: block;
+  width: 14px;
+  height: 14px; }
+
+#inbox .from {
+  min-width: 250px;
+  width: 22%; }
+
+#inbox .date {
+  min-width: 110px;
+  width: 15%;
+  text-align: right; }
+
+#inbox .message {
+  background-color: transparent; }
+
+#inbox .message td {
+  white-space: normal; }
+
+#inbox .message .details {
+  margin: 0 5px; }
+
+#inbox .message-body {
+  margin: 5px;
+  padding: 10px 10px 5px;
+  line-height: 1.2em; }
+
+#inbox .message-body p {
+  width: 100%;
+  margin-bottom: 10px; }
+
+#inbox .message .message-utilities {
+  float: right; }
+
+#inbox .message .message-utilities li {
+  display: inline-block; }
+
+#inbox tr.unread {
+  font-weight: 500; }
+
+#refreshAction {
+  width: 200px;
+  margin: 20px auto;
+  display: block; }
+
+.ui-dialog .page, .ui-dialog .tab {
+  display: none;
+  clear: both; }
+
+.ui-dialog .page-active, .ui-dialog .tab-active {
+  display: block; }
+
+.ui-dialog button {
+  display: inline-block; }
+
+.ui-dialog button.clear-btn {
+  display: block;
+  clear: left; }
+
+.ui-dialog button.right-btn {
+  float: right; }
+
+.ui-dialog p {
+  margin: 5px 0 10px; }
+
+.ui-dialog input[type=text],
+.ui-dialog input[type=password],
+.ui-dialog input[type=email] {
+  width: 100%; }
+
+.ui-dialog table {
+  width: 100%; }
+
+.ui-dialog table td {
+  vertical-align: top; }
+
+.ui-dialog input[type=search] {
+  width: 100%; }
+
+.ui-dialog table .thumbnail {
+  padding: 2px;
+  width: 32px;
+  height: 32px; }
+
+.ui-dialog-titlebar button, .ui-dialog-titlebar span {
+  outline: none; }
+
+.thumbnail img {
+  width: 50px;
+  height: 50px; }
+
+tr.contact td {
+  vertical-align: middle; }
+
+tr.contact {
+  cursor: pointer; }
+
+/* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
+.as-selections input {
+  margin-top: 0 !important; }
+
+.as-selections input {
+  background-color: transparent !important; }
+
+.splash-logo {
+  margin: 30px auto;
+  height: 200px;
+  width: 155px; }
+
+.splash-logo img {
+  width: 100%; }
 
 /* Gonna start putting responsive stuff here */
-@media screen and (max-width: 9000px) and (min-width: 0px) {
-}
