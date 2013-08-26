@@ -1131,7 +1131,7 @@ class GPG(object):
         "Encrypt the message read from the file-like object 'file'"
         args = ['--encrypt']
         if symmetric:
-            args = ['--symmetric']
+            args = ['--symmetric --cipher-algo aes256']
         else:
             args = ['--encrypt']
             if not _is_sequence(recipients):
