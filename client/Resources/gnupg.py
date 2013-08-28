@@ -1131,7 +1131,7 @@ class GPG(object):
         "Encrypt the message read from the file-like object 'file'"
         args = ['--encrypt']
         if symmetric:
-            args = ['--symmetric']
+            args = ['--symmetric --cipher-algo aes256']
         else:
             args = ['--encrypt']
             if not _is_sequence(recipients):
@@ -1234,7 +1234,7 @@ class GPG(object):
         proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         input = "y\n3\n\ny\n%s\n" % passphrase
         (stdout, stderr) = proc.communicate(input.encode(self.encoding))
-        return stdout
+        return (stdout,stderr)
 
     def add_uid(self, fingerprint, name, email, comment, passphrase):
         cmd = [self.gpgbinary]
@@ -1242,8 +1242,7 @@ class GPG(object):
         cmd.append("--status-fd 2 --command-fd 0 --no-tty")
         cmd.append("--edit %s" % fingerprint)
         proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        input = "adduid\n%s\n%s\n%s\no\n%s\nsave\n" % (name, email, comment, passphrase)
-        print input
+        input = "adduid\n%s\n%s\n%s\n%s\nsave\n" % (name, email, comment, passphrase)
         (stdout, stderr) = proc.communicate(input.encode(self.encoding))
         return (stdout,stderr)
 

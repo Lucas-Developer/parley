@@ -70,7 +70,7 @@ window._phrases = {
 "message-installing": "Parley requires its own version of GPG, which is being installed for you now. Please wait.",
 "message-welcome": "Welcome to the Parley Pre-Beta! It's still obviously a work in progress, but we hope you find it useful and look forward to your feedback.",
 "message-login": "Enter your password to access the magic of Parley!",
-"message-login-wait": "It takes a while to log in! We've downloaded your encrypted keys and contacts from the Parley server, and they take a little while to decrypt. We should be able to speed this process up significantly with the next release.",
+"message-login-wait": "Downloading encrypted keys and contacts from the Parley server...",
 "message-register": "Register for Parley! Keep in mind, this will only work if you have already signed up for the service at http://parley.co",
 
 "message-keygen": "To use encrypted email, you must have a <strong>secret key</strong>. If you have never used PGP encryption, select <strong>Generate New Key</strong> and the Parley client will set you up. If you have an existing key, I don't need to tell you to click <strong>Import Private Key</strong>.",

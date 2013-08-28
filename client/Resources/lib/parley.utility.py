@@ -97,8 +97,8 @@ def PYgetEncryptedKeyring():
   public_keys = [key['keyid'] for key in gpg.list_keys()]
   private_keys = [key['keyid'] for key in gpg.list_keys(True)]
   keyring = dict(public=gpg.export_keys(public_keys),private=gpg.export_keys(private_keys,True))
-  encrypted_keyring = aes.encryptData(window.Parley.currentUser.attributes.passwords.local[0:32],json.dumps(keyring))
-  return base64.b64encode(encrypted_keyring)
+  encrypted_keyring = gpg.encrypt(json.dumps(keyring),None,passphrase=window.Parley.currentUser.attributes.passwords.local,symmetric=True,armor=False)
+  return base64.b64encode(encrypted_keyring.data)
 
 window.PYgetEncryptedKeyring = PYgetEncryptedKeyring
 
@@ -117,7 +117,13 @@ window.PYclearKeys = PYclearKeys
 def PYimportEncryptedKeyring(b64_keyring):
   PYclearKeys()
   encrypted_keyring = base64.b64decode(b64_keyring)
-  keyring = json.loads(aes.decryptData(window.Parley.currentUser.attributes.passwords.local[0:32],encrypted_keyring))
+  #try legacy method, then new method (old aes module didn't use OpenPGP format)
+  #TODO: eventually remove legacy AES module
+  try:
+    keyring = json.loads(aes.decryptData(window.Parley.currentUser.attributes.passwords.local[0:32],encrypted_keyring))
+  except:
+    decrypt = gpg.decrypt(encrypted_keyring,passphrase=window.Parley.currentUser.attributes.passwords.local)
+    keyring = json.loads(decrypt.data)
   gpg.import_keys(keyring['private'])
   gpg.import_keys(keyring['public'])
   return True
@@ -220,8 +226,15 @@ def PYrevokeKey():
   private_key = gpg.list_keys(True)
   keyid = private_key[0]['fingerprint']
   revocation  = gpg.gen_revoke(keyid,window.Parley.currentUser.attributes.passwords.local)
-  gpg.import_keys(revocation)
-  return gpg.send_keys('pgp.mit.edu',keyid)
+  if revocation[0]:
+    revoked = gpg.import_keys(revocation[0])
+    if revoked.count:
+      gpg.send_keys('pgp.mit.edu',keyid)
+      return revocation
+    else:
+      return False
+  else:
+    return False
 
 window.PYrevokeKey = PYrevokeKey
 
