@@ -582,4 +582,26 @@ are massaged to fit. The arguments to finished on ajax error look like:
     });
   }
 
+  //Fetch 20 contacts to whom currentUser has sent the most mail
+  //in the past 6 months
+  Parley.requestContacts = function(finished) {
+    var url = Parley.BASE_URL+'/imap/contacts';
+    var data = {
+      'user' : Parley.currentUser.get('email'),
+      'offset' : offset || 0,
+      'time' : Math.floor((new Date())/1000)
+    }
+    var sig = Parley.signAPIRequest(url,'GET',data);
+    data.sig = sig;
+    $.ajax({
+      type:'GET',
+      url:url,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
+      data:data,
+      success:finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
+  }
+
 }(window.Parley = window.Parley || {}));

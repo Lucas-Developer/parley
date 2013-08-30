@@ -484,6 +484,32 @@ def imap_get():
   else:
     abort(403)
 
+@app.route("/imap/contacts", methods=['GET'])
+def imap_contacts():
+  user = getUser(request.args["user"])
+  params = get_header_params(request.headers, request.args['user'])
+  params.update(request.args.to_dict())
+  if user and not user["pending"] and user["imap_account"] and 'sig' in params and verifySignature(request.base_url, request.method, params, user["secret"]):
+    account_dict = json.loads(user["imap_account"])
+    cio_params = {'id':account_dict["id"]}
+    account = contextio.Account(context_io, cio_params)
+    contacts =  account.get_contacts(active_after=int(time.time())-6*30*24*60*60,sort_by='sent_count',limit=20)
+
+    #create an array of serialized contacts
+    serialized_contacts = []
+    for contact in contacts.matches:
+      try:
+        contact_dict = {}
+        for key in ('email','count','name','thumbnail'):
+          contact_dict[key] = getattr(contact,key)
+        serialized_contacts.append(contact_dict)
+      except:
+        pass
+    return jsonify(contacts=serialized_contacts)
+
+  else:
+    abort(403)
+
 
 if __name__ == "__main__":
   app.run()
