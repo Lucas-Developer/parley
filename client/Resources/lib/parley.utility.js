@@ -603,4 +603,4 @@ are massaged to fit. The arguments to finished on ajax error look like:
     });
   }
 
-}(window.Parley = window.Parley || {}));
+})(window.Parley = window.Parley || {});
