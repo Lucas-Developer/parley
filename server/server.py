@@ -497,7 +497,7 @@ def imap_contacts():
 
     #create an array of serialized contacts
     serialized_contacts = []
-    for contact in contacts.matches:
+    for contact in contacts:
       try:
         contact_dict = {}
         for key in ('email','count','name','thumbnail'):

@@ -588,7 +588,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
     var url = Parley.BASE_URL+'/imap/contacts';
     var data = {
       'user' : Parley.currentUser.get('email'),
-      'offset' : offset || 0,
       'time' : Math.floor((new Date())/1000)
     }
     var sig = Parley.signAPIRequest(url,'GET',data);
