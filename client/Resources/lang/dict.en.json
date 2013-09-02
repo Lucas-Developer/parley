@@ -61,6 +61,7 @@ window._phrases = {
 "send email": "Send email",
 "loading inbox": "Loading inbox",
 "refresh inbox": "Refresh inbox",
+"reconnect inbox": "Reconnect inbox",
 "auto refresh inbox": "Automatically refresh mailbox every 5 minutes.",
 "inbox updates": "Inbox updates",
 
@@ -88,6 +89,7 @@ window._phrases = {
 
 // Messages: inbox
 "message-inbox-loading": "We are loading your inbox. This may take a minute or two, but again we will be able to improve that with the next release. Please be patient. Thanks! You are the best.",
+"message-inbox-reconnect": "If you are unable to successfully refresh your inbox, there's a chance that we can fix it by generating some new tokens and what not for context.io.",
 
 "message-message-sending": "Encrypting and sending...",
 "message-message-sent": "Your message was encrypted and sent on its way!",

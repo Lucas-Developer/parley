@@ -195,9 +195,11 @@
                 Parley.app.dialog('info inbox-error', {
                     message: _t('error-inbox-forbidden'),
                     buttons: [ {
-                        id:'retryInbox',
-                        text:'Retry',
-                        handler: function(e) {
+                        id: 'reconnectInbox',
+                        text: _t('reconnect inbox'),
+                        handler: function (e) {
+                            e.preventDefault();
+                            
                             Parley.registerInbox();
                             Parley.waitForRegisteredInbox(function(success) {
                                 Parley.app.dialog('hide info inbox-error');

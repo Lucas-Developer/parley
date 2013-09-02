@@ -24,7 +24,6 @@
 
         window.setTimeout(Parley.timer, Parley.timerDelay);
     }
-    window.setTimeout(Parley.timer, Parley.timerDelay);
 
     Parley.falseIsFalse = function (data) {
         console.log('\'false\' is false');
@@ -432,6 +431,15 @@
                 'click #revokeKeyAction': function (e) {
                     e.preventDefault();
                     Parley.vent.trigger('user:kill');
+                },
+                'click #reconnectInboxAction': function (e) {
+                    e.preventDefault();
+
+                    Parley.registerInbox();
+                    Parley.waitForRegisteredInbox(function(success) {
+                        Parley.app.dialog('hide info inbox-error');
+                        _.delay(function(){Parley.vent.trigger('message:sync');},1000);
+                    });
                 }
             },
             model: {
@@ -748,6 +756,8 @@
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.$('.email').text(Parley.currentUser.get('email'));
 
+            window.setTimeout(Parley.timer, Parley.timerDelay);
+
             return this;
 		},
 
@@ -769,7 +779,7 @@
         separate dialog with [page name] as the slug. Use this for "loading" windows
         or modal dialogs.
         Make sure you pass a button:
-            button: [{id:'buttonId',text:'click me',handler:function(}, etc.]
+            button: [{id:'buttonId',text:'click me',handler:function(){}}, etc.]
         as members of 'data'.
         **/
         dialog: function (opts,data) {
