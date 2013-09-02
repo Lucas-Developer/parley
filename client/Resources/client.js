@@ -589,7 +589,7 @@
         tagName: 'div',
 
         initialize: function (options) {
-            console.log('Initializing');
+            console.log('Initializing dialog' + options.model.slug);
 
             var _defaultEvents = {
                 'keydown':                          'clickSubmit',
