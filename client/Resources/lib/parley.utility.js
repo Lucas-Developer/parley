@@ -285,7 +285,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Accepts finished callback. */
   Parley.storeKeyring = _.debounce(function(finished) {
     console.log('Storing keyring');
-    var keyring = window.PYgetEncryptedKeyring();
+    var keyring = window.PYgetEncryptedKeyring(),
+        finished = finished || function () {};
     Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey()}, finished);
   }, 1000*3);
   
@@ -603,4 +604,49 @@ are massaged to fit. The arguments to finished on ajax error look like:
     });
   }
 
+    // This function processes all of [Parley.alarms] (in parley.config.js) every [Parley.timerDelay] seconds.
+    Parley.timer = function () {
+        Parley.timerDelay = Parley.timerDelay || 300000;
+        _.each(Parley.alarms, function (alarm) {
+            if (alarm.when()) alarm.todo();
+        });
+
+        window.setTimeout(Parley.timer, Parley.timerDelay);
+    }
+    
+    Parley.falseIsFalse = function (data) {
+        console.log('\'false\' is false');
+        
+        var parsed_data = {};
+
+        _.each(data, function (v,k) {
+            if (v == 'false')
+                v = false;
+
+            if (k=='meta')
+                _.each(JSON.parse(v), function (v,k) {
+                    if (v == 'false')
+                        v = false;
+                    parsed_data[k] = v;
+                });
+            else
+                parsed_data[k] = v;
+        });
+
+        return parsed_data;
+    };
+
+    Parley.formErrors = function (fname, errors) {
+        if (!_.isObject(errors) || !document.forms[fname]) return false;
+
+        var form = $(document.forms[fname]), err, errSpan;
+        _.each(form.find('input'), function (v) {
+            errSpan = $(v).parents('label').find('.error');
+            if (err = errors[v.name]) {
+                errSpan.text(err);
+            } else {
+                errSpan.text('');
+            }
+        });
+    }
 })(window.Parley = window.Parley || {});
