@@ -563,7 +563,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       ]
     }
   */
-  Parley.requestInbox = function(finished, offset) {
+  Parley.requestInbox = function(offset, finished) {
     var url = Parley.BASE_URL+'/imap/get';
     var data = {
       'user' : Parley.currentUser.get('email'),

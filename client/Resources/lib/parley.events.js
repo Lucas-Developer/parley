@@ -182,19 +182,17 @@
         });
     });
 
-    Parley.vent.on('message:sync', function (e, callback) {
+    Parley.vent.on('message:sync', function () {
         console.log('VENT: message:sync');
 
         $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
-        //Parley.app.dialog('info inbox-loading', { header: _t('loading inbox'), message: _t('message-inbox-loading') });
 
-        Parley.requestInbox(function (data, textStatus) {
-            console.log('Inbox requested.');
-            $('#refreshAction').removeAttr('disabled').removeClass('refreshing').animate({width:200,height:50,opacity:1}).text( _t('refresh inbox') );
+        Parley.requestInbox(Parley.inboxCurOffset, function (data, textStatus) {
+            console.log('Inbox requested at offset: ' + Parley.inboxCurOffset + '.');
+
             if (data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
 
-                //Parley.app.dialog('hide info inbox-loading');
                 Parley.app.dialog('info inbox-error', {
                     message: _t('error-inbox-forbidden'),
                     buttons: [ {
@@ -214,15 +212,28 @@
 
                 return false;
             } else if (!_.has(data, 'error')) {
-                console.log('Inbox loaded', data.messages);
+                console.log('Inbox: loaded ' + data.messages.length + ' messages.', data.messages);
 
-                //Parley.app.dialog('hide info inbox-loading');
+                Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
                 if (_.has(data, 'messages')) {
                     for (var i = 0, t = data.messages.length; i<t; i++) {
                         Parley.inbox.add(data.messages[i], {parse:true});
                     }
+
+                    if (Parley.inbox.length < (Parley.inboxCurPage * Parley.inboxPerPage))
+                        Parley.vent.trigger('message:sync');
+                    else
+                        $('#refreshAction')
+                            .removeAttr('disabled')
+                            .removeClass('refreshing')
+                            .animate({
+                                width:200,
+                                height:50,
+                                opacity:1
+                            })
+                            .text( _t('refresh inbox') );
                 }
             } else {
                 // An error occurred
