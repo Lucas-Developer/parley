@@ -111,6 +111,7 @@ window._phrases = {
 "error-register": "We encountered some type of registration error, but we're not totally sure exactly what happened. Are you sure that you have already signed up at <a href=\"https://parley.co/#signup\" target=\"registerWindow\">parley.co</a>?",
 "error-login": "We have encountered an error trying to log you in to Parley. Is it possible that you mistyped your email, your password, or—though we do not want to assume this about our users—both your email and password? Go ahead and try again.",
 "error-password-nomatch": "Your passwords don't match. Please retype one, or the other, or both.",
+"error-password-novalid": "Please enter a valid password.",
 "error-inbox-forbidden": "We haven't been able to access your account through context.io yet. We'll keep trying, or click \"Retry\" below to change your settings with context.io.",
 "error-email-novalid": "Please enter a valid email address.",
 "error-message-notsent": "We encountered an error trying to send your message. Sorry for the inconvenience.",

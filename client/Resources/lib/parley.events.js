@@ -182,7 +182,7 @@
         });
     });
 
-    Parley.vent.on('message:sync', function () {
+    Parley.vent.on('message:sync', _.throttle(function () {
         console.log('VENT: message:sync');
 
         $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
@@ -222,6 +222,10 @@
                         Parley.inbox.add(data.messages[i], {parse:true});
                     }
 
+                    // I have an arbitrary limit set for now just so it doesn't keep going forever.
+                    if (Parley.inboxCurOffset >= 10000)
+                        return Parley.inboxCurOffset = 0;
+
                     if (Parley.inbox.length < (Parley.inboxCurPage * Parley.inboxPerPage))
                         Parley.vent.trigger('message:sync');
                     else
@@ -239,7 +243,7 @@
                 // An error occurred
             }
         });
-    });
+    }, 5000));
 
     Parley.vent.on('message:nokey', function (data, callback) {
         console.log('Unknown emails in recipients list');
