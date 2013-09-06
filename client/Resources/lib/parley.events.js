@@ -212,33 +212,34 @@
 
                 return false;
             } else if (!_.has(data, 'error')) {
+                if (!data.messages) {
+                    console.log('End of mailbox!');
+                    Parley.inboxCurOffset = 0;
+                    return false;
+                }
+
                 console.log('Inbox: loaded ' + data.messages.length + ' messages.', data.messages);
 
                 Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
-                if (_.has(data, 'messages')) {
-                    for (var i = 0, t = data.messages.length; i<t; i++) {
-                        Parley.inbox.add(data.messages[i], {parse:true});
-                    }
 
-                    // I have an arbitrary limit set for now just so it doesn't keep going forever.
-                    if (Parley.inboxCurOffset >= 10000)
-                        return Parley.inboxCurOffset = 0;
-
-                    if (Parley.inbox.length < (Parley.inboxCurPage * Parley.inboxPerPage))
-                        Parley.vent.trigger('message:sync');
-                    else
-                        $('#refreshAction')
-                            .removeAttr('disabled')
-                            .removeClass('refreshing')
-                            .animate({
-                                width:200,
-                                height:50,
-                                opacity:1
-                            })
-                            .text( _t('refresh inbox') );
+                for (var i = 0, t = data.messages.length; i<t; i++) {
+                    Parley.inbox.add(data.messages[i], {parse:true});
                 }
+
+                if (Parley.inbox.length < (Parley.inboxCurPage * Parley.inboxPerPage))
+                    Parley.vent.trigger('message:sync');
+                else
+                    $('#refreshAction')
+                        .removeAttr('disabled')
+                        .removeClass('refreshing')
+                        .animate({
+                            width:200,
+                            height:50,
+                            opacity:1
+                        })
+                        .text( _t('refresh inbox') );
             } else {
                 // An error occurred
             }
