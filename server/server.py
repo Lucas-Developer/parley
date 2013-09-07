@@ -457,6 +457,8 @@ window.close();
 
 @app.route("/imap/get", methods=['GET'])
 def imap_get():
+  #TODO: implement redis cache
+  #
   user = getUser(request.args["user"])
   params = get_header_params(request.headers, request.args['user'])
   params.update(request.args.to_dict())
@@ -479,6 +481,8 @@ def imap_get():
           serialized_messages.append(message_dict)
       except:
         pass
+    if not len(messages):
+      serialized_messages = None
     return jsonify(messages=serialized_messages)
 
   else:
