@@ -175,7 +175,20 @@
                 return memo + '<p>' + val + '</p>';
             }, '');
             
-			this.$el.addClass('message-body').html(this.template({body:message_body}));
+			this.$el
+                .addClass('message-body')
+                .html(this.template({
+                    body: message_body,
+                    date: moment(this.model.get('date') * 1000).format('MMMM Do YYYY, h:mm:ss a'),
+                    to: _.bind(function () {
+                        return _.map(this.model.get('addresses').to, function (addr) {
+                            if (addr.email == Parley.currentUser.get('email'))
+                                return '<span>' + _t('you') + '</span>';
+                            else
+                                return '<a class="contactLink" title="' + addr.email + '" href="mailto:' + addr.email + '">' + (addr.name ? addr.name : addr.email) + '</a>';
+                        });
+                    }, this)
+                }));
 			return this;
 	    },
 
@@ -187,6 +200,20 @@
                 {'plainText':this.model.readMessage(false)}
               )
             );
+/*
+        },
+
+        openContact: function (e) {
+            var email = e.target.split(':')[1],
+                contact;
+
+            if (contact = Parley.contacts.findWhere({email: email}))
+                Parley.app.dialog('show compose', { reply_to: contact });
+            else
+                Parley.app.dialog('show info nocontact', { buttons: ['okay'] });
+
+            return false;
+*/
         }
     });
 
@@ -298,6 +325,37 @@
         tempDialogs: [],
 
 	    events: {
+            'click a': function (e) {
+                var hrefParts = e.target.href.split(':');
+                switch (hrefParts[0]) {
+                    case 'mailto':
+                        var email = hrefParts[1],
+                            contact;
+
+                        if (contact = Parley.contacts.findWhere({email: email}))
+                            Parley.app.dialog('show compose', { reply_to: contact });
+                        else
+                            Parley.app.dialog('show info nocontact', {
+                                message: _t('message-contacts-noexist'),
+                                buttons: [
+                                    {
+                                        id: 'addContactAction',
+                                        text: _t('add new contact'),
+                                        handler: _.bind(function (e) {
+                                            e.preventDefault();
+                                            Parley.app.dialog('show contacts newcontact', { newemail: this} );
+                                            Parley.app.dialog('hide info nocontact');
+                                        }, email),
+                                    },
+                                    'cancel'
+                                ]
+                            });
+
+                        return false;
+                    default:
+                        break;
+                }
+            },
             'click #composeAction': function (e) {
                 console.log('Composing new message.');
                 Parley.app.dialog('compose', {'from':null,'subject':null,'plainText':null});

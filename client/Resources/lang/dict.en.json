@@ -9,6 +9,7 @@ window._phrases = {
 "compose": "compose",
 "register": "register",
 "registering": "registering",
+"you": "you",
 "name": "name",
 "or": "or",
 "okay": "okay",
@@ -96,6 +97,7 @@ window._phrases = {
 
 // Messages: contacts
 "message-contacts-saving": "Please wait while we save your contacts to the server! Again, the encryption process takes some time, but we will be speeding it up with the next release.",
+"message-contacts-noexist": "You need to add this email address as a contact before you can send mail to it. Would you like to do this now?",
 
 // Messages: settings
 "message-settings-saveerror": "We have encountered an error trying to save your settings.",

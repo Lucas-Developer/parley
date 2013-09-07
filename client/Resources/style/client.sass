@@ -1,0 +1,527 @@
+$grey: #191208
+$ltgrey: #5b5b5c
+$vltgrey: #f4f0ec
+
+$orange: #eb9c21
+$red: #ff6666
+
+$w100:  rgba(255,255,255,1.0)
+$w80:   rgba(255,255,255,0.8)
+$w60:   rgba(255,255,255,0.6)
+$w40:   rgba(255,255,255,0.4)
+$w20:   rgba(255,255,255,0.2)
+
+$b100:  rgba(0,0,0,1.0)
+$b80:   rgba(0,0,0,0.8)
+$b60:   rgba(0,0,0,0.6)
+$b40:   rgba(0,0,0,0.4)
+$b20:   rgba(0,0,0,0.2)
+
+$font1: "Raleway"
+$font2: "Open Sans"
+
+@mixin default-button
+    background-color: $w80
+    color: $orange
+    -webkit-transition: background-color 0.4s, color 0.2s
+
+@mixin default-button-over
+    background-color: #f0961e
+    color: #f0f0f0
+    -webkit-transition: background-color 0.4s, color 0.2s
+
+@mixin default-cell
+    margin: 1px 0
+    padding: 4px
+    text-align: left
+    cursor: default
+
+@mixin default-input
+    color: $grey
+    background-color: #fff
+    padding: 4px 8px 4px 4px
+    border: 1px inset #ccc
+    border-radius: 1px
+
+@mixin default-input-focus
+    outline: none
+    border-color: $orange
+
+@font-face 
+    font-family: "Raleway"
+    src: url(Raleway-Medium.ttf) format("truetype")
+    font-weight: 500 
+@font-face
+    font-family: "Raleway"
+    src: url(Raleway-Regular.ttf) format("truetype")
+    font-weight: 400 
+@font-face
+    font-family: "Raleway"
+    src: url(Raleway-Light.ttf) format("truetype")
+    font-weight: 300 
+
+@font-face
+    font-family: "Open Sans"
+    src: url(OpenSans-Regular.otf) format("opentype")
+    font-weight: 400
+@font-face
+    font-family: "Open Sans"
+    src: url(OpenSans-Semibold.otf) format("opentype")
+    font-weight: 600
+@font-face
+    font-family: "Open Sans"
+    src: url(OpenSans-Italic.otf) format("opentype")
+    font-weight: 400
+    font-style: italic
+@font-face
+    font-family: "Open Sans"
+    src: url(OpenSans-SemiboldItalic.otf) format("opentype")
+    font-weight: 600
+    font-style: italic
+
+/* 1.0 - Common Elements */
+*
+    -moz-box-sizing: border-box
+    -webkit-box-sizing: border-box
+    box-sizing: border-box
+body 
+    font-size: 100%
+    background: url(../img/wavegrid.png) 0 0 repeat
+body, p, .ui-widget
+    font-family: $font1 
+button
+    font-weight: 500
+    text-transform: capitalize 
+input, textarea
+    font-family: $font2 
+
+body
+    color: $grey
+h1, h2, h3, h4, h5, h6
+    color: $grey
+
+button
+    @include default-button
+    &.send
+        background-color: transparent
+        color: $orange
+    &:hover, &:active
+        @include default-button-over
+
+textarea
+    @include default-input
+    width: 100%
+    margin-bottom: 10px
+    &:focus
+        @include default-input-focus
+
+input[type=checkbox]
+    display: block
+    float: left
+
+.as-selections
+    @include default-input
+    height: 2em
+
+input[type=search] 
+    @include default-input
+    padding-right: 24px
+    background: url(../img/icon_search.png) 4px 4px no-repeat
+    
+input[type=text], input[type=search], input[type=email], input[type=password]
+    @include default-input
+    height: 2em
+    &:focus
+        @include default-input-focus
+
+input[readonly]
+    border: none
+    font-weight: 500
+    background: none
+
+/* 2.0 - Stylish Classes */
+.error
+    color: $red
+
+/* 3.0 - Layout Elements */
+header
+    background: #fff
+    background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255,255,255,.9)), color-stop(100%, rgba(255,255,255,.5))) /* Chrome,Safari4+ */
+    .email
+        color: $grey
+    nav button span 
+        color: $grey
+        -webkit-text-shadow: 0 0 1px #f0f0f0
+
+#refreshAction.refreshing:hover
+    cursor: default
+    @include default-button
+
+table
+    tbody
+        tr
+            border-bottom: 1px solid rgba(0,0,0,0.1)
+            &:hover
+                background-color: #eee
+            td
+                @include default-cell
+                
+        .selector a 
+            border: 1px solid $grey 
+            &.clicked 
+                background-color: $grey
+
+    thead
+        tr
+            background-color: $grey
+            color: #eee
+            th
+                @include default-cell
+        .selector a
+            border: 1px solid $vltgrey 
+            &.clicked
+                background-color: $vltgrey
+
+.contactLink
+    padding-left: 5px
+    color: inherit
+    text-decoration: none
+    &:hover
+        text-decoration: underline
+
+
+.ui-dialog 
+    background-color: rgba(240,240,240,.95) !important
+    border: 1px solid rgba(77, 104, 141, .3)
+
+    .page, .tab
+        display: none
+        clear: both
+        &.page-active, &.tab-active
+            display: block
+
+    .ui-dialog-content
+        background: transparent none !important 
+
+    .section
+        border-bottom: 1px solid #eee
+    .ui-dialog-titlebar, h2
+        border-bottom: 1px solid #f0961e
+        color: #f0961e 
+
+    button
+        display: inline-block
+        &.clear-btn
+            display: block
+            clear: left
+        &.right-btn
+            float: right
+        &.default-btn
+            border: 1px solid #f0961e 
+
+#contactsListTable tr:nth-child(odd)
+    background-color: #f0f0f0 
+
+#composeAction:hover, #settingsAction:hover, #contactsAction:hover 
+    background-color: transparent
+
+
+
+.ui-dialog-title, h1, h2, h3, h4, h5, h6
+    font-weight: 300
+    text-transform: capitalize 
+.ui-dialog-title, h2
+    font-size: 1.5em
+h3
+    text-align: left
+    font-size: 1.3em
+.ui-dialog h4
+    border-bottom: 1px solid #ccc
+
+p
+    font-size: 0.9em
+    line-height: 1.4em
+p.small-text
+    font-size: 0.8em
+
+.error
+    display: block
+    margin-top: 5px
+    font-weight: 500
+
+button
+    outline: none
+    border: none
+    cursor: pointer
+    padding: 8px 16px
+    white-space: nowrap
+    &:hover, &:active
+        outline: none
+
+.row
+    display: table
+    width: 100%
+    padding: 10px 0
+    &.no-line 
+        border-top: none
+    .half 
+        width: 48%
+        margin-right: 4%
+        float: left
+        &:nth-child(even) 
+            margin-right: 0
+    .quarter 
+        width: 20%
+        margin-right: 5%
+    label 
+        font-size: 0.9em
+        display: block
+        width: 100%
+        float: left
+        margin-bottom: 10px
+        text-transform: capitalize
+        *, span, input 
+            text-transform: none
+        input 
+            display: block
+            margin-top: 5px
+        input[type=checkbox] 
+            margin-top: 0
+    span 
+        width: 100%
+        padding: 0 10px
+
+    .hidden
+        display: inline
+        width: auto
+        margin-right: 10px
+    .hidden *
+        display: none
+    .hidden:after
+        content: "\0025BE"
+
+
+.inset-text
+    position: relative
+.full-width
+    padding: 0 !important
+    .status
+        position: relative
+        top: -1.8em
+        float: right
+        right: .2em
+    .status img
+        display: none
+        height: 16px
+        width: 16px
+.extra-link
+    float: right
+    font-size: 0.7em
+
+
+#contactsListWrapper
+    height: 350px
+    overflow-y: scroll
+    overflow-x: visible
+#contactsListTable
+    width: 100%
+    min-width: 600px
+    background-color: transparent
+
+.ui-state-default
+    background-color: transparent
+    background-image: none
+.ui-dialog
+    border-radius: 3px
+.ui-dialog .section
+    width: 100%
+.no-close .ui-dialog-titlebar
+    display: none
+    
+.ui-dialog-titlebar, h2
+    background: none
+    border: none
+    padding-bottom: 15px
+    margin-bottom: 15px
+.ui-dialog-titlebar
+    height: 48px
+.hidetext
+    display: block
+    text-indent: -9999px
+
+.ui-dialog .image-wrapper
+    max-width: 400px
+    margin: 5px auto
+.ui-dialog .image-wrapper img
+    width: 100%
+
+.close-button
+    display: inline-block
+    float: right
+
+header
+    display: none
+    width: 100%
+    padding: 10px 20px 0
+    height: 90px
+    position: relative
+    line-height: 58px
+    h1 
+        float: left
+        width: 250px
+        height: 60px
+        background: url(../img/logo.png) no-repeat 0 8px
+    .email
+        padding: 12px 0 0 20px
+        font-weight: 500
+        display: inline-block
+        float: left
+    nav 
+        overflow: visible
+        padding: 8px 0
+        display: inline-block
+        float: right
+
+        button 
+            display: inline-block
+            text-align: center
+            float: left
+            width: 80px
+            height: 70px
+            border-radius: 4px
+            padding: 40px 0 0 0
+            background-color: transparent
+            background-position: top center
+            background-repeat: no-repeat
+            span
+                visibility: hidden
+                text-align: center
+                font-size: 0.8em
+                color: $ltgrey
+            &:hover span
+                visibility: visible
+
+    #composeAction
+        background-image: url(../img/compose.png)
+    #settingsAction
+        background-image: url(../img/settings.png)
+    #contactsAction
+        background-image: url(../img/contacts.png)
+
+.loggedin header, .loggedin header .email, .loggedin header nav, .loggedin #inbox
+    display: block
+
+#dialogWrapper
+    display: none
+
+#inbox 
+    display: none
+    width: 96%
+    margin-top: 10px
+    margin-bottom: 10px
+    margin-left: 2%
+    margin-right: 2%
+    
+    table 
+        width: 100%
+        border-collapse: collapse
+
+        tr
+            border-top: 1px solid #ddd
+            border-left: 1px solid #ddd
+            border-bottom: 1px solid #aaa
+            border-right: 1px solid #aaa
+            background-color: #fff
+
+            margin-top: 1px
+            width: 100%
+            min-width: 500px
+            padding: 5px 10px
+            margin-bottom: 2px
+
+            &.unread
+                font-weight: 500
+
+            &.message 
+                background-color: transparent
+                td
+                    background-color: $w80
+                    .details 
+                        margin: 0 5px
+                .message-utilities 
+                    float: right
+                    li
+                        display: inline-block 
+            &.message-body 
+                margin: 5px
+                padding: 10px 10px 5px
+                line-height: 1.2em
+                p 
+                    width: 100%
+                    margin: 10px
+
+            .buttons
+                vertical-align: top
+                text-align: right
+
+            .from
+                min-width: 250px
+                width: 22%
+            .date
+                min-width: 110px
+                width: 15%
+                text-align: right
+
+
+    .header-info
+        display: none
+        font-size: .8em
+        line-height: 1.2em
+
+#refreshAction
+    width: 200px
+    margin: 20px auto
+    display: block
+
+.ui-dialog p
+    margin: 5px 0 10px
+.ui-dialog input[type=text], .ui-dialog input[type=password], .ui-dialog input[type=email]
+    width: 100%
+
+.ui-dialog table
+    width: 100%
+.ui-dialog table td
+    vertical-align: top
+.ui-dialog input[type=search]
+    width: 100%
+
+.ui-dialog table .thumbnail
+    padding: 2px
+    width: 32px
+    height: 32px
+
+.ui-dialog-titlebar button, .ui-dialog-titlebar span
+    outline: none
+.thumbnail img
+    width: 50px
+    height: 50px
+tr.contact td
+    vertical-align: middle
+tr.contact
+    cursor: pointer
+
+/* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
+.as-selections input
+    margin-top: 0 !important
+.as-selections input
+    background-color: transparent !important
+
+.splash-logo
+    margin: 30px auto
+    height: 200px
+    width: 155px
+.splash-logo img
+    width: 100%
+
+/* Gonna start putting responsive stuff here */
+// @media screen and (max-width: 9000px) and (min-width: 0px)
