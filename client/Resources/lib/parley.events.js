@@ -212,12 +212,11 @@
 
                 return false;
             } else if (!_.has(data, 'error')) {
-                console.log('Inbox: loaded ' + data.messages.length + ' messages.', data.messages);
-
                 Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
-                if (_.has(data, 'messages')) {
+                if (_.has(data, 'messages') && !!data.messages) {
+                    console.log('Inbox: loaded ' + data.messages.length + ' messages.', data.messages);
                     for (var i = 0, t = data.messages.length; i<t; i++) {
                         Parley.inbox.add(data.messages[i], {parse:true});
                     }
@@ -234,6 +233,8 @@
                                 opacity:1
                             })
                             .text( _t('refresh inbox') );
+                } else {
+                    console.log('End of mailbox');
                 }
             } else {
                 // An error occurred

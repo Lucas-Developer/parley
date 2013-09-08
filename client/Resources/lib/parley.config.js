@@ -287,8 +287,20 @@
                 opts: {},
                 title: 'Compose',
                 init: function () {
-                    this.to = this.reply_to ? this.reply_to.toJSON() : this.from ? this.from.toJSON() : undefined;
-                    
+                    var respondTo = this.reply_to ? this.reply_to.toJSON() : this.from ? this.from.toJSON() : undefined;
+                    this.to = [respondTo];
+
+                    if (this.replyAll) {
+                        _.each(this.addresses.to, _.bind(function (ele) {
+                            var _tmp;
+                                
+                            if (ele.email == Parley.currentUser.get('email')) return false;
+
+                            if (_tmp = Parley.contacts.findWhere({email: ele.email}))
+                                this.to.push(_tmp);
+                        }, this));
+                    }
+
                     if (this.subject) {
                         var prefix = /^(R|r)e:/g;
                         this.subject = prefix.test(this.subject) ? this.subject : 're: ' + this.subject;
@@ -304,17 +316,19 @@
                         return {name: name, value: email, uid: name + ' <' + email + '>'}
                     });
 
-                    var to = this.to;
-                    var preFill = {};
-
-                    if (_.isObject(to))
-                        preFill = _.findWhere(items, {value: this.to.email}) || {};
+                    if (_.isArray(this.to))
+                        preFill = _.map(this.to, function (ele) {
+                            return _.findWhere(items, {value: ele.get ? ele.get('email') : ele.email}) || {};
+                        });
+                    else if (_.isObject(this.to))
+                        preFill = [ _.findWhere(items, {value: this.to.email}) ] || [];
 
                     var opts = {
                         selectedItemProp: 'name',
                         searchObjProps: 'name,value',
-                        preFill: [preFill]
+                        preFill: preFill
                     };
+
                     view.$('#recipient_to').each(function (){
                         $(this).autoSuggest(items, _.extend({asHtmlID: this.name}, opts));
                     });

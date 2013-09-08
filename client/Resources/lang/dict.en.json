@@ -60,6 +60,7 @@ window._phrases = {
 "parley settings": "Parley settings",
 
 "send email": "Send email",
+"reply all": "Reply all",
 "loading inbox": "Loading inbox",
 "refresh inbox": "Refresh inbox",
 "reconnect inbox": "Reconnect inbox",

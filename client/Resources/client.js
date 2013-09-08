@@ -168,7 +168,8 @@
         attributes: {id:'readMessageView'},
 	    template: Mustache.compile($('#readMessageTemplate').html()),
 	    events: {
-            'click .reply':     'openCompose'
+            'click .reply':     'openCompose',
+            'click .replyAll':     'openCompose'
 	    },
 	    render: function () {
             var message_body = _.reduce(this.model.readMessage(), function (memo, val) {
@@ -192,28 +193,16 @@
 			return this;
 	    },
 
-        openCompose: function () {
-            Parley.app.dialog(
-              'compose',
-              _.extend(
-                this.model.toJSON(),
-                {'plainText':this.model.readMessage(false)}
-              )
+        openCompose: function (e) {
+            e.preventDefault();
+            Parley.app.dialog('compose',
+                _.extend( this.model.toJSON(),
+                    {
+                        'plainText': this.model.readMessage(false),
+                        'replyAll': $(e.target).hasClass('replyAll')
+                    }
+                )
             );
-/*
-        },
-
-        openContact: function (e) {
-            var email = e.target.split(':')[1],
-                contact;
-
-            if (contact = Parley.contacts.findWhere({email: email}))
-                Parley.app.dialog('show compose', { reply_to: contact });
-            else
-                Parley.app.dialog('show info nocontact', { buttons: ['okay'] });
-
-            return false;
-*/
         }
     });
 
