@@ -316,12 +316,13 @@
                         return {name: name, value: email, uid: name + ' <' + email + '>'}
                     });
 
-                    if (_.isArray(this.to))
+                    if (_.isArray(this.to) && !!this.to[0]) {
                         preFill = _.map(this.to, function (ele) {
                             return _.findWhere(items, {value: ele.get ? ele.get('email') : ele.email}) || {};
                         });
-                    else if (_.isObject(this.to))
-                        preFill = [ _.findWhere(items, {value: this.to.email}) ] || [];
+                    } else {
+                        preFill = {};
+                    }
 
                     var opts = {
                         selectedItemProp: 'name',
