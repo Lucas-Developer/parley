@@ -105,7 +105,7 @@ window._phrases = {
 "message-settings-invalidname": "Please enter a valid name.",
 "message-password-invalidpassword": "Please enter a valid password.",
 "message-password-changeerror": "We encountered a strange error while trying to change your password.",
-"message-password-changed": "Your password has been successfully changed from \"abcde\" to \"password\"",
+"message-password-changed": "Your password has been successfully changed.",
 
 // Messages: etc etc etc
 

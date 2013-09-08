@@ -128,7 +128,9 @@
                 'click #changePasswordAction': function (e) {
                     console.log('Changing password');
 
+                    Parley.pauseTimer = true;
                     e.preventDefault();
+
                     var form = document.forms.changePassword;
 
                     if (!form.cur_password.value) {
@@ -147,6 +149,8 @@
                     }
 
                     Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
+                        Parley.pauseTimer = false;
+
                         if (!_.has(data, 'error')) {
                             Parley.app.dialog('show info password-changed', {
                                 header: _t('password changed'),

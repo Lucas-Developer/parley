@@ -613,9 +613,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
     // This function processes all of [Parley.alarms] (in parley.config.js) every [Parley.timerDelay] seconds.
     Parley.timer = function () {
         Parley.timerDelay = Parley.timerDelay || 300000;
-        _.each(Parley.alarms, function (alarm) {
-            if (alarm.when()) alarm.todo();
-        });
+
+        if (!Parley.pauseTimer)
+            _.each(Parley.alarms, function (alarm) {
+                if (alarm.when()) alarm.todo();
+            });
 
         window.setTimeout(Parley.timer, Parley.timerDelay);
     }
