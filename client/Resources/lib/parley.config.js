@@ -6,8 +6,8 @@
                 'click #emailVerify': function (e) {
                     e.preventDefault();
                     var form = document.forms.emailVerify;
-                    
-                    if (_.isUndefined(form.email.value) || !Parley.rex.email.test(form.email.value)) {
+
+                    if (form.email.value.length == 0 || !Parley.rex.email.test(form.email.value)) {
                         Parley.formErrors('emailVerify', { email: _t('error-email-novalid') });
                         return false;
                     }
@@ -19,7 +19,7 @@
                     e.preventDefault();
                     var form = document.forms.loginAction;
 
-                    if (_.isUndefined(form.password.value)) {
+                    if (form.password.value.length == 0) {
                         Parley.formErrors('loginAction', { password: _t('error-password-novalid') });
                         return false;
                     }
@@ -343,7 +343,7 @@
     Parley.inboxCurOffset = 0;
 
     Parley.rex = {
-        email: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g
+        email: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
     };
 
     Parley.alarms = [

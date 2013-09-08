@@ -182,7 +182,7 @@
         });
     });
 
-    Parley.vent.on('message:sync', function () {
+    Parley.vent.on('message:sync', _.throttle(function () {
         console.log('VENT: message:sync');
 
         $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
@@ -236,11 +236,24 @@
                 } else {
                     console.log('End of mailbox');
                 }
+
+                if (Parley.inbox.length < (Parley.inboxCurPage * Parley.inboxPerPage))
+                    Parley.vent.trigger('message:sync');
+                else
+                    $('#refreshAction')
+                        .removeAttr('disabled')
+                        .removeClass('refreshing')
+                        .animate({
+                            width:200,
+                            height:50,
+                            opacity:1
+                        })
+                        .text( _t('refresh inbox') );
             } else {
                 // An error occurred
             }
         });
-    });
+    }, 5000));
 
     Parley.vent.on('message:nokey', function (data, callback) {
         console.log('Unknown emails in recipients list');
