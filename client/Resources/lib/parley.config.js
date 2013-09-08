@@ -126,41 +126,41 @@
                     });
                 },
                 'click #changePasswordAction': function (e) {
+                    console.log('Changing password');
+
                     e.preventDefault();
                     var form = document.forms.changePassword;
 
                     if (!form.cur_password.value) {
-                        Parley.formErrors('settings', { cur_password: _t('error-settings-invalidpassword') });
-                        return false;
+                        return Parley.formErrors('changePassword', { cur_password: _t('error-settings-invalidpassword') }) && false;
                     }
 
                     if (!form.new_password_1.value) {
-                        Parley.formErrors('settings', { new_password_1: _t('error-settings-invalidpassword') });
-                        return false;
+                        return Parley.formErrors('changePassword', { new_password_1: _t('error-settings-invalidpassword') }) && false;
                     }
 
-                    if (form.new_password_2.value == form.new_password_1.value) {
-                        Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
-                            if (!_.has(data, 'error')) {
-                                Parley.app.dialog('show info password-changed', {
-                                    header: _t('password changed'),
-                                    message: _t('message-password-changed'),
-                                    buttons: [ 'okay' ]
-                                });
-                            } else {
-                                Parley.app.dialog('show info password-changeerror', {
-                                    header: _t('error'),
-                                    message: _t('message-password-changeerror') + "\n" + data.error,
-                                    buttons: [ 'okay' ]
-                                });
-                            }
-                        });
-                    } else {
-                        Parley.formErrors('changePassword', {
-                            new_password_1: _t('error-settings-invalidpassword'),
-                            new_password_2: _t('error-settings-invalidpassword')
-                        });
+                    if (form.new_password_1.value != form.new_password_2.value) {
+                        return Parley.formErrors('changePassword', {
+                            new_password_1: _t('password mismatch'),
+                            new_password_2: _t('password mismatch')
+                        }) && false;
                     }
+
+                    Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
+                        if (!_.has(data, 'error')) {
+                            Parley.app.dialog('show info password-changed', {
+                                header: _t('password changed'),
+                                message: _t('message-password-changed'),
+                                buttons: [ 'okay' ]
+                            });
+                        } else {
+                            Parley.app.dialog('show info password-changeerror', {
+                                header: _t('error'),
+                                message: _t('message-password-changeerror') + "\n" + data.error,
+                                buttons: [ 'okay' ]
+                            });
+                        }
+                    });
                 },
                 'click #revokeKeyAction': function (e) {
                     e.preventDefault();
