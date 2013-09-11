@@ -83,6 +83,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
         return '';
     }
 
+  Parley.localUsers = function () {
+    return window.localStorage['parley:local_users'] ? window.localStorage['parley:local_users'].split(' ') : [];
+  }
+
   //This is just a shim in case Parley.Contact isn't defined elsewhere
   Parley.Contact = Parley.Contact || function () {
     this.attributes = this.attributes || {};
@@ -231,6 +235,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
+
+      //make sure email is available in list of local users
+      window.localStorage['parley:local_users'] = _.uniq(Parley.localUsers().concat([email])).join(' ');
+
       $.ajax({
         type:'GET',
         url:url,
@@ -577,16 +585,26 @@ are massaged to fit. The arguments to finished on ajax error look like:
       'time' : Math.floor((new Date())/1000)
     }
     var sig = Parley.signAPIRequest(url,'GET',data);
+    var ls = window.localStorage['parley:messages:' + Parley.currentUser.get('email')] ? JSON.parse(window.localStorage['parley:messages:'+Parley.currentUser.get('email')]) : [];
+
     data.sig = sig;
     $.ajax({
       type:'GET',
       url:url,
       headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       data:data,
-      success:finished,
+      success:function (a,b,c) {
+        //add messages to localStorage
+        ls = _.uniq(ls.concat(_.clone(a.messages)),function (i) {return i.message_id});
+        window.localStorage['parley:messages:'+Parley.currentUser.get('email')] = JSON.stringify(ls);
+
+        finished(a,b,c);
+      },
       error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
       dataType:'json'
     });
+
+    return ls;
   }
 
   //Fetch 20 contacts to whom currentUser has sent the most mail
