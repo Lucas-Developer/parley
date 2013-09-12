@@ -49,6 +49,7 @@
             } else {
                 var key = Parley.importKey(data.public_key);
                 var fingerprint = key.fingerprints[0];
+                data.isParleyUser = true;
                 contact.set( _.extend(data, Parley.AFIS(fingerprint)) );
                 callback(contact);
             }
@@ -68,6 +69,7 @@
                 var parsed = Parley.parseUID(userinfo.uids[0]);
                 userinfo.name = parsed.name;
                 userinfo.email = parsed.email;
+                userinfo.isParleyUser = false;
                 contact.set(userinfo);
                 callback(contact);
             }

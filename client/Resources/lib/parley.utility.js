@@ -398,6 +398,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
     }
   }
 
+  Parley.signKey = function(fp) {
+    return window.PYsignKey(fp);
+  }
+
   /* Sign, encrypt and send message to recipient(s).
   Accepts clearTextMessage as a String and recipients as an array of Contacts.
   Also takes finished callback. */
@@ -414,6 +418,14 @@ are massaged to fit. The arguments to finished on ajax error look like:
         return recipient;
       } else {
         return recipient.get('email');
+      }
+    });
+
+    //sign recipient keys, if they're Parley users (Parley has verified
+    //their email addresses)
+    _(recipients).each(function(recipient) {
+      if (!_.isString(recipient) && recipient.get('isParleyUser')) {
+        Parley.signKey(recipient.get('fingerprint'));
       }
     });
 
