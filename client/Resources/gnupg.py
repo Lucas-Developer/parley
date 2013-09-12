@@ -1263,7 +1263,6 @@ class GPG(object):
         cmd.append("--status-fd 2 --command-fd 0 --no-tty")
         cmd.append("--edit %s" % fingerprint)
         proc = Popen(' '.join(cmd), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        #input = "passwd\n%s\n%s\n%s\nsave\n" % (old, new, new)
-        input = "sign\n%s\nsave\n" % (passphrase)
+        input = "sign\ny\n%s\nsave\n" % (passphrase)
         (stdout, stderr) = proc.communicate(input.encode(self.encoding))
         return (stdout,stderr)
