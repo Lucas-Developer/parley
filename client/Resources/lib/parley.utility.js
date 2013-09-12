@@ -594,9 +594,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
       headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       data:data,
       success:function (a,b,c) {
-        //add messages to localStorage
-        ls = _.uniq(ls.concat(_.clone(a.messages)),function (i) {return i.message_id});
-        window.localStorage['parley:messages:'+Parley.currentUser.get('email')] = JSON.stringify(ls);
+        if (a.messages) {
+          //add messages to localStorage
+          ls = _.uniq(ls.concat(_.clone(a.messages)),function (i) {return i.message_id});
+          window.localStorage['parley:messages:'+Parley.currentUser.get('email')] = JSON.stringify(ls);
+        }
 
         finished(a,b,c);
       },
