@@ -84,7 +84,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     }
 
   Parley.localUsers = function () {
-    return window.localStorage['parley:local_users'] ? window.localStorage['parley:local_users'].split(' ') : [];
+    return window.localStorage['parley:local_users'] ? JSON.parse(window.localStorage['parley:local_users']) : [];
   }
 
   //This is just a shim in case Parley.Contact isn't defined elsewhere
@@ -173,14 +173,28 @@ are massaged to fit. The arguments to finished on ajax error look like:
     });
   }
 
-  Parley.authenticateUser = function(email, clearTextPassword, finished) {
+  Parley.authenticateUser = function(email, clearTextPassword, finished, rememberMe) {
     Parley.currentUser = Parley.currentUser || new Parley.Contact({isCurrentUser:true});
     Parley.currentUser.set('email', email);
     var passwords = Parley.currentUser.get('passwords') || {};
     passwords.local = Parley.pbkdf2(clearTextPassword);
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
-    Parley.requestKeyring(finished);
+    var modifiedCallback = function(a,b,c) {
+      finished(a,b,c);
+
+      //make sure email is available in list of local users
+      var localUsers = Parley.localUsers();
+      var storedUser = _(lu).where({'email':email});
+      var currentUser = rememberMe ? Parley.currentUser.toJSON() : {'email': email};
+      if (storedUser) {
+        storedUser = currentUser;
+      } else {
+        localUsers.concat([currentUser]);
+      }
+      window.localStorage['parley:local_users'] = JSON.stringify(localUsers);
+    }
+    Parley.requestKeyring(modifiedCallback);
   }
   
   Parley.updateUser = function (data, finished) {
@@ -235,9 +249,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
-
-      //make sure email is available in list of local users
-      window.localStorage['parley:local_users'] = _.uniq(Parley.localUsers().concat([email])).join(' ');
 
       $.ajax({
         type:'GET',
