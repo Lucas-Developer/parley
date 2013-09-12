@@ -185,12 +185,12 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
       //make sure email is available in list of local users
       var localUsers = Parley.localUsers();
-      var storedUser = _(lu).where({'email':email});
+      var storedUser = _(localUsers).where({'email':email})[0];
       var currentUser = rememberMe ? Parley.currentUser.toJSON() : {'email': email};
       if (storedUser) {
         storedUser = currentUser;
       } else {
-        localUsers.concat([currentUser]);
+        localUsers = localUsers.concat([currentUser]);
       }
       window.localStorage['parley:local_users'] = JSON.stringify(localUsers);
     }
