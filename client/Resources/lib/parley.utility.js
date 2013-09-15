@@ -8,9 +8,23 @@ are massaged to fit. The arguments to finished on ajax error look like:
   {'error':ErrorString},textStatus,jqXHR
 */
 
+
+/*
+ * for changing uid and pass, we'll probably need to play aroudn with low-level
+ * stuff:
+ * see generate_key_pair and openpgp_crypto_generateKeyPair for clues
+ * for revoking keys (as well as searc/send-key), we'll need https://npmjs.org/package/hkp-client
+ * */
+
 (function (Parley) {
 
   Parley.BASE_URL = "https://api.parley.co";
+
+  //TODO: node-webkit allows us to use node modules
+  //var crypt = require('crypto');
+
+  //openpgp.min.js must be included in index.html
+  openpgp.init()
 
     /**
     Wrapping encodeURIComponent in case we accidentally call it twice.
@@ -50,18 +64,33 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* Sign Parley API request--identical to Amazon API signing method,
   but timestamped and using password hash as the secret key. */
   Parley.signAPIRequest = function (url, method, data) {
-    //cast all data values as strings, because tide's KObject transfer layer
-    //was changing ints to floats and breaking the signatures
     for (var key in data) {
       data[key] = ''+data[key];
     }
-    //TODO: this needs to be implemented with SJCL
     return window.PYsignAPIRequest(url, method, data);
+/* TODO:
+    var valuePairs = _.pairs(data);
+    var sorted = _.sortBy(valuePairs,function(i){return i[0]});
+    var urlComponents = _.map(sorted,function(i){
+      return encodeURIComponent(i[0]) + '=' encodeURIComponent(i[1]);
+    });
+    return crypto.createHmac(
+        'SHA256',
+        Parley.currentUser.get('passwords').local)
+      .data(method+'|'+url+'?'+urlComponents.join('&'))
+      .digest('base64')
+      .replace('+','-')
+      .replace('/','_')
+      .replace('=','');
+      */
   }
 
   Parley.pbkdf2 = function (data) {
-    //TODO: this needs to be implemented with SJCL
-    return window.PYpbkdf2(data);
+    window.PYpbkdf2(data);
+    /* TODO:
+    var salt = Parley.currentUser.get('email') + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db';
+    return crypto.pbkdf2Sync(data, salt.toLowerCase(), 2048, 32).toString('hex');
+    */
   }
   
   /* Check if a user is already registered with Parley.
@@ -98,8 +127,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
         'p':Parley.currentUser.get('passwords').remote
       },
       success: function() {
-        //TODO: this needs to be implemented with openpgpjs
-        window.PYgenKey(sendKey); //this is super slow
+        var uid = Parley.currentUser.get('name') + ' () '
+          + Parley.currentUser.get('email');
+        openpgp.generate_key_pair(1,4096,uid,
+          Parley.currentUser.get('passwords').local);
         Parley.storeKeyring(finished);
       },
       error: function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
