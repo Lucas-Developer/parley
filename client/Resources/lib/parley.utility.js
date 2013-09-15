@@ -1,64 +1,5 @@
 /*
-
-   Here are some newer miscellaneous notes about Parley while they're on my mind:
-   
-   -we need to think about what data, if any, we'll persist between uses
-     -ie. does a user stay logged in if they open/close the app? Are contacts
-     stored in localStorage or regenerated from the keyring every time?
-     -I'm tempted to err towards the least storage possible until we consider
-     the usability/security tradeoffs at hand
-     -Note that the keyring itself will generally stay on the clients as a separate (encrypted) file, as per gpg's typical behaviour
-   -I added parley.listKeys() to list every public key in a keyring--we could
-   easily use that to build a contact list every time the user logs in. Here's
-   some sample output for a single key:
-     
-     [
-       {
-         "dummy": "",
-         "keyid": "5CA687A5B91D848E",
-         "expires": "1372256185",
-         "subkeys": [
-           [ "E45C139F7291E0F6", "e" ]
-         ],
-         "length": "2048",
-         "ownertrust": "-",
-         "algo": "1",
-         "fingerprint": "B1E44BDDB11E03815D9CEE435CA687A5B91D848E",
-         "date": "1371651385",
-         "trust": "-",
-         "type": "pub",
-         "uids": [ "Jim John <test@example.com>" ]
-       }
-     ]
-
-     -uids take the form "First Name (Optional comment here) <email@example.com>"
-       -it probably makes sense to pull names and email addresses from the uid with a regex in order to build the Contact model
-
-   -I've taken some care to make these functions accept email addresses and Contact objects interchangeably, but it probably makes sense to build Contact objects from email addresses before calling the functions (see note on Parley.requestPublicKey)
-
-   ---------------Older Note:--------------------
-Methods and data models
-Parley.setup (stores IMAP credentials and downloads encrypted keyring from Parley server)
-Parley.contacts (collection)
-Parley.inbox (collection)
-  .fetch retrieves paginated list of PGP encrypted mail (and unencrypted messages from Parley, ie. for
-  verification), both sent and received, ordered by time via IMAP (using context.io)
-
-The client should walk the user through a setup process on initial use (or after logging out) that
-involves getting the user's email address and checking to see if it is registered with Parley. If so,
-the program should accept the user's password and retrieve the keyring from the Parley server. Otherwise,
-the program should create a new account for the user and generate a keypair.
-
-The setup process also needs to collect and store (locally) the user's IMAP credentials.
-
-There should be a settings panel where the user can change their password, IMAP credentials or log out.
-
-There should be a "Contacts" panel (separate from the one that pops up while composing a message) where
-the user can manage their contacts and invite new users to Parley.
-
---------------General docstring:--------------
-
-The following utilities will encapsulate any external Python calls (ie. for crypto/key management) and
+The following utilities will encapsulate any crypto and
 remote API calls (IMAP/SMTP/Parley).
 
 NB. I've replaced jQuery's usual success and error callbacks with a single
@@ -96,19 +37,13 @@ are massaged to fit. The arguments to finished on ajax error look like:
     }
   }
   Parley.installed = function(){
-      result = window.PYinstalled(
-          window.Ti.Filesystem.getResourcesDirectory().toString(),
-          window.Ti.Filesystem.getApplicationDataDirectory().toString(),
-          window.Ti.Filesystem.getUserDirectory().toString()
-      );
-      return result
+      //legacy function; deprecated since install process is no longer
+      //a thing
+      //(make sure all calls to it are gone before it can be removed)
+      return true;
   }
   Parley.install = function(finished){
-      window.PYinstall(
-          window.Ti.Filesystem.getResourcesDirectory().toString(),
-          window.Ti.Filesystem.getApplicationDataDirectory().toString(),
-          window.Ti.Filesystem.getUserDirectory().toString()
-      );
+      //also legacy, also deprecated (see above)
       finished();
   }
 
@@ -120,10 +55,12 @@ are massaged to fit. The arguments to finished on ajax error look like:
     for (var key in data) {
       data[key] = ''+data[key];
     }
+    //TODO: this needs to be implemented with SJCL
     return window.PYsignAPIRequest(url, method, data);
   }
 
   Parley.pbkdf2 = function (data) {
+    //TODO: this needs to be implemented with SJCL
     return window.PYpbkdf2(data);
   }
   
@@ -161,6 +98,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         'p':Parley.currentUser.get('passwords').remote
       },
       success: function() {
+        //TODO: this needs to be implemented with openpgpjs
         window.PYgenKey(sendKey); //this is super slow
         Parley.storeKeyring(finished);
       },
@@ -210,7 +148,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       data:data,
       headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       success:function(a,b,c) {
-        a.revoked = window.PYrevokeKey();
+        a.revoked = window.PYrevokeKey(); //TODO with openpgpjs
         if (!a.revoked) {
           a.error = 'Failed to revoke key';
         }
@@ -238,7 +176,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         data:{'time':time,'sig':sig},
         success:function(data, textStatus, jqXHR) {
           if (data.keyring) {
-            window.PYimportEncryptedKeyring(data.keyring);
+            window.PYimportEncryptedKeyring(data.keyring); //TODO with openpgpjs
           } else {
             data.error = 'Failed to authenticate. Returning public user info.';
           }
@@ -264,8 +202,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       data.time = Math.floor((new Date())/1000);
       if (data.name) {
-        window.PYchangeName(data.name);
-        data.keyring = window.PYgetEncryptedKeyring();
+        window.PYchangeName(data.name); //TODO with openpgpjs
+        data.keyring = window.PYgetEncryptedKeyring(); //TODO
       }
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
@@ -285,9 +223,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Accepts finished callback. */
   Parley.storeKeyring = _.debounce(function(finished) {
     console.log('Storing keyring');
-    var keyring = window.PYgetEncryptedKeyring(),
+    var keyring = window.PYgetEncryptedKeyring(), //TODO with openpgpjs
         finished = finished || function () {};
-    Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey()}, finished);
+    Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey() /* TODO with openpgpjs */}, finished);
   }, 1000*3);
   
   /* Requests the public key corresponding to an email address from public keyservers.
@@ -298,11 +236,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //it is probably better to create Contact objects using this function first
   //and then pass the entire object to encrypt/decrypt/etc. (See Parley.AFIS)
   Parley.requestPublicKey = function(email) {
-    return window.PYfetchKey(email);
+    return window.PYfetchKey(email); //TODO with openpgpjs
   }
 
   Parley.importKey = Parley.importPublicKey = Parley.importSecretKey = function(key) {
-    return window.PYimportKey(key);
+    return window.PYimportKey(key); //TODO with openpgpjs
   }
 
   Parley.changePass = function(oldPass, newPass, finished) {
@@ -312,13 +250,13 @@ are massaged to fit. The arguments to finished on ajax error look like:
       oldRemote = passwords.remote;
       passwords.local = newLocal = Parley.pbkdf2(newPass);
       passwords.remote = newRemote = Parley.pbkdf2(newLocal);
-      window.PYchangePass(newLocal); //change keyring passphrase
+      window.PYchangePass(newLocal); //TODO //change keyring passphrase
 
       //update passwords on server along with keyring
       var email = Parley.currentUser.get('email');
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
-      var keyring = window.PYgetEncryptedKeyring();
-      var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':window.PYgetPublicKey(),'secret':newRemote};
+      var keyring = window.PYgetEncryptedKeyring(); //TODO
+      var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':window.PYgetPublicKey() /* TODO */,'secret':newRemote};
 
       //reset to old passwords temporarily for signing API request
       //(because the server will validate agains the old secret)
@@ -345,7 +283,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //This function could be used to build Parley.Contacts from a keyring
   //after importing it or adding a new key.
   Parley.listKeys = function() {
-    return window.PYlistKeys();
+    return window.PYlistKeys(); //TODO  with openpgpjs
   }
 
   /*This function returns key meta data belonging to a given fingerprint.
@@ -417,6 +355,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       }
     });
 
+    //TODO
     var messageText = window.PYencryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
 
     var message = {
@@ -461,6 +400,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     } else {
       throw "Error: Sender is illegible."
     }
+    //TODO
     return window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
   }
 
