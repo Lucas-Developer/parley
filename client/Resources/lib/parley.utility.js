@@ -14,6 +14,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
  * stuff:
  * see generate_key_pair and openpgp_crypto_generateKeyPair for clues
  * for revoking keys (as well as searc/send-key), we'll need https://npmjs.org/package/hkp-client
+ * use https://gitorious.org/openhkp-js/openhkp-js/source/deca0bd37f6dc18fbd16362f21047cf8c125b147:openhkp.js as a template for adding sendKey
  * */
 
 (function (Parley) {
