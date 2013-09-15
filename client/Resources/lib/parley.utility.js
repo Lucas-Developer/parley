@@ -27,17 +27,67 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //openpgp.min.js must be included in index.html
   openpgp.init()
 
-    /**
-    Wrapping encodeURIComponent in case we accidentally call it twice.
-    Ideally this doesn't exist, but for now, until we get tidier, voila.
-
-    If a string is NOT encoded OR does not contain an @, it will be encoded
-    **/
-    Parley.encodeEmail = function (email) {
-        if (email)
-            return (!~email.indexOf('%40') ? email : encodeURIComponent(email));
-        return '';
+  Parley.PGP = {
+    'genKey': function() {
+      openpgp.generate_key_pair(1,4096,uid,
+        Parley.currentUser.get('passwords').local);
+    },
+    'importEncryptedKeyring': function(b64_keyring) {
+      var success= true;
+      return success;
+    },
+    'getEncryptedKeyring': function() {
+      var b64_keyring = '';
+      return b64_keyring;
+    },
+    'getPublicKey': function() {
+      public_key = {};
+      return public_key;
+    },
+    'listKeys': function() {
+      var keys = [];
+      return keys;
+    },
+    'fetchKey': function(email) {
+      var fingerprint = '';
+      return fingerprint;
+    },
+    'importKey':function(key) {
+      return key;
+    },
+    'revokeKey': function() {
+      var revocation = null; //populate with revocation cert
+      return revocation || false;
+    },
+    'changeName': function(newName) {
+      var success = '', error = '';
+      return [success, error];
+    },
+    'changePass': function(newPass) {
+      var success = '', error = '';
+      return [success, error];
+    },
+    'encryptAndSign': function(data, recipients, signer, passphrase) {
+      var encrypted = '';
+      return encrypted;
+    },
+    'decryptAndVerify': function(data, passphrase, sender_id) {
+      var decrypted = '';
+      return decrypted;
     }
+  }
+
+  /**
+  Wrapping encodeURIComponent in case we accidentally call it twice.
+  Ideally this doesn't exist, but for now, until we get tidier, voila.
+
+  If a string is NOT encoded OR does not contain an @, it will be encoded
+  **/
+  Parley.encodeEmail = function (email) {
+    if (email)
+      return (!~email.indexOf('%40') ? email : encodeURIComponent(email));
+    return '';
+  }
 
   //This is just a shim in case Parley.Contact isn't defined elsewhere
   Parley.Contact = Parley.Contact || function () {
@@ -130,8 +180,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       success: function() {
         var uid = Parley.currentUser.get('name') + ' () '
           + Parley.currentUser.get('email');
-        openpgp.generate_key_pair(1,4096,uid,
-          Parley.currentUser.get('passwords').local);
+        Parley.PGP.genKey();
         Parley.storeKeyring(finished);
       },
       error: function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -180,7 +229,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       data:data,
       headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       success:function(a,b,c) {
-        a.revoked = window.PYrevokeKey(); //TODO with openpgpjs
+        a.revoked = Parley.PGP.revokeKey();
         if (!a.revoked) {
           a.error = 'Failed to revoke key';
         }
@@ -208,7 +257,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         data:{'time':time,'sig':sig},
         success:function(data, textStatus, jqXHR) {
           if (data.keyring) {
-            window.PYimportEncryptedKeyring(data.keyring); //TODO with openpgpjs
+            Parley.PGP.importEncryptedKeyring(data.keyring);
           } else {
             data.error = 'Failed to authenticate. Returning public user info.';
           }
@@ -234,8 +283,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       data.time = Math.floor((new Date())/1000);
       if (data.name) {
-        window.PYchangeName(data.name); //TODO with openpgpjs
-        data.keyring = window.PYgetEncryptedKeyring(); //TODO
+        Parley.PGP.changeName(data.name);
+        data.keyring = Parley.PGP.getEncryptedKeyring();
       }
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
@@ -255,9 +304,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Accepts finished callback. */
   Parley.storeKeyring = _.debounce(function(finished) {
     console.log('Storing keyring');
-    var keyring = window.PYgetEncryptedKeyring(), //TODO with openpgpjs
+    var keyring = Parley.PGP.getEncryptedKeyring(),
         finished = finished || function () {};
-    Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey() /* TODO with openpgpjs */}, finished);
+    Parley.saveUser({'keyring':keyring, 'public_key':Parley.PGP.getPublicKey()}, finished);
   }, 1000*3);
   
   /* Requests the public key corresponding to an email address from public keyservers.
@@ -267,13 +316,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //be used in place of Contact objects (ie. the encrypt and decrypt functions)
   //it is probably better to create Contact objects using this function first
   //and then pass the entire object to encrypt/decrypt/etc. (See Parley.AFIS)
-  Parley.requestPublicKey = function(email) {
-    return window.PYfetchKey(email); //TODO with openpgpjs
-  }
+  Parley.requestPublicKey = Parley.PGP.fetchKey;
 
-  Parley.importKey = Parley.importPublicKey = Parley.importSecretKey = function(key) {
-    return window.PYimportKey(key); //TODO with openpgpjs
-  }
+  Parley.importKey = Parley.importPublicKey = Parley.importSecretKey = Parley.PGP.importKey;
 
   Parley.changePass = function(oldPass, newPass, finished) {
     if (Parley.pbkdf2(oldPass) == Parley.currentUser.get('passwords').local) { //this is extremely superficial (because PWs are already in memory) but hopefully will at least reduce the likelihood of situations like "my little brother saw Parley open and decided to change my password"
@@ -282,13 +327,13 @@ are massaged to fit. The arguments to finished on ajax error look like:
       oldRemote = passwords.remote;
       passwords.local = newLocal = Parley.pbkdf2(newPass);
       passwords.remote = newRemote = Parley.pbkdf2(newLocal);
-      window.PYchangePass(newLocal); //TODO //change keyring passphrase
+      Parley.PGP.changePass(newLocal); //change keyring passphrase
 
       //update passwords on server along with keyring
       var email = Parley.currentUser.get('email');
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
-      var keyring = window.PYgetEncryptedKeyring(); //TODO
-      var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':window.PYgetPublicKey() /* TODO */,'secret':newRemote};
+      var keyring = Parley.PGP.getEncryptedKeyring();
+      var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':Parley.PGP.getPublicKey(),'secret':newRemote};
 
       //reset to old passwords temporarily for signing API request
       //(because the server will validate agains the old secret)
@@ -314,9 +359,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   //This function could be used to build Parley.Contacts from a keyring
   //after importing it or adding a new key.
-  Parley.listKeys = function() {
-    return window.PYlistKeys(); //TODO  with openpgpjs
-  }
+  Parley.listKeys = Parley.PGP.listKeys;
 
   /*This function returns key meta data belonging to a given fingerprint.
     Could be used in tandem with requestPublicKey to create a new Contact
@@ -387,8 +430,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       }
     });
 
-    //TODO
-    var messageText = window.PYencryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
+    var messageText = Parley.PGP.encryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
 
     var message = {
       'from':null,
@@ -432,8 +474,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     } else {
       throw "Error: Sender is illegible."
     }
-    //TODO
-    return window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
+    return Parley.PGP.decryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
   }
 
   Parley.quote = function(message) {
