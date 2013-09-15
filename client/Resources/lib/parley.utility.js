@@ -24,56 +24,83 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //TODO: node-webkit allows us to use node modules
   //var crypt = require('crypto');
 
-  //openpgp.min.js must be included in index.html
-  openpgp.init()
+  //clear stored keys before initializing, for multi-user scenario
+  window.localStorage.removeItem('privatekeys');
+  window.localStorage.removeItem('publickeys');
+  openpgp.init(); //openpgp.min.js must be included in index.html
 
   Parley.PGP = {
-    'genKey': function() {
+    'genKey': function(sendKey) {
       openpgp.generate_key_pair(1,4096,uid,
         Parley.currentUser.get('passwords').local);
+      if (sendKey) {
+        //TODO: send key to keyserver
+      }
     },
-    'importEncryptedKeyring': function(b64_keyring) {
-      var success= true;
-      return success;
+    'importEncryptedKeyring': function(b64Keyring) {
+      var encryptedKeyring = new Buffer(b64Keyring, 'base64').toString('ascii');
+
+      //TODO: symmetrically decrypt keyring to get keyObj
+
+      var keyObj = {'private':[],'public':[]};
+      _.each(keyObj['private'], openpgp.keyring.importPrivateKey);
+      _.each(keyObj['public'], openpgp.keyring.importPublicKey);
+      return true;
     },
     'getEncryptedKeyring': function() {
-      var b64_keyring = '';
-      return b64_keyring;
+      var publicKeys = _.pluck(openpgp.keyring.publicKeys, 'armored');
+      var privateKeys = _.pluck(openpgp.keyring.privateKeys, 'armored');
+      var keyring = JSON.stringify({'public':publicKeys,'private':privateKeys});
+      return new Buffer(keyring).toString('base64');
     },
     'getPublicKey': function() {
-      public_key = {};
-      return public_key;
+      var secretKey = openpgp.keyring.getPrivateKeyForAddress(
+          Parley.currentUser.get('email'));
+      return secretKey.extractPublicKey();
     },
     'listKeys': function() {
-      var keys = [];
-      return keys;
+      return openpgp.keyring.publicKeys;
     },
     'fetchKey': function(email) {
+      //TODO:
+      //search for keys, import first match, and return fingerprint of new key
       var fingerprint = '';
       return fingerprint;
     },
     'importKey':function(key) {
-      return key;
+      openpgp.keyring.importPublicKey(key);
+      return _.last(openpgp.keyring.publicKeys);
     },
     'revokeKey': function() {
+      //TODO:
+      //generate revocation, send to keyservers
+      //
       var revocation = null; //populate with revocation cert
       return revocation || false;
     },
     'changeName': function(newName) {
+      //TODO: add new uid to currentUser's key
       var success = '', error = '';
       return [success, error];
     },
     'changePass': function(newPass) {
+      //TODO
       var success = '', error = '';
       return [success, error];
     },
     'encryptAndSign': function(data, recipients, signer, passphrase) {
-      var encrypted = '';
+      var privateKey = openpgp.keyring.getPrivateKeyForKeyId(
+          signer.subtr(signer.length-8));
+      var publicKeys = _.map(recipients, function(i){
+        i.substr(i.length-8);
+      });
+      var encrypted = openpgp.write_signed_and_encrypted_message(privateKey,publicKeys,data);
+      //TODO:encrypted is a binary string, needs to be ascii armored?
       return encrypted;
     },
     'decryptAndVerify': function(data, passphrase, sender_id) {
-      var decrypted = '';
-      return decrypted;
+      var message = openpgp.read_message(data);
+      return message;
     }
   }
 
@@ -180,7 +207,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       success: function() {
         var uid = Parley.currentUser.get('name') + ' () '
           + Parley.currentUser.get('email');
-        Parley.PGP.genKey();
+        Parley.PGP.genKey(sendKey);
         Parley.storeKeyring(finished);
       },
       error: function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
