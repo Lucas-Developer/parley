@@ -48,6 +48,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
       console.log(b64Keyring);
       //var encryptedKeyring = new Buffer(b64Keyring, 'base64').toString('utf8');
       window.ek = openpgp_encoding_base64_decode(b64Keyring);
+      //TODO: openpgp.js doesn't seem to handle the "Symmetric-key Encrypted Session Key Packet" well
+      //-either fix openPGP.js or manually parse the packets and then call symmetricDecrypt with whatever you find
+      //-see http://tools.ietf.org/html/rfc4880#section-5.3
 
       //var keyObj = JSON.parse(openpgp_crypto_symmetricDecrypt(9,Parley.currentUser.get('passwords').local,encryptedKeyring,true));
       //_.each(keyObj['private'], function(i){
