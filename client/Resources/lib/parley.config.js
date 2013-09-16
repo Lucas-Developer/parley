@@ -215,27 +215,36 @@
                 }
             }
         },
-        {   id: 'dialog_nokey',
-            template: Mustache.compile($('#nokeyDialogTemplate').html()),
+        {
+            id: 'dialog_invite',
+            template: Mustache.compile($('#inviteDialogTemplate').html()),
             events: {
+                'click #selectAllInvite': function () {
+                    $('#inviteList input').each(function () {
+                        this.checked = true;
+                    });
+                },
+                'click .inviteRow': function (e) {
+                    var checkbox = $(e.target).find('input')[0];
+                    checkbox.checked = !checkbox.checked;
+                },
                 'click #inviteAction': function (e) {
                     e.preventDefault();
-                    var emails = [], selected = $('#nokeysForm input:checked');
+                    var emails = [], selected = $('#inviteForm input:checked');
 
                     selected.each(function (e) {
                         emails.push(this.name.split('_')[1]);
                     });
 
                     Parley.vent.trigger('invite', emails, function () {
-                        Parley.app.dialog('hide nokey');
-                        
+                        Parley.app.dialog('hide invite');
                     });
                 }
             },
             model: {
-                slug: 'nokey',
+                slug: 'invite',
                 opts: {},
-                title: 'Public PGP keys not found.'
+                title: 'Invite your friends.'
             }
         },
         {   

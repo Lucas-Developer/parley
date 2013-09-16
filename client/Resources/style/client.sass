@@ -219,7 +219,8 @@ table
         &.default-btn
             border: 1px solid #f0961e 
 
-#contactsListTable tr:nth-child(odd)
+
+.niceTable tr:nth-child(odd)
     background-color: #f0f0f0 
 
 #composeAction:hover, #settingsAction:hover, #contactsAction:hover 
@@ -319,11 +320,11 @@ button
     font-size: 0.7em
 
 
-#contactsListWrapper
+.niceTableWrapper
     height: 350px
     overflow-y: scroll
     overflow-x: visible
-#contactsListTable
+.niceTable
     width: 100%
     min-width: 600px
     background-color: transparent
@@ -509,6 +510,12 @@ tr.contact td
     vertical-align: middle
 tr.contact
     cursor: pointer
+
+img.avatar
+    float: left
+    width: 48px
+    height: 48px
+    margin: 2px 4px 0 0
 
 /* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
 .as-selections input

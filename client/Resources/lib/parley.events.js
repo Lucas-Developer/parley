@@ -94,6 +94,16 @@
         contact = Parley.getUserInfo(data.contact, data.callback);
     });
 
+    Parley.vent.on('contact:fetch', function (callback) {
+        Parley.requestContacts(function (data) {
+            if (data && !_.has(data, 'error')) {
+                callback(data);
+            } else {
+                console.log(data.error);
+            }
+        });
+    });
+
     /**
     Verify the email that the user submitted.
 
@@ -137,6 +147,7 @@
 
                 Parley.app.dialog('hide setup');
                 Parley.app.dialog('hide info register-wait');
+
                 Parley.app.render();
             } else {
                 Parley.app.dialog('hide info register-wait');
@@ -168,7 +179,29 @@
 
                 Parley.app.dialog('hide setup');
                 Parley.app.dialog('hide info login-wait');
+
                 Parley.app.render();
+
+                // This next part is for the register flow, just here for testing
+                Parley.app.dialog('show info inviteFriends', {
+                    header: _t('invite your friends'),
+                    message: _t('message-invitefriends'),
+                    buttons: [
+                        {
+                            id: 'inviteFriends',
+                            text: _t('okay'),
+                            handler: function (e) {
+                                e.preventDefault();
+                                Parley.vent.trigger('contact:fetch', function (data) {
+                                    console.log('fetched');
+                                    Parley.app.dialog('hide info inviteFriends');
+                                    Parley.app.dialog('show invite', { emails: data.contacts });
+                                });
+                            }
+                        },
+                        'cancel'
+                    ]
+                });
             } else {
                 console.log('Login error occurred');
 
@@ -281,14 +314,50 @@
         $.when.apply($, nokeysBuilder).then(function () {
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
-                Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
+                var nokeysHTML = _.reduce(nokeys, function (memo, val) {
+                    return memo + '<li>' + val.email + '</li>';
+                }, '<ul>') + '</ul>';
+                Parley.app.dialog('show info nokey', {
+                    message: _t('message-nokey'),
+                    extra_html: nokeysHTML,
+                    buttons: [ 
+                        {
+                            id: 'inviteDialogAction',
+                            text: _t('invite'),
+                            handler: function (e) {
+                                e.preventDefault();
+                                Parley.app.dialog('invite', { emails: nokeys });
+                                Parley.app.dialog('hide info nokey');
+                            }
+                        },
+                        'cancel'
+                    ]
+                });
             }
             if (!_.isEmpty(message.recipients)) Parley.vent.trigger('message:send', message, callback);
         }, function () {
-            // This gets called if getUserInfo doesn't have a change to fire the callback
+            // This gets called if getUserInfo doesn't have a chance to fire the callback
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
-                Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
+                var nokeysHTML = _.reduce(nokeys, function (memo, val) {
+                    return memo + '<li>' + val.email + '</li>';
+                }, '<ul>') + '</ul><br>';
+                Parley.app.dialog('show info nokey', {
+                    message: _t('message-nokey'),
+                    extra_html: nokeysHTML,
+                    buttons: [ 
+                        {
+                            id: 'inviteDialogAction',
+                            text: _t('invite'),
+                            handler: function (e) {
+                                e.preventDefault();
+                                Parley.app.dialog('invite', { emails: nokeys });
+                                Parley.app.dialog('hide info nokey');
+                            }
+                        },
+                        'cancel'
+                    ]
+                });
             }
         });
     });
@@ -345,6 +414,7 @@
     });
 
     Parley.vent.on('invite', function (emails, callback) {
+        console.log('VENT: invite');
         callback = callback || function () {};
 
         if (_.isString(emails))

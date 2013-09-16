@@ -197,8 +197,8 @@
         <div class="row">
             <button id="newContact">{{t_new_contact}}</button>
         </div>
-        <div id="contactsListWrapper">
-            <table id="contactsListTable" class="sortable">
+        <div class="niceTableWrapper" id="contactsListWrapper">
+            <table id="contactsListTable" class="sortable niceTable">
                 <!--<thead>
                 <tr><th class="thumbnail"></th><th>{{t_name}}</th><th>{{t_email}}</th><th class="buttons"></th></tr>
                       </thead>-->
@@ -228,22 +228,32 @@
     </div>
 </script>
 
-    <script type="text/template" id="nokeyDialogTemplate">
-        <p>{{t_message-nokey}}</p>
+    <script type="text/template" id="inviteDialogTemplate">
+        <p>{{t_message-invite}}</p>
     
-        <form name="nokeys" id="nokeysForm">
-            <h4>{{t_invite_users}}</h4>
+        <form name="invite" id="inviteForm">
+            <h4>{{t_invite_users}} <a href="#" id="selectAllInvite">{{t_select_all}}</a></h4>
             <div class="row"> <ul>
-                {{#nokeys}}
-                    <li> <label for="invite_{{email}}">
-                        <input type="checkbox" name="invite_{{email}}">
-                        {{email}}
-                    </label> </li>
-                {{/nokeys}}
+                <div class="niceTableWrapper" id="inviteListWrapper">
+                    <table id="inviteListTable" class="sortable niceTable">
+                        <tbody id="inviteList">
+                        {{#emails}}
+                            <tr class="inviteRow"><td> <label for="invite_{{email}}">
+                                <input type="checkbox" name="invite_{{email}}">
+                                {{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}
+                                {{#name}}{{name}}<br>{{/name}}
+                                {{email}}
+                            </label> </td></tr>
+                        {{/emails}}
+                        </tbody>
+                    </table>
+                </div>
             </ul> </div>
         </form>
-        <button id="inviteAction" name="invite">{{t_invite}}</button>
+        <button id="inviteAction" name="invite">{{t_send}}</button>
+        <button id="cancelButton" name="cancel">{{t_cancel}}</button>
     </script>
+
 	<script type="text/template" id="composeDialogTemplate">
 	    <form name="compose" id="composeForm">
             <div class="no-line row" id="recipients">
