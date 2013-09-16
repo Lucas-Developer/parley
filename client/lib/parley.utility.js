@@ -158,8 +158,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
     });
     return crypto.createHmac(
         'SHA256',
-        Parley.currentUser.get('passwords').local)
-      .data(method+'|'+url+'?'+urlComponents.join('&'))
+        Parley.currentUser.get('passwords').remote)
+      .update(method+'|'+url+'?'+urlComponents.join('&'))
       .digest('base64')
       .replace('+','-')
       .replace('/','_')
