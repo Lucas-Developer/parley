@@ -42,18 +42,21 @@ are massaged to fit. The arguments to finished on ajax error look like:
     'importEncryptedKeyring': function(b64Keyring) {
       var encryptedKeyring = new Buffer(b64Keyring, 'base64').toString('ascii');
 
-      //TODO: symmetrically decrypt keyring to get keyObj
-
-      var keyObj = {'private':[],'public':[]};
-      _.each(keyObj['private'], openpgp.keyring.importPrivateKey);
+      var keyObj = JSON.parse(openpgp_crypto_symmetricDecrypt(9,Parley.currentUser.get('passwords').local));
+      _.each(keyObj['private'], function(i){openpgp.keyring.importPrivateKey(i,Parley.currentUser.get('passwords').local});
       _.each(keyObj['public'], openpgp.keyring.importPublicKey);
       return true;
     },
     'getEncryptedKeyring': function() {
       var publicKeys = _.pluck(openpgp.keyring.publicKeys, 'armored');
       var privateKeys = _.pluck(openpgp.keyring.privateKeys, 'armored');
-      var keyring = JSON.stringify({'public':publicKeys,'private':privateKeys});
-      return new Buffer(keyring).toString('base64');
+      var encryptedKeyring = openpgp_crypto_symmetricEncrypt(
+        openpgp_crypto_getPrefixRandom(9),
+        9,
+        Parley.currentUser.get('passwords').local,
+        JSON.stringify({'public':publicKeys,'private':privateKeys})
+        );
+      return new Buffer(encryptedKeyring).toString('base64');
     },
     'getPublicKey': function() {
       var secretKey = openpgp.keyring.getPrivateKeyForAddress(
@@ -97,7 +100,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
         i.substr(i.length-8);
       });
       var encrypted = openpgp.write_signed_and_encrypted_message(privateKey,publicKeys,data);
-      //TODO:encrypted is a binary string, needs to be ascii armored?
       return encrypted;
     },
     'decryptAndVerify': function(data, passphrase, sender_id) {
