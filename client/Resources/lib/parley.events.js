@@ -187,7 +187,7 @@
 
         $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
 
-        Parley.requestInbox(Parley.inboxCurOffset, function (data, textStatus) {
+        var fetchedInboxHandler = function (data, textStatus) {
             console.log('Inbox requested at offset: ' + Parley.inboxCurOffset + '.');
 
             if (data.error == 'FORBIDDEN') {
@@ -212,7 +212,7 @@
 
                 return false;
             } else if (!_.has(data, 'error')) {
-                Parley.inboxCurOffset += 100;
+                if (textStatus != 'localStorage') Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
                 if (_.has(data, 'messages') && !!data.messages) {
@@ -252,7 +252,9 @@
             } else {
                 // An error occurred
             }
-        });
+        };
+        var lsInbox = Parley.requestInbox(Parley.inboxCurOffset, fetchedInboxHandler);
+        if (Parley.inbox.length == 0 && lsInbox.length > 0) fetchedInboxHandler({'messages':lsInbox});
     }, 5000));
 
     Parley.vent.on('message:nokey', function (data, callback) {
