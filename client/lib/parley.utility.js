@@ -43,7 +43,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var encryptedKeyring = new Buffer(b64Keyring, 'base64').toString('ascii');
 
       var keyObj = JSON.parse(openpgp_crypto_symmetricDecrypt(9,Parley.currentUser.get('passwords').local));
-      _.each(keyObj['private'], function(i){openpgp.keyring.importPrivateKey(i,Parley.currentUser.get('passwords').local});
+      _.each(keyObj['private'], function(i){
+        openpgp.keyring.importPrivateKey(i,Parley.currentUser.get('passwords').local);
+      });
       _.each(keyObj['public'], openpgp.keyring.importPublicKey);
       return true;
     },

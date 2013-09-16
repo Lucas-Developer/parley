@@ -374,6 +374,19 @@
                 this._dialogs.push({slug:slug,view:view});
             }
 
+            this._buttons = {
+                "okay": { id: "okayButton", text: _t('okay'), handler: function(e){ e.preventDefault(); this.dialog('close'); } },
+                "cancel": { id: "cancelButton", text: _t("cancel"), handler: function(e){ e.preventDefault(); this.dialog('close'); } }
+            };
+
+            this._images = {
+                "loading": "img/loader.gif",
+                "logo": "img/logo.png",
+                "logo_big": "img/logo_big.png"
+            };
+
+            this._blankOpts = { resizable: false, dialogClass: 'no-close', minWidth: '400' };
+
 			this.inbox = $('#inbox tbody');
 			this.contactsList = $('<div>');
 
@@ -442,27 +455,17 @@
             button: [{id:'buttonId',text:'click me',handler:function(){}}, etc.]
         as members of 'data'.
         **/
-        dialog: function (opts,data) {
-            var _buttons = {
-                "okay": { id: "okayButton", text: _t('okay'), handler: function(e){ e.preventDefault(); this.dialog('close'); } },
-                "cancel": { id: "cancelButton", text: _t("cancel"), handler: function(e){ e.preventDefault(); this.dialog('close'); } }
-            };
+        dialog: function (opts, data) {
+            var data = data || {};
+
             if (_.has(data, 'buttons')) {
                 data.buttons = _.map(data.buttons, function (ele) {
-                    if (_.isString(ele) && _.has(_buttons, ele)) return _buttons[ele];
+                    if (_.isString(ele) && _.has(this._buttons, ele)) return this._buttons[ele];
                     else return ele;
                 });
             }
 
-            var _images = {
-                "loading": "img/loader.gif",
-                "logo": "img/logo.png",
-                "logo_big": "img/logo_big.png"
-            };
-
-            var _blankOpts = { resizable: false, dialogClass: 'no-close', minWidth: '400' };
-
-            if (data && _.has(_images, data.image)) data.image = _images[data.image];
+            if (data && _.has(this._images, data.image)) data.image = this._images[data.image];
 
             if (_.isString(opts)) {
                 var _a = opts.split(' ');
@@ -500,11 +503,11 @@
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            if (false && _.has(this.tempDialogs, page)) { // Overriden
+                            if (_.has(this.tempDialogs, page)) { // Overriden
                                 var dialog = this.tempDialogs[page];
                                 dialog.html(this.blankTemplate(data));
                             } else {
-                                var dialog = $(this.blankTemplate(data)).dialog(_blankOpts);
+                                var dialog = $(this.blankTemplate(data)).dialog(this._blankOpts);
                                 this.tempDialogs[page] = dialog;
 
                                 _.each(data.buttons, function (ele) {
@@ -566,7 +569,11 @@
     window._t = function (key,data) { return Parley.polyglot.t(key,data); };
     window._T = function (key,data) { var word = Parley.polyglot.t(key,data); return word.charAt(0).toUpperCase() + word.slice(1); };
 
+console.log('inbox');
     Parley.inbox = new MessageList;
+console.log('contacts');
     Parley.contacts = new ContactList;
+console.log('app');
 	Parley.app = new AppView;
+console.log('done');
 }(window.Parley = window.Parley || {}, jQuery));
