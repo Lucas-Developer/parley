@@ -21,8 +21,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   Parley.BASE_URL = "https://api.parley.co";
 
-  //TODO: node-webkit allows us to use node modules
-  //var crypt = require('crypto');
+  //node-webkit allows us to use node modules
+  var crypto = require('crypto');
 
   //clear stored keys before initializing, for multi-user scenario
   window.localStorage.removeItem('privatekeys');
@@ -138,7 +138,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   }
   Parley.install = function(finished){
       //also legacy, also deprecated (see above)
-      finished();
+      _.delay(finished,1000);
   }
 
   /* Sign Parley API request--identical to Amazon API signing method,
@@ -147,12 +147,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
     for (var key in data) {
       data[key] = ''+data[key];
     }
-    return window.PYsignAPIRequest(url, method, data);
-/* TODO:
     var valuePairs = _.pairs(data);
     var sorted = _.sortBy(valuePairs,function(i){return i[0]});
     var urlComponents = _.map(sorted,function(i){
-      return encodeURIComponent(i[0]) + '=' encodeURIComponent(i[1]);
+      return encodeURIComponent(i[0]) + '=' + encodeURIComponent(i[1]);
     });
     return crypto.createHmac(
         'SHA256',
@@ -162,15 +160,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
       .replace('+','-')
       .replace('/','_')
       .replace('=','');
-      */
   }
 
   Parley.pbkdf2 = function (data) {
-    window.PYpbkdf2(data);
-    /* TODO:
     var salt = Parley.currentUser.get('email') + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db';
     return crypto.pbkdf2Sync(data, salt.toLowerCase(), 2048, 32).toString('hex');
-    */
   }
   
   /* Check if a user is already registered with Parley.
