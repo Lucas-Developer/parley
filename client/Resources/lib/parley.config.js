@@ -26,7 +26,8 @@
 
                     formdata = {
                         email: form.email.value,
-                        password: form.password.value
+                        password: form.password.value,
+                        remember: form.remember.checked
                     }
                     Parley.vent.trigger('setup:login', formdata);
                 },

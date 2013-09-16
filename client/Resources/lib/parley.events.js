@@ -179,7 +179,7 @@
                     buttons: ['okay']
                 });
             }
-        });
+        }, formdata.remember);
     });
 
     Parley.vent.on('message:sync', _.throttle(function () {

@@ -41,6 +41,7 @@ window._phrases = {
 "log in": "Log in",
 "logging in": "Logging in",
 "error logging in": "Error logging in",
+"remember me": "Remember me",
 
 "import key": "Import key",
 "revoke key": "Revoke key",
