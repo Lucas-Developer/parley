@@ -51,6 +51,24 @@ are massaged to fit. The arguments to finished on ajax error look like:
       //TODO: openpgp.js doesn't seem to handle the "Symmetric-key Encrypted Session Key Packet" well
       //-either fix openPGP.js or manually parse the packets and then call symmetricDecrypt with whatever you find
       //-see http://tools.ietf.org/html/rfc4880#section-5.3
+      //
+      //UPDATE: So the read_message path isn't defined for symmetric
+      //messages (tagType == 3). I've got it decrypting SOMETHING
+      //by:
+      //
+      // first_packet = openpgp_packet.read_packet(data,0,data.length)
+      // second_packet = openpgp_packet.read_packet(
+      //   data,
+      //   first_packet.packetLength + first_packet.headerLength,
+      //   data.length - first_packet.packetLength - first_packet.headerLength
+      // )
+      // aeskey = first_packet.s2k.produce_key(localPW,32).substr(0,32)
+      // kindaDecrypted = openpgp_crypto_symmetricDecrypt(9,aeskey,second_packet.encryptedData,false)
+      //
+      //except in that example kindaDecrypted just looks like a binary blob
+      //(but with other attempts it would fail completely, it seems to be
+      //checking the integrity of the data during/after decryption)
+      //I think it might be some sort of encoding issue?
 
       //var keyObj = JSON.parse(openpgp_crypto_symmetricDecrypt(9,Parley.currentUser.get('passwords').local,encryptedKeyring,true));
       //_.each(keyObj['private'], function(i){
