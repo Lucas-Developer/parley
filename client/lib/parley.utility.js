@@ -45,36 +45,102 @@ are massaged to fit. The arguments to finished on ajax error look like:
       }
     },
     'importEncryptedKeyring': function(b64Keyring) {
-      console.log(b64Keyring);
-      //var encryptedKeyring = new Buffer(b64Keyring, 'base64').toString('utf8');
-      window.ek = openpgp_encoding_base64_decode(b64Keyring);
-      //TODO: openpgp.js doesn't seem to handle the "Symmetric-key Encrypted Session Key Packet" well
-      //-either fix openPGP.js or manually parse the packets and then call symmetricDecrypt with whatever you find
-      //-see http://tools.ietf.org/html/rfc4880#section-5.3
-      //
-      //UPDATE: So the read_message path isn't defined for symmetric
-      //messages (tagType == 3). I've got it decrypting SOMETHING
-      //by:
-      //
-      // first_packet = openpgp_packet.read_packet(data,0,data.length)
-      // second_packet = openpgp_packet.read_packet(
-      //   data,
-      //   first_packet.packetLength + first_packet.headerLength,
-      //   data.length - first_packet.packetLength - first_packet.headerLength
-      // )
-      // aeskey = first_packet.s2k.produce_key(localPW,32).substr(0,32)
-      // kindaDecrypted = openpgp_crypto_symmetricDecrypt(9,aeskey,second_packet.encryptedData,false)
-      //
-      //except in that example kindaDecrypted just looks like a binary blob
-      //(but with other attempts it would fail completely, it seems to be
-      //checking the integrity of the data during/after decryption)
-      //I think it might be some sort of encoding issue?
 
-      //var keyObj = JSON.parse(openpgp_crypto_symmetricDecrypt(9,Parley.currentUser.get('passwords').local,encryptedKeyring,true));
-      //_.each(keyObj['private'], function(i){
-        //openpgp.keyring.importPrivateKey(i,Parley.currentUser.get('passwords').local);
-      //});
-      //_.each(keyObj['public'], openpgp.keyring.importPublicKey);
+      //legacy support:
+      //old pure-Python AES
+      var oldAES = function(b64CipherText, passphrase) {
+        var buf = new Buffer(b64CipherText,'base64');
+        var iv = buf.slice(0,16);
+        var data = buf.slice(16);
+        var key = new Buffer(passphrase.substr(0,32));
+        var decipher = crypto.createDecipheriv('aes-256-cbc',key,iv);
+        decipher.update(data);
+        return decipher.final('utf8');
+      }
+
+      //old GPG
+      var oldGPG = function(b64CipherText, passphrase) {
+        //the following was really fucking hard to figure out, because
+        //openpgp.js doesn't support symmetric-key encrypted session key
+        //packets (tagType == 3) properly.
+        //TODO: contribute a fix, and implement it more cleanly here
+        //-see http://tools.ietf.org/html/rfc4880#section-5.3
+
+        var cipherText = openpgp_encoding_base64_decode(b64CipherText);
+        var ctLength = cipherText.length;
+
+        var sessionKey = openpgp_packet.read_packet(cipherText,0,ctLength);
+        var skLength = sessionKey.headerLength + sessionKey.packetLength;
+
+        var encryptedCompressedData = openpgp_packet.read_packet(
+            cipherText,
+            skLength,
+            ctLength - skLength);
+
+        var aesKey = sessionKey.s2k.produce_key(
+            passphrase,
+            32).substr(0,32);
+
+        var compressedData = openpgp_crypto_symmetricDecrypt(
+            9,
+            aesKey,
+            encryptedCompressedData.encryptedData,
+            false);
+
+        var compressedPacket = openpgp_packet.read_packet(
+            compressedData,
+            0,
+            compressedData.length);
+        var data = compressedPacket.decompress();
+
+        //in the test case, the decompressed data appeared to have nonsense
+        //bits prepended to it--presumably openpgp_packet_compressed.read_packet
+        //is failing to strip some header info.
+        //For our own purposes, the following fix is sufficient:
+        return data.substr(data.indexOf('{'));
+      }
+
+      //var cipherText = new Buffer(b64Keyring,'base64').toString('utf8');
+      var passphrase = Parley.currentUser.get('passwords').local;
+      var json = '';
+
+      //have to do this in a very convoluted fashion
+      //because who knows what will cause an error and what won't
+      try {
+        //try current decryption method with openPGP.js
+        var cipherText = openpgp_encoding_base64_decode(b64Keyring);
+        json = openpgp_crypto_symmetricDecrypt(
+            9,
+            util.hex2bin(passphrase),
+            cipherText,
+            false);
+      } catch (e) {
+        console.log(e.message);
+      }
+
+      if (!json) {
+        //try old GPG decryption
+        try {
+          json = oldGPG(b64Keyring, passphrase);
+        } catch (e) {
+          console.log(e.message);
+        }
+      }
+
+      if (!json) {
+        //try old "pure python AES"
+        try {
+          json = oldAES(b64Keyring, passphrase);
+        } catch (e) {
+          console.log(e.message);
+        }
+      }
+
+      var keyObj = JSON.parse(json);
+
+      openpgp.keyring.importPrivateKey(keyObj['private'],Parley.currentUser.get('passwords').local);
+      openpgp.keyring.importPublicKey(keyObj['public']);
+      //TODO: add fingerprints to imported keys, as well as any other expected attributes
       return true;
     },
     'getEncryptedKeyring': function() {
@@ -83,7 +149,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var encryptedKeyring = openpgp_crypto_symmetricEncrypt(
         openpgp_crypto_getPrefixRandom(9),
         9,
-        Parley.currentUser.get('passwords').local,
+        util.hex2bin(Parley.currentUser.get('passwords').local),
         JSON.stringify({'public':publicKeys,'private':privateKeys})
         );
       return new Buffer(encryptedKeyring).toString('base64');
@@ -103,6 +169,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       return fingerprint;
     },
     'importKey':function(key) {
+      //TODO: add fingerprints array to return value!
       openpgp.keyring.importPublicKey(key);
       return _.last(openpgp.keyring.publicKeys);
     },
@@ -176,6 +243,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
   /* Sign Parley API request--identical to Amazon API signing method,
   but timestamped and using password hash as the secret key. */
   Parley.signAPIRequest = function (url, method, data) {
+    //temporarily disable post request (so as not to fuck up server
+    //with dev branch)
+    if (method.toLowerCase() != 'get') return '';
     for (var key in data) {
       data[key] = ''+data[key];
     }
