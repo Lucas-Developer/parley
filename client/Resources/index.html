@@ -238,12 +238,12 @@
                     <table id="inviteListTable" class="sortable niceTable">
                         <tbody id="inviteList">
                         {{#emails}}
-                            <tr class="inviteRow"><td> <label for="invite_{{email}}">
-                                <input type="checkbox" name="invite_{{email}}">
-                                {{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}
-                                {{#name}}{{name}}<br>{{/name}}
-                                {{email}}
-                            </label> </td></tr>
+                            <tr class="inviteRow">
+                                <td> <input type="checkbox" name="invite_{{email}}"> </td>
+                                <td> {{name}} </td>
+                                <!--{{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}-->
+                                <td> {{email}} </td>
+                            </tr>
                         {{/emails}}
                         </tbody>
                     </table>
@@ -300,7 +300,7 @@
         </td>
 	</script>
 	<script type="text/template" id="contactTemplate">
-		<td class="thumbnail">{{#thumbnail}}<img alt="{{name}}" src="{{thumbnail}}">{{/thumbnail}}</td>
+		<!--<td class="thumbnail">{{#thumbnail}}<img alt="{{name}}" src="{{thumbnail}}">{{/thumbnail}}</td>-->
 	    <td>{{name}}</td>
 	    <td>{{email}}</td>
 		<td class="buttons"><button data-email="{{email}}" class="send">{{t_send_email}}</button></td>

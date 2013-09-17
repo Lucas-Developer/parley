@@ -225,7 +225,7 @@
                     });
                 },
                 'click .inviteRow': function (e) {
-                    var checkbox = $(e.target).find('input')[0];
+                    var checkbox = $(e.currentTarget).find('input')[0];
                     if (checkbox)
                         checkbox.checked = !checkbox.checked;
                 },
