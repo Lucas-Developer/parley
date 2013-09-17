@@ -47,6 +47,11 @@ $font2: "Open Sans"
     outline: none
     border-color: $orange
 
+@import "reset"
+
+@import "jquery-ui"
+@import "autoSuggest"
+
 @font-face 
     font-family: "Raleway"
     src: url(Raleway-Medium.ttf) format("truetype")
@@ -99,6 +104,14 @@ body
     color: $grey
 h1, h2, h3, h4, h5, h6
     color: $grey
+    font-weight: 300
+    text-transform: capitalize 
+
+h2
+    font-size: 1.5em
+h3
+    text-align: left
+    font-size: 1.3em
 
 button
     @include default-button
@@ -194,21 +207,41 @@ table
     background-color: rgba(240,240,240,.95) !important
     border: 1px solid rgba(77, 104, 141, .3)
 
+    p
+        margin: 5px 0 10px
+    input[type=text], input[type=password], input[type=email]
+        width: 100%
+    input[type=search]
+        width: 100%
+
+    table
+        width: 100%
+        td
+            vertical-align: top
+
+        .thumbnail
+            padding: 2px
+            width: 32px
+            height: 32px
+
     .page, .tab
         display: none
         clear: both
         &.page-active, &.tab-active
             display: block
 
+    .ui-dialog-titlebar, h2
+        border-bottom: 1px solid #f0961e
+        color: #f0961e 
+
+    h4
+        border-bottom: 1px solid #ccc
+
     .ui-dialog-content
         background: transparent none !important 
 
     .section
         border-bottom: 1px solid #eee
-    .ui-dialog-titlebar, h2
-        border-bottom: 1px solid #f0961e
-        color: #f0961e 
-
     button
         display: inline-block
         &.clear-btn
@@ -226,18 +259,6 @@ table
 #composeAction:hover, #settingsAction:hover, #contactsAction:hover 
     background-color: transparent
 
-
-
-.ui-dialog-title, h1, h2, h3, h4, h5, h6
-    font-weight: 300
-    text-transform: capitalize 
-.ui-dialog-title, h2
-    font-size: 1.5em
-h3
-    text-align: left
-    font-size: 1.3em
-.ui-dialog h4
-    border-bottom: 1px solid #ccc
 
 p
     font-size: 0.9em
@@ -324,10 +345,10 @@ button
     height: 350px
     overflow-y: scroll
     overflow-x: visible
-.niceTable
-    width: 100%
-    min-width: 600px
-    background-color: transparent
+    .niceTable
+        width: 100%
+        min-width: 600px
+        background-color: transparent
 
 .ui-state-default
     background-color: transparent
@@ -484,22 +505,6 @@ header
     margin: 20px auto
     display: block
 
-.ui-dialog p
-    margin: 5px 0 10px
-.ui-dialog input[type=text], .ui-dialog input[type=password], .ui-dialog input[type=email]
-    width: 100%
-
-.ui-dialog table
-    width: 100%
-.ui-dialog table td
-    vertical-align: top
-.ui-dialog input[type=search]
-    width: 100%
-
-.ui-dialog table .thumbnail
-    padding: 2px
-    width: 32px
-    height: 32px
 
 .ui-dialog-titlebar button, .ui-dialog-titlebar span
     outline: none
@@ -532,3 +537,4 @@ img.avatar
 
 /* Gonna start putting responsive stuff here */
 // @media screen and (max-width: 9000px) and (min-width: 0px)
+

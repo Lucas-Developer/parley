@@ -182,25 +182,11 @@
 
                 Parley.app.render();
 
-                // This next part is for the register flow, just here for testing
-                Parley.app.dialog('show info inviteFriends', {
-                    header: _t('invite your friends'),
-                    message: _t('message-invitefriends'),
-                    buttons: [
-                        {
-                            id: 'inviteFriends',
-                            text: _t('okay'),
-                            handler: function (e) {
-                                e.preventDefault();
-                                Parley.vent.trigger('contact:fetch', function (data) {
-                                    console.log('fetched');
-                                    Parley.app.dialog('hide info inviteFriends');
-                                    Parley.app.dialog('show invite', { emails: data.contacts });
-                                });
-                            }
-                        },
-                        'cancel'
-                    ]
+                Parley.vent.trigger('contact:fetch', function (data) {
+                    Parley.app.dialog('show invite', {
+                        message: _t('message-invitefriends'),
+                        emails: data.contacts
+                    });
                 });
             } else {
                 console.log('Login error occurred');

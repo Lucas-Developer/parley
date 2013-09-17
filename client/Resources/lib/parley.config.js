@@ -226,7 +226,8 @@
                 },
                 'click .inviteRow': function (e) {
                     var checkbox = $(e.target).find('input')[0];
-                    checkbox.checked = !checkbox.checked;
+                    if (checkbox)
+                        checkbox.checked = !checkbox.checked;
                 },
                 'click #inviteAction': function (e) {
                     e.preventDefault();
