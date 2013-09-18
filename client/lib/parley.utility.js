@@ -23,6 +23,34 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   //node-webkit allows us to use node modules
   var crypto = require('crypto');
+  var http = require('http');
+
+  //wrappers, because Node's http is annoying
+  var HKPrequestKey = function(op, search, callback) {
+    //build options
+    var path = '/pks/lookup?exact=on&options=mr&op='+op+'&search='+encodeURIComponent(search);
+    var options = {
+      'hostname': 'pgp.mit.edu',
+      'port': 11371,
+      'path': path,
+      'method': 'GET'
+    }
+    var req = http.request(options, callback);
+    req.end();
+  }
+  var HKPsubmitKey = function(armoredKey, callback) {
+    //build options
+    var path = '/pks/add';
+    var options = {
+      'hostname': 'pgp.mit.edu',
+      'port': 11371,
+      'path': path,
+      'method': 'POST'
+    }
+    var req = http.request(options, callback);
+    req.write('keytext='+encodeURIComponent(armoredKey)+'\n');
+    req.end();
+  }
 
   //clear stored keys before initializing, for multi-user scenario
   window.localStorage.removeItem('privatekeys');
@@ -41,7 +69,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       openpgp.keyring.importPrivateKey(keyPair.privateKeyArmored,Parley.currentUser.get('passwords').local);
       openpgp.keyring.importPublicKey(keyPair.publicKeyArmored);
       if (sendKey) {
-        //TODO: send key to keyserver
+        HKPsubmitKey(keyPair.publicKeyArmored,console.log);
       }
     },
     'importEncryptedKeyring': function(b64Keyring) {
@@ -164,11 +192,22 @@ are massaged to fit. The arguments to finished on ajax error look like:
     'listKeys': function() {
       return openpgp.keyring.publicKeys;
     },
-    'fetchKey': function(email) {
-      //TODO:
-      //search for keys, import first match, and return fingerprint of new key
-      var fingerprint = '';
-      return fingerprint;
+    'fetchKey': function(email, callback) {
+      //search for keys, import first match, and send key fingerprint to callback
+      HKPrequestKey('index','<'+email+'>',function (res1) {
+        res1.setEncoding('utf8');
+        res1.on('data', function (index) {
+          //TODO: parse index to get first fingerprint
+          var fingerprint = ''; //0x...
+          HKPrequestKey('get',fingerprint, function (res2) {
+            res2.setEncoding('utf8');
+            res2.on('data', function(chunk) {
+              var key = Parley.PGP.importKey(chunk);
+              callback(key.fingerprint);
+            });
+          });
+        });
+      });
     },
     'importKey':function(key) {
       openpgp.keyring.importPublicKey(key);
@@ -194,13 +233,14 @@ are massaged to fit. The arguments to finished on ajax error look like:
       
       var revokedKey = openpgp_encoding_armor(4,toRevoke+sig);
 
-      //TODO: send to keyservers
+      HKPsubmitKey(revokedKey,console.log);
       return revokedKey;
     },
     'changeName': function(newName) {
       //TODO: add new uid to currentUser's key
       //-look at packet_uerid.write_packet()
       var success = '', error = '';
+      //TODO: HKPsubmitKey(armoredKey,console.log);
 
       //this weird return format is for backwards compatibility.
       //if/when it can be improved, it should
