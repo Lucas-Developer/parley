@@ -94,6 +94,16 @@
         contact = Parley.getUserInfo(data.contact, data.callback);
     });
 
+    Parley.vent.on('contact:fetch', function (callback) {
+        Parley.requestContacts(function (data) {
+            if (data && !_.has(data, 'error')) {
+                callback(data);
+            } else {
+                console.log(data.error);
+            }
+        });
+    });
+
     /**
     Verify the email that the user submitted.
 
@@ -137,6 +147,7 @@
 
                 Parley.app.dialog('hide setup');
                 Parley.app.dialog('hide info register-wait');
+
                 Parley.app.render();
             } else {
                 Parley.app.dialog('hide info register-wait');
@@ -168,7 +179,29 @@
 
                 Parley.app.dialog('hide setup');
                 Parley.app.dialog('hide info login-wait');
+
                 Parley.app.render();
+
+                Parley.vent.trigger('contact:fetch', function (data) {
+                    var contact, areMembers, pendingList = new Parley.ContactList;
+
+                    _(data.contacts).each(function (ele) {
+                        if (contact = Parley.contacts.findWhere({email:ele.email})) {
+                            areMembers = (areMembers || 0) + 1;
+                            pendingList.unshift(contact);
+                        } else {
+                            ele.pending = true;
+                            contact = new Parley.Contact(ele);
+                            pendingList.push(contact);
+                            Parley.contacts.push(contact);
+                        }
+                    });
+
+                    Parley.app.dialog('show invite', {
+                        areMembers: areMembers,
+                        contacts: pendingList.toJSON()
+                    });
+                });
             } else {
                 console.log('Login error occurred');
 
@@ -187,7 +220,7 @@
 
         $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
 
-        Parley.requestInbox(Parley.inboxCurOffset, function (data, textStatus) {
+        var fetchedInboxHandler = function (data, textStatus) {
             console.log('Inbox requested at offset: ' + Parley.inboxCurOffset + '.');
 
             if (data.error == 'FORBIDDEN') {
@@ -212,7 +245,7 @@
 
                 return false;
             } else if (!_.has(data, 'error')) {
-                Parley.inboxCurOffset += 100;
+                if (textStatus != 'localStorage') Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
                 if (_.has(data, 'messages') && !!data.messages) {
@@ -252,7 +285,9 @@
             } else {
                 // An error occurred
             }
-        });
+        };
+        var lsInbox = Parley.requestInbox(Parley.inboxCurOffset, fetchedInboxHandler);
+        if (Parley.inbox.length == 0 && lsInbox.length > 0) fetchedInboxHandler({'messages':lsInbox});
     }, 5000));
 
     Parley.vent.on('message:nokey', function (data, callback) {
@@ -279,14 +314,50 @@
         $.when.apply($, nokeysBuilder).then(function () {
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
-                Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
+                var nokeysHTML = _.reduce(nokeys, function (memo, val) {
+                    return memo + '<li>' + val.email + '</li>';
+                }, '<ul>') + '</ul>';
+                Parley.app.dialog('show info nokey', {
+                    message: _t('message-nokey'),
+                    extra_html: nokeysHTML,
+                    buttons: [ 
+                        {
+                            id: 'inviteDialogAction',
+                            text: _t('invite'),
+                            handler: function (e) {
+                                e.preventDefault();
+                                Parley.app.dialog('invite', { emails: nokeys });
+                                Parley.app.dialog('hide info nokey');
+                            }
+                        },
+                        'cancel'
+                    ]
+                });
             }
             if (!_.isEmpty(message.recipients)) Parley.vent.trigger('message:send', message, callback);
         }, function () {
-            // This gets called if getUserInfo doesn't have a change to fire the callback
+            // This gets called if getUserInfo doesn't have a chance to fire the callback
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
-                Parley.app.dialog('nokey', { message: message, nokeys: nokeys });
+                var nokeysHTML = _.reduce(nokeys, function (memo, val) {
+                    return memo + '<li>' + val.email + '</li>';
+                }, '<ul>') + '</ul><br>';
+                Parley.app.dialog('show info nokey', {
+                    message: _t('message-nokey'),
+                    extra_html: nokeysHTML,
+                    buttons: [ 
+                        {
+                            id: 'inviteDialogAction',
+                            text: _t('invite'),
+                            handler: function (e) {
+                                e.preventDefault();
+                                Parley.app.dialog('invite', { emails: nokeys });
+                                Parley.app.dialog('hide info nokey');
+                            }
+                        },
+                        'cancel'
+                    ]
+                });
             }
         });
     });
@@ -343,6 +414,7 @@
     });
 
     Parley.vent.on('invite', function (emails, callback) {
+        console.log('VENT: invite');
         callback = callback || function () {};
 
         if (_.isString(emails))

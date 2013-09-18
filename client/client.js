@@ -10,14 +10,24 @@
 				count: 0,
                 email: '',
                 fingerprint: '',
-                messages: []
+                messages: [],
+                pending: false,
+                isCurrentUser: false
 			}
 	    },
         idAttribute: 'email',
         initialize: function (attrs) {
             console.log('Initializing contact.');
 
-            if (attrs && !_.has(attrs, 'isCurrentUser') && !_.has(attrs, 'pending'))
+            if (!attrs)
+                return true;
+
+            if (_.has(attrs, 'isCurrentUser')) {
+                // Any current user specific initialization stuff here.
+            } else if (_.has(attrs, 'pending')) {
+                // Any pending user intialization stuff here.
+            } else {
+                // Any normal contact (not current user, not pending user) initialization stuff here.
                 Parley.vent.trigger('contact:userinfo', {
                     contact: this,
                     callback: function (contact) {
@@ -27,15 +37,20 @@
                             Parley.contacts.add(contact, { merge: true });
                             Parley.storeKeyring();
                         } else {
-                            console.log(contact.error);
                             // Didn't return a proper contact object
+                            console.log(contact.error);
                         }
                     }
                 });
+            }
+        },
+
+        invited: function () {
+            return this.attributes.invited;
         }
 	});
 
-	var ContactList = Backbone.Collection.extend({
+	Parley.ContactList = Backbone.Collection.extend({
 	    model: Parley.Contact
 	});
 	var ContactView = Backbone.View.extend({
@@ -569,11 +584,7 @@
     window._t = function (key,data) { return Parley.polyglot.t(key,data); };
     window._T = function (key,data) { var word = Parley.polyglot.t(key,data); return word.charAt(0).toUpperCase() + word.slice(1); };
 
-console.log('inbox');
     Parley.inbox = new MessageList;
-console.log('contacts');
-    Parley.contacts = new ContactList;
-console.log('app');
+    Parley.contacts = new Parley.ContactList;
 	Parley.app = new AppView;
-console.log('done');
 }(window.Parley = window.Parley || {}, jQuery));

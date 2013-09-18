@@ -284,6 +284,10 @@ are massaged to fit. The arguments to finished on ajax error look like:
     return '';
   }
 
+    Parley.localUsers = function () {
+      return window.localStorage['parley:local_users'] ? JSON.parse(window.localStorage['parley:local_users']) : [];
+    }
+
   //This is just a shim in case Parley.Contact isn't defined elsewhere
   Parley.Contact = Parley.Contact || function () {
     this.attributes = this.attributes || {};
@@ -378,14 +382,28 @@ are massaged to fit. The arguments to finished on ajax error look like:
     });
   }
 
-  Parley.authenticateUser = function(email, clearTextPassword, finished) {
+  Parley.authenticateUser = function(email, clearTextPassword, finished, rememberMe) {
     Parley.currentUser = Parley.currentUser || new Parley.Contact({isCurrentUser:true});
     Parley.currentUser.set('email', email);
     var passwords = Parley.currentUser.get('passwords') || {};
     passwords.local = Parley.pbkdf2(clearTextPassword);
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
-    Parley.requestKeyring(finished);
+    var modifiedCallback = function(a,b,c) {
+      finished(a,b,c);
+
+      //make sure email is available in list of local users
+      var localUsers = Parley.localUsers();
+      var storedUser = _(localUsers).where({'email':email})[0];
+      var currentUser = rememberMe ? Parley.currentUser.toJSON() : {'email': email};
+      if (storedUser) {
+        storedUser = currentUser;
+      } else {
+        localUsers = localUsers.concat([currentUser]);
+      }
+      window.localStorage['parley:local_users'] = JSON.stringify(localUsers);
+    }
+    Parley.requestKeyring(modifiedCallback);
   }
   
   Parley.updateUser = function (data, finished) {
@@ -780,16 +798,26 @@ are massaged to fit. The arguments to finished on ajax error look like:
       'time' : Math.floor((new Date())/1000)
     }
     var sig = Parley.signAPIRequest(url,'GET',data);
+    var ls = window.localStorage['parley:messages:' + Parley.currentUser.get('email')] ? JSON.parse(window.localStorage['parley:messages:'+Parley.currentUser.get('email')]) : [];
+
     data.sig = sig;
     $.ajax({
       type:'GET',
       url:url,
       headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       data:data,
-      success:finished,
+      success:function (a,b,c) {
+        if (a.messages) {
+          //add messages to localStorage
+          ls = _.uniq(ls.concat(_.clone(a.messages)),function (i) {return i.message_id});
+          window.localStorage['parley:messages:'+Parley.currentUser.get('email')] = JSON.stringify(ls);
+        }
+        finished(a,b,c);
+      },
       error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
       dataType:'json'
     });
+    return ls;
   }
 
   //Fetch 20 contacts to whom currentUser has sent the most mail
