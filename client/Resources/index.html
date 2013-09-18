@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-	<link rel="stylesheet" type="text/css" href="style/reset.css">
-	<link rel="stylesheet" type="text/css" href="style/jquery-ui.css">
 	<link rel="stylesheet" type="text/css" href="style/client.css">
-	<link rel="stylesheet" type="text/css" href="style/autoSuggest.css">
+
+	<link rel="stylesheet" type="text/css" href="style/animations.css">
 	
 	<script type="text/javascript" src="lib/jquery-2.0.2.min.js"></script>
     <script charset="UTF-8" type="text/javascript" src="lang/dict.en.json"></script>
@@ -222,35 +221,59 @@
 	    </div>
     </form>
 
-    <button id="addContact">{{t_save_contact}}</button>
+    <button class="default-btn" id="addContact">{{t_save_contact}}</button>
     <button id="backToContactlist">{{t_cancel}}</button>
 
     </div>
 </script>
 
     <script type="text/template" id="inviteDialogTemplate">
-        <p>{{t_message-invite}}</p>
+        {{#areMembers}}
+            <p>{{areMembers}} of your friends already use Parley.</p>
+            <table id="inviteListTable" class="sortable niceTable">
+                <tbody id="inviteList">
+                    {{#contacts}}
+                        {{^pending}}
+                        <tr class="inviteRow">
+                            <td> </td>
+                            <td> {{name}} </td>
+                            <!--{{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}-->
+                            <td> {{email}} </td>
+                        </tr>
+                        {{/pending}}
+                    {{/contacts}}
+                </tbody>
+            </table>
+            <p>{{t_message-invite}}</p>
+        {{/areMembers}}
+        {{^areMembers}}
+            <p>{{t_message-invite}}</p>
+        {{/areMembers}}
     
         <form name="invite" id="inviteForm">
-            <h4>{{t_invite_users}} <a href="#" id="selectAllInvite">{{t_select_all}}</a> / <a href="#" id="selectNoneInvite">{{t_select_none}}</a></h4>
+            <h4> <span class="links">
+                <a href="#" id="selectAllInvite">{{t_select_all}}</a> / <a href="#" id="selectNoneInvite">{{t_select_none}}</a>
+            </span> </h4>
             <div class="row"> <ul>
                 <div class="niceTableWrapper" id="inviteListWrapper">
                     <table id="inviteListTable" class="sortable niceTable">
                         <tbody id="inviteList">
-                        {{#emails}}
+                        {{#contacts}}
+                            {{#pending}}
                             <tr class="inviteRow">
-                                <td> <input type="checkbox" name="invite_{{email}}"> </td>
+                                <td> <input disabled type="checkbox" name="invite_{{email}}"> </td>
                                 <td> {{name}} </td>
                                 <!--{{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}-->
                                 <td> {{email}} </td>
                             </tr>
-                        {{/emails}}
+                            {{/pending}}
+                        {{/contacts}}
                         </tbody>
                     </table>
                 </div>
             </ul> </div>
         </form>
-        <button id="inviteAction" name="invite">{{t_send}}</button>
+        <button class="default-btn" id="inviteAction" disabled name="invite">{{t_invite}}</button>
         <button id="cancelButton" name="cancel">{{t_cancel}}</button>
     </script>
 
@@ -303,7 +326,17 @@
 		<!--<td class="thumbnail">{{#thumbnail}}<img alt="{{name}}" src="{{thumbnail}}">{{/thumbnail}}</td>-->
 	    <td>{{name}}</td>
 	    <td>{{email}}</td>
-		<td class="buttons"><button data-email="{{email}}" class="send">{{t_send_email}}</button></td>
+		<td class="buttons">
+            {{#pending}}
+                {{#invited}}
+                    <span class="sendBtn inactive">{{t_invited}}</span>
+                {{/invited}}
+                {{^invited}}
+                    <button data-email="{{email}}" class="sendBtn invite">{{t_invite}}</button>
+                {{/invited}}
+            {{/pending}}
+            {{^pending}}<button data-email="{{email}}" class="sendBtn send">{{t_send_email}}</button>{{/pending}}
+        </td>
 	</script>
 	
 	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom.js"></script>

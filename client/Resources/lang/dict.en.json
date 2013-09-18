@@ -69,6 +69,9 @@ window._phrases = {
 
 "invite users": "Invite users",
 
+"select all": "Select all",
+"select none": "Select none",
+
 // Messages: setup
 "message-installing": "Parley requires its own version of GPG. May we install it for you now? (It will take a minute or two.)",
 "message-welcome": "Welcome to the Parley Pre-Beta! It's still obviously a work in progress, but we hope you find it useful and look forward to your feedback.",
@@ -100,7 +103,9 @@ window._phrases = {
 "message-contacts-saving": "Please wait while we save your contacts to the server! Again, the encryption process takes some time, but we will be speeding it up with the next release.",
 "message-contacts-noexist": "You need to add this email address as a contact before you can send mail to it. Would you like to do this now?",
 
-"message-invite": "Select emails from the list below and send them invitations to use Parley.",
+"message-invite": "Invite 5 friends to come use Parley!",
+"message-invite-sending": "We're sending the invitations out.",
+"message-invite-sent": "Your invitations have been sent out.",
 
 // Messages: settings
 "message-settings-saveerror": "We have encountered an error trying to save your settings.",

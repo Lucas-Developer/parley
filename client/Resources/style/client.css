@@ -28,6 +28,8 @@ a {
   font-size: 100%;
   vertical-align: baseline;
   background: transparent; }
+  a:focus {
+    outline: none; }
 
 ins {
   background-color: #ffff99;
@@ -1591,9 +1593,8 @@ body {
 body, p, .ui-widget {
   font-family: "Raleway"; }
 
-button {
-  font-weight: 500;
-  text-transform: capitalize; }
+a {
+  color: #eb9c21; }
 
 input, textarea {
   font-family: "Open Sans"; }
@@ -1618,17 +1619,32 @@ h3 {
   text-align: left;
   font-size: 1.3em; }
 
+h4 .links {
+  width: auto; }
+  h4 .links a {
+    color: #eb9c21;
+    font-size: 0.8em;
+    text-align: right; }
+
 button {
+  outline: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 16px;
+  white-space: nowrap;
+  font-weight: 500;
+  text-transform: capitalize;
   background-color: rgba(255, 255, 255, 0.8);
   color: #eb9c21;
   -webkit-transition: background-color 0.4s, color 0.2s; }
-  button.send {
+  button.sendBtn {
     background-color: transparent;
     color: #eb9c21; }
   button:hover, button:active {
     background-color: #f0961e;
     color: #f0f0f0;
-    -webkit-transition: background-color 0.4s, color 0.2s; }
+    -webkit-transition: background-color 0.4s, color 0.2s;
+    outline: none; }
 
 textarea {
   color: #191208;
@@ -1645,6 +1661,8 @@ textarea {
 input[type=checkbox] {
   display: block;
   float: left; }
+  input[type=checkbox]:disabled {
+    opacity: 1; }
 
 .as-selections {
   color: #191208;
@@ -1686,12 +1704,54 @@ input[readonly] {
 /* 3.0 - Layout Elements */
 header {
   background: white;
-  background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255, 255, 255, 0.9)), color-stop(100%, rgba(255, 255, 255, 0.5))); }
+  background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255, 255, 255, 0.9)), color-stop(100%, rgba(255, 255, 255, 0.5)));
+  display: none;
+  width: 100%;
+  padding: 10px 20px 0;
+  height: 90px;
+  position: relative;
+  line-height: 58px; }
+  header h1 {
+    float: left;
+    width: 250px;
+    height: 60px;
+    background: url(../img/logo.png) no-repeat 0 8px; }
   header .email {
-    color: #191208; }
-  header nav button span {
     color: #191208;
-    -webkit-text-shadow: 0 0 1px #f0f0f0; }
+    padding: 12px 0 0 20px;
+    font-weight: 500;
+    display: inline-block;
+    float: left; }
+  header nav {
+    overflow: visible;
+    padding: 8px 0;
+    display: inline-block;
+    float: right; }
+    header nav button {
+      display: inline-block;
+      text-align: center;
+      float: left;
+      width: 80px;
+      height: 70px;
+      border-radius: 4px;
+      padding: 40px 0 0 0;
+      background-color: transparent;
+      background-position: top center;
+      background-repeat: no-repeat; }
+      header nav button span {
+        color: #191208;
+        -webkit-text-shadow: 0 0 1px #f0f0f0;
+        visibility: hidden;
+        text-align: center;
+        font-size: 0.8em; }
+      header nav button:hover span {
+        visibility: visible; }
+  header #composeAction {
+    background-image: url(../img/compose.png); }
+  header #settingsAction {
+    background-image: url(../img/settings.png); }
+  header #contactsAction {
+    background-image: url(../img/contacts.png); }
 
 #refreshAction.refreshing:hover {
   cursor: default;
@@ -1708,10 +1768,6 @@ table tbody tr {
     padding: 4px;
     text-align: left;
     cursor: default; }
-  table tbody tr.contact {
-    cursor: pointer; }
-    table tbody tr.contact td {
-      vertical-align: middle; }
 table thead tr {
   background-color: #191208;
   color: #eeeeee; }
@@ -1741,6 +1797,20 @@ table thead tr {
     width: 100%; }
     .ui-dialog table td {
       vertical-align: top; }
+    .ui-dialog table .contact {
+      cursor: pointer; }
+      .ui-dialog table .contact td {
+        vertical-align: middle; }
+        .ui-dialog table .contact td .sendBtn {
+          border: 1px solid transparent;
+          display: inline-block;
+          outline: none;
+          border: none;
+          cursor: pointer;
+          padding: 8px 16px;
+          white-space: nowrap;
+          font-weight: 500;
+          text-transform: capitalize; }
     .ui-dialog table .thumbnail {
       padding: 2px;
       width: 32px;
@@ -1785,15 +1855,6 @@ p.small-text {
   display: block;
   margin-top: 5px;
   font-weight: 500; }
-
-button {
-  outline: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 16px;
-  white-space: nowrap; }
-  button:hover, button:active {
-    outline: none; }
 
 .row {
   display: table;
@@ -1900,53 +1961,6 @@ button {
 .close-button {
   display: inline-block;
   float: right; }
-
-header {
-  display: none;
-  width: 100%;
-  padding: 10px 20px 0;
-  height: 90px;
-  position: relative;
-  line-height: 58px; }
-  header h1 {
-    float: left;
-    width: 250px;
-    height: 60px;
-    background: url(../img/logo.png) no-repeat 0 8px; }
-  header .email {
-    padding: 12px 0 0 20px;
-    font-weight: 500;
-    display: inline-block;
-    float: left; }
-  header nav {
-    overflow: visible;
-    padding: 8px 0;
-    display: inline-block;
-    float: right; }
-    header nav button {
-      display: inline-block;
-      text-align: center;
-      float: left;
-      width: 80px;
-      height: 70px;
-      border-radius: 4px;
-      padding: 40px 0 0 0;
-      background-color: transparent;
-      background-position: top center;
-      background-repeat: no-repeat; }
-      header nav button span {
-        visibility: hidden;
-        text-align: center;
-        font-size: 0.8em;
-        color: #5b5b5c; }
-      header nav button:hover span {
-        visibility: visible; }
-  header #composeAction {
-    background-image: url(../img/compose.png); }
-  header #settingsAction {
-    background-image: url(../img/settings.png); }
-  header #contactsAction {
-    background-image: url(../img/contacts.png); }
 
 .loggedin header, .loggedin header .email, .loggedin header nav, .loggedin #inbox {
   display: block; }
