@@ -52,10 +52,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
         var buf = new Buffer(b64CipherText,'base64');
         var iv = buf.slice(0,16);
         var data = buf.slice(16);
-        var key = new Buffer(passphrase.substr(0,32));
+        var key = passphrase.substr(0,32);
         var decipher = crypto.createDecipheriv('aes-256-cbc',key,iv);
-        decipher.update(data);
-        return decipher.final('utf8');
+        return decipher.update(data,'utf8','utf8') + decipher.final('utf8');
       }
 
       //old GPG
@@ -107,13 +106,11 @@ are massaged to fit. The arguments to finished on ajax error look like:
       //have to do this in a very convoluted fashion
       //because who knows what will cause an error and what won't
       try {
-        //try current decryption method with openPGP.js
-        var cipherText = openpgp_encoding_base64_decode(b64Keyring);
-        json = openpgp_crypto_symmetricDecrypt(
-            9,
-            util.hex2bin(passphrase),
-            cipherText,
-            false);
+        //try current decryption method (from node.js crypto
+        //module, using OpenSSL)
+        var key = new Buffer(passphrase,'hex');
+        var decipher = crypto.createDecipher('aes256',key);
+        return decipher.update(b64Keyring, 'base64', 'utf8') + decipher.final('utf8');
       } catch (e) {
         console.log(e.message);
       }
@@ -140,19 +137,24 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
       openpgp.keyring.importPrivateKey(keyObj['private'],Parley.currentUser.get('passwords').local);
       openpgp.keyring.importPublicKey(keyObj['public']);
-      //TODO: add fingerprints to imported keys, as well as any other expected attributes
+      //add fingerprints to imported keys, as well as any other expected attributes
+      _.each(openpgp.keyring.publicKeys, function (key) {
+        key.fingerprint = key.obj.getFingerprint();
+        key.keyId = key.keyid = key.obj.getKeyId();
+        key.uids = _.map(key.obj.userIds, function(uid) { return uid.text });
+      });
       return true;
     },
     'getEncryptedKeyring': function() {
       var publicKeys = _.pluck(openpgp.keyring.publicKeys, 'armored');
       var privateKeys = _.pluck(openpgp.keyring.privateKeys, 'armored');
-      var encryptedKeyring = openpgp_crypto_symmetricEncrypt(
-        openpgp_crypto_getPrefixRandom(9),
-        9,
-        util.hex2bin(Parley.currentUser.get('passwords').local),
-        JSON.stringify({'public':publicKeys,'private':privateKeys})
-        );
-      return new Buffer(encryptedKeyring).toString('base64');
+
+      var symmetricKey = new Buffer(passphrase,'hex');
+
+      var data = JSON.stringify({'public':publicKeys,'private':privateKeys});
+
+      var cipher = crypto.createCipher('aes256',symmetricKey);
+      return cipher.update(data, 'utf8', 'base64') + cipher.final('base64');
     },
     'getPublicKey': function() {
       var secretKey = openpgp.keyring.getPrivateKeyForAddress(
@@ -169,25 +171,50 @@ are massaged to fit. The arguments to finished on ajax error look like:
       return fingerprint;
     },
     'importKey':function(key) {
-      //TODO: add fingerprints array to return value!
       openpgp.keyring.importPublicKey(key);
-      return _.last(openpgp.keyring.publicKeys);
+      returnObj = _.last(openpgp.keyring.publicKeys);
+      returnObj.fingerprint = returnObj.obj.getFingerprint();
+      returnObj.keyId = returnObj.keyid = returnObj.obj.getKeyId();
+      returnObj.uids = _.map(returnObj.obj.userIds, function(uid) { return uid.text });
+      returnObj.fingerprints = [returnObj.fingerprint];
+
+      //de-dupe keyring
+      _.uniq(openpgp.keyring.publicKeys, function (key) { return key.keyId });
+      _.uniq(openpgp.keyring.privateKeys, function (key) { return key.keyId });
+
+      return returnObj;
     },
     'revokeKey': function() {
-      //TODO:
-      //generate revocation, send to keyservers
-      //
-      var revocation = null; //populate with revocation cert
-      return revocation || false;
+      //generate revocation signature:
+      var Sig = new openpgp_packet_signature();
+      var email = Parley.currentUser.get('email');
+      var toRevoke = openpgp.keyring.getPublicKeyForAddress(email)[0].obj.data;
+      var privateKey = openpgp.keyring.getPrivateKeyForAddress(email)[0].obj;
+      sig = Sig.write_message_signature(32,toRevoke,privateKey);
+      
+      var revokedKey = openpgp_encoding_armor(4,toRevoke+sig);
+
+      //TODO: send to keyservers
+      return revokedKey;
     },
     'changeName': function(newName) {
       //TODO: add new uid to currentUser's key
+      //-look at packet_uerid.write_packet()
       var success = '', error = '';
+
+      //this weird return format is for backwards compatibility.
+      //if/when it can be improved, it should
       return [success, error];
     },
     'changePass': function(newPass) {
-      //TODO
+      //TODO:
+      //basically, reversing keymaterial.decryptSecretMPIs
+      //we want to replace the MPI with a new one, encrypted using
+      //the new passphrase, then rebuild and rearmor the key
       var success = '', error = '';
+
+      //this weird return format is for backwards compatibility.
+      //if/when it can be improved, it should
       return [success, error];
     },
     'encryptAndSign': function(data, recipients, signer, passphrase) {
