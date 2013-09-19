@@ -85,7 +85,7 @@
                 from_obj = new Parley.Contact(from);
             }
 
-            if (_.has(data.person_info, from.email)) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
+            if (data.person_info && data.person_info[from.email]) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
 
             this.set('from', from_obj);
 
@@ -470,14 +470,14 @@
         dialog: function (opts, data) {
             var data = data || {};
 
-            if (_.has(data, 'buttons')) {
-                data.buttons = _.map(data.buttons, function (ele) {
-                    if (_.isString(ele) && _.has(this._buttons, ele)) return this._buttons[ele];
+            if (data && data.buttons) {
+                data.buttons = _.map(data.buttons, _.bind(function (ele) {
+                    if (_.isString(ele) && (this._buttons && this._buttons[ele])) return this._buttons[ele];
                     else return ele;
-                });
+                }, this));
             }
 
-            if (data && _.has(this._images, data.image)) data.image = this._images[data.image];
+            if (data && (this._images && this._images[data.image])) data.image = this._images[data.image];
 
             if (_.isString(opts)) {
                 var _a = opts.split(' ');
@@ -515,7 +515,7 @@
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            if (_.has(this.tempDialogs, page)) { // Overriden
+                            if (this.tempDialogs && this.tempDialogs[page]) { // Overriden
                                 var dialog = this.tempDialogs[page];
                                 dialog.html(this.blankTemplate(data));
                             } else {
@@ -523,7 +523,8 @@
                                 this.tempDialogs[page] = dialog;
 
                                 _.each(data.buttons, function (ele) {
-                                    $(document).on('click', '#'+ele.id, _.bind(ele.handler, dialog));
+                                    if (ele && ele.handler)
+                                        $(document).on('click', '#'+ele.id, _.bind(ele.handler, dialog));
                                 });
                             }
                         } else {

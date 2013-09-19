@@ -25,7 +25,7 @@
 
         userinfo = Parley.AFIS(fingerprint);
 
-        if (!_.has(userinfo, 'uids')) {
+        if (userinfo && !userinfo.uids) {
             callback({error: 'User not found'});
         } else {
             var parsed = Parley.parseUID(userinfo.uids[0]);
@@ -100,7 +100,7 @@
 
     Parley.vent.on('contact:fetch', function (callback) {
         Parley.requestContacts(function (data) {
-            if (data && !_.has(data, 'error')) {
+            if (data && !data.error) {
                 callback(data);
             } else {
                 console.log(data.error);
@@ -117,7 +117,7 @@
         console.log('Verifying email address: ' + formdata.email);
 
         Parley.requestUser(formdata.email, function (data, textStatus) {
-            if (_.isObject(data) && !_.has(data, 'error')) {
+            if (data && !data.error) {
                 console.log('User exists, setting up login form.');
                 Parley.app.dialog('setup login', {
                     email: formdata.email
@@ -139,7 +139,7 @@
         Parley.registerUser(formdata.name, formdata.email, formdata.password, formdata.send_key, function (data, textStatus, jqXHR) {
             console.log(JSON.stringify(data), textStatus, data.error);
 
-            if (!_.has(data, 'error')) {
+            if (data && !data.error) {
                 console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
                 console.log('Registering new inbox with Context.io');
 
@@ -171,7 +171,7 @@
         Parley.app.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
 
         Parley.authenticateUser(formdata.email, formdata.password, function (data, textStatus) {
-            if (!_.has(data, 'error')) {
+            if (data && !data.error) {
                 console.log('User successfully logged in.');
 
                 var parsed_data = Parley.falseIsFalse(data);
@@ -207,7 +207,9 @@
                     });
                 });
             } else {
-                console.log('Login error:', data.error);
+                console.log('Login error:', data ? data.error : '');
+
+                Parley.currentUser = undefined;
 
                 Parley.app.dialog('hide info login-wait');
                 Parley.app.dialog('info login-error', {
@@ -248,11 +250,11 @@
                 });
 
                 return false;
-            } else if (!_.has(data, 'error')) {
+            } else if (data && !data.error) {
                 if (textStatus != 'localStorage') Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
-                if (_.has(data, 'messages') && !!data.messages) {
+                if (data && !!data.messages) {
                     console.log('Inbox: loaded ' + data.messages.length + ' messages.', data.messages);
                     for (var i = 0, t = data.messages.length; i<t; i++) {
                         Parley.inbox.add(data.messages[i], {parse:true});
@@ -403,7 +405,7 @@
                 handler: function () {
                     Parley.killUser(function (data, status) {
                         Parley.app.dialog('hide info revoke-confirm');
-                        if (!_.has(data, 'error')) {
+                        if (data && !data.error) {
                             Parley.app.kill();
                         } else {
                             Parley.app.dialog('show info revoke-info', {
@@ -430,7 +432,7 @@
             var dfd = $.Deferred();
 
             Parley.invite(ele, function (recipient) {
-                if (!_.has(recipient, 'error'))
+                if (recipient && !recipient.error)
                     dfd.resolve();
             });
 

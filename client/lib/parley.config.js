@@ -106,7 +106,7 @@
                     }
                     
                     Parley.saveUser(formdata, function (data) {
-                        if (!_.has(data, 'error')) {
+                        if (data && !data.error) {
                             var parsed_data = Parley.falseIsFalse(data);
 
                             Parley.currentUser.set(parsed_data);
@@ -151,7 +151,7 @@
                     Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
                         Parley.pauseTimer = false;
 
-                        if (!_.has(data, 'error')) {
+                        if (data && !data.error) {
                             Parley.app.dialog('show info password-changed', {
                                 header: _t('password changed'),
                                 message: _t('message-password-changed'),
