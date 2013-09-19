@@ -394,7 +394,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
       //make sure email is available in list of local users
       var localUsers = Parley.localUsers();
-      var storedUser = _(localUsers).where({'email':email})[0];
+      var storedUser = _(localUsers).findWhere({'email':email});
       var currentUser = rememberMe ? Parley.currentUser.toJSON() : {'email': email};
       if (storedUser) {
         storedUser = currentUser;
@@ -598,7 +598,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   */
   Parley.AFIS = function(fingerprint) {
     var keys = Parley.listKeys();
-    return _(keys).where({'fingerprint':fingerprint})[0];
+    return _(keys).findWhere({'fingerprint':fingerprint});
   }
 
   //sort of a "reverse AFIS", if you will:
