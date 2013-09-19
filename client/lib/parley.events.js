@@ -207,9 +207,13 @@
                     });
                 });
             } else {
+<<<<<<< HEAD
                 console.log('Login error:', data ? data.error : '');
 
                 Parley.currentUser = undefined;
+=======
+                console.log('Login error occurred', data ? data.error : '');
+>>>>>>> pure_js
 
                 Parley.app.dialog('hide info login-wait');
                 Parley.app.dialog('info login-error', {

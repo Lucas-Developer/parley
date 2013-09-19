@@ -13,8 +13,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
  * for changing uid and pass, we'll probably need to play aroudn with low-level
  * stuff:
  * see generate_key_pair and openpgp_crypto_generateKeyPair for clues
- * for revoking keys (as well as searc/send-key), we'll need https://npmjs.org/package/hkp-client
- * use https://gitorious.org/openhkp-js/openhkp-js/source/deca0bd37f6dc18fbd16362f21047cf8c125b147:openhkp.js as a template for adding sendKey
  * */
 
 (function (Parley) {
@@ -93,8 +91,16 @@ are massaged to fit. The arguments to finished on ajax error look like:
         //TODO: contribute a fix, and implement it more cleanly here
         //-see http://tools.ietf.org/html/rfc4880#section-5.3
 
+        openpgp.config.debug = true;
+        var debug = {'base64inputLength':b64CipherText.length};
+
         var cipherText = openpgp_encoding_base64_decode(b64CipherText);
         var ctLength = cipherText.length;
+
+        debug.ctLength = ctLength;
+        var reB64 = openpgp_encoding_base64_encode(cipherText);
+        debug.reB64length = reB64.length;
+        console.log(debug);
 
         var sessionKey = openpgp_packet.read_packet(cipherText,0,ctLength);
         var skLength = sessionKey.headerLength + sessionKey.packetLength;
@@ -119,6 +125,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
             0,
             compressedData.length);
         var data = compressedPacket.decompress();
+
+        console.log('data length', data.length);
+        openpgp.config.debug = false;
 
         //in the test case, the decompressed data appeared to have nonsense
         //bits prepended to it--presumably openpgp_packet_compressed.read_packet
@@ -177,7 +186,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var publicKeys = _.pluck(openpgp.keyring.publicKeys, 'armored');
       var privateKeys = _.pluck(openpgp.keyring.privateKeys, 'armored');
 
-      var symmetricKey = new Buffer(passphrase,'hex');
+      var symmetricKey = new Buffer(Parley.currentUser.get('passwords').local,'hex');
 
       var data = JSON.stringify({'public':publicKeys,'private':privateKeys});
 
@@ -187,7 +196,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     'getPublicKey': function() {
       var secretKey = openpgp.keyring.getPrivateKeyForAddress(
           Parley.currentUser.get('email'));
-      return secretKey.extractPublicKey();
+      return secretKey[0].obj.extractPublicKey();
     },
     'listKeys': function() {
       return openpgp.keyring.publicKeys;
@@ -269,7 +278,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
     'decryptAndVerify': function(data, passphrase, sender_id) {
       var message = openpgp.read_message(data);
       return message;
-    }
+    },
+    'ksUtil': { 'get': HKPrequestKey, 'post': HKPsubmitKey }
   }
 
   /**
@@ -330,9 +340,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
         Parley.currentUser.get('passwords').remote)
       .update(method+'|'+url+'?'+urlComponents.join('&'))
       .digest('base64')
-      .replace('+','-')
-      .replace('/','_')
-      .replace('=','');
+      .replace(/\+/g,'-')
+      .replace(/\//g,'_')
+      .replace(/=+$/g,'');
   }
 
   Parley.pbkdf2 = function (data) {
