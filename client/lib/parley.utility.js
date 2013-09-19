@@ -196,7 +196,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     'getPublicKey': function() {
       var secretKey = openpgp.keyring.getPrivateKeyForAddress(
           Parley.currentUser.get('email'));
-      return secretKey[0].extractPublicKey();
+      return secretKey[0].obj.extractPublicKey();
     },
     'listKeys': function() {
       return openpgp.keyring.publicKeys;
