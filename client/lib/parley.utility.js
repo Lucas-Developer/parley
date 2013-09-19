@@ -322,7 +322,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Parley.signAPIRequest = function (url, method, data) {
     //temporarily disable post request (so as not to fuck up server
     //with dev branch)
-    if (method.toLowerCase() != 'get') return '';
+    if (method.toLowerCase() != 'get') return ''; //TODO: remove this line for prod, and make server allow CORS
     for (var key in data) {
       data[key] = ''+data[key];
     }
