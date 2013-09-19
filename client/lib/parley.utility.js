@@ -196,7 +196,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     'getPublicKey': function() {
       var secretKey = openpgp.keyring.getPrivateKeyForAddress(
           Parley.currentUser.get('email'));
-      return secretKey.extractPublicKey();
+      return secretKey[0].extractPublicKey();
     },
     'listKeys': function() {
       return openpgp.keyring.publicKeys;
@@ -338,7 +338,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       .digest('base64')
       .replace('+','-')
       .replace('/','_')
-      .replace('=','');
+      .replace(/=+$/g,'');
   }
 
   Parley.pbkdf2 = function (data) {
