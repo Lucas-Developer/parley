@@ -156,7 +156,7 @@
         Parley.app.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
 
         Parley.authenticateUser(formdata.email, formdata.password, function (data, textStatus) {
-            if (!_.has(data, 'error')) {
+            if (data && data.error) {
                 console.log('User successfully logged in.');
 
                 var parsed_data = Parley.falseIsFalse(data);
@@ -170,7 +170,7 @@
                 Parley.app.dialog('hide info login-wait');
                 Parley.app.render();
             } else {
-                console.log('Login error occurred');
+                console.log('Login error occurred', data ? data.error : '');
 
                 Parley.app.dialog('hide info login-wait');
                 Parley.app.dialog('info login-error', {
