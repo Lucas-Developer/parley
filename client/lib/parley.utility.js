@@ -336,8 +336,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
         Parley.currentUser.get('passwords').remote)
       .update(method+'|'+url+'?'+urlComponents.join('&'))
       .digest('base64')
-      .replace('+','-')
-      .replace('/','_')
+      .replace(/\+/g,'-')
+      .replace(/\//g,'_')
       .replace(/=+$/g,'');
   }
 
