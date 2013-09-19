@@ -149,6 +149,27 @@
                 Parley.app.dialog('hide info register-wait');
 
                 Parley.app.render();
+
+                Parley.vent.trigger('contact:fetch', function (data) {
+                    var contact, areMembers, pendingList = new Parley.ContactList;
+
+                    _(data.contacts).each(function (ele) {
+                        if (contact = Parley.contacts.findWhere({email:ele.email})) {
+                            areMembers = (areMembers || 0) + 1;
+                            pendingList.unshift(contact);
+                        } else {
+                            ele.pending = true;
+                            contact = new Parley.Contact(ele);
+                            pendingList.push(contact);
+                            Parley.contacts.push(contact);
+                        }
+                    });
+
+                    Parley.app.dialog('show invite', {
+                        areMembers: areMembers,
+                        contacts: pendingList.toJSON()
+                    });
+                });
             } else {
                 Parley.app.dialog('hide info register-wait');
                 Parley.app.dialog('info register-error', {
@@ -181,27 +202,6 @@
                 Parley.app.dialog('hide info login-wait');
 
                 Parley.app.render();
-
-                Parley.vent.trigger('contact:fetch', function (data) {
-                    var contact, areMembers, pendingList = new Parley.ContactList;
-
-                    _(data.contacts).each(function (ele) {
-                        if (contact = Parley.contacts.findWhere({email:ele.email})) {
-                            areMembers = (areMembers || 0) + 1;
-                            pendingList.unshift(contact);
-                        } else {
-                            ele.pending = true;
-                            contact = new Parley.Contact(ele);
-                            pendingList.push(contact);
-                            Parley.contacts.push(contact);
-                        }
-                    });
-
-                    Parley.app.dialog('show invite', {
-                        areMembers: areMembers,
-                        contacts: pendingList.toJSON()
-                    });
-                });
             } else {
                 console.log('Login error occurred');
 
