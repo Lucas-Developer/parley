@@ -22,24 +22,21 @@
             if (!attrs)
                 return true;
 
-            if (_.has(attrs, 'isCurrentUser')) {
+            if (attrs.isCurrentUser) {
                 // Any current user specific initialization stuff here.
-            } else if (_.has(attrs, 'pending')) {
+            } else if (attrs.pending) {
                 // Any pending user intialization stuff here.
             } else {
                 // Any normal contact (not current user, not pending user) initialization stuff here.
-                Parley.vent.trigger('contact:userinfo', {
-                    contact: this,
-                    callback: function (contact) {
-                        if (!_.has(contact, 'error')) {
-                            var data = contact.toJSON && contact.toJSON();
-                            console.log('Contact initialized: ' + data.email);
-                            Parley.contacts.add(contact, { merge: true });
-                            Parley.storeKeyring();
-                        } else {
-                            // Didn't return a proper contact object
-                            console.log(contact.error);
-                        }
+                Parley.getUserInfo(this, function (contact) {
+                    if (contact && !contact.error) {
+                        var data = contact.toJSON && contact.toJSON();
+                        console.log('Contact initialized: ' + data.email);
+                        Parley.contacts.add(contact, { merge: true });
+                        Parley.storeKeyring();
+                    } else {
+                        // Didn't return a proper contact object
+                        console.log(contact.error);
                     }
                 });
             }
