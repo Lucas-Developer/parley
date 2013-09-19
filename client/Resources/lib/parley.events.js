@@ -95,11 +95,13 @@
     });
 
     Parley.vent.on('contact:fetch', function (callback) {
+        console.log('contact:fetch');
+
         Parley.requestContacts(function (data) {
-            if (data && !_.has(data, 'error')) {
+            if (data && 'error' in data) {
                 callback(data);
             } else {
-                console.log(data.error);
+                console.log(data);
             }
         });
     });
@@ -150,26 +152,7 @@
 
                 Parley.app.render();
 
-                Parley.vent.trigger('contact:fetch', function (data) {
-                    var contact, areMembers, pendingList = new Parley.ContactList;
-
-                    _(data.contacts).each(function (ele) {
-                        if (contact = Parley.contacts.findWhere({email:ele.email})) {
-                            areMembers = (areMembers || 0) + 1;
-                            pendingList.unshift(contact);
-                        } else {
-                            ele.pending = true;
-                            contact = new Parley.Contact(ele);
-                            pendingList.push(contact);
-                            Parley.contacts.push(contact);
-                        }
-                    });
-
-                    Parley.app.dialog('show invite', {
-                        areMembers: areMembers,
-                        contacts: pendingList.toJSON()
-                    });
-                });
+                Parley.fetchAndDisplayContacts();
             } else {
                 Parley.app.dialog('hide info register-wait');
                 Parley.app.dialog('info register-error', {
@@ -182,6 +165,31 @@
             }
         });
     });
+
+    Parley.fetchAndDisplayContacts = function () {
+        Parley.vent.trigger('contact:fetch', function (data) {
+            var contact, areMembers, pendingList = new Parley.ContactList;
+
+            console.log('Contacts fetched');
+
+            _(data.contacts).each(function (ele) {
+                if (contact = Parley.contacts.findWhere({email:ele.email})) {
+                    areMembers = (areMembers || 0) + 1;
+                    pendingList.unshift(contact);
+                } else {
+                    ele.pending = true;
+                    contact = new Parley.Contact(ele);
+                    pendingList.push(contact);
+                    Parley.contacts.push(contact);
+                }
+            });
+
+            Parley.app.dialog('show invite', {
+                areMembers: areMembers,
+                contacts: pendingList.toJSON()
+            });
+        });
+    }
 
     Parley.vent.on('setup:login', function (formdata) {
         console.log('VENT: setup:login');
