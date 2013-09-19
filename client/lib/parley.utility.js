@@ -177,7 +177,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var publicKeys = _.pluck(openpgp.keyring.publicKeys, 'armored');
       var privateKeys = _.pluck(openpgp.keyring.privateKeys, 'armored');
 
-      var symmetricKey = new Buffer(passphrase,'hex');
+      var symmetricKey = new Buffer(Parley.currentUser.get('passwords').local,'hex');
 
       var data = JSON.stringify({'public':publicKeys,'private':privateKeys});
 
