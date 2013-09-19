@@ -98,10 +98,10 @@
         console.log('contact:fetch');
 
         Parley.requestContacts(function (data) {
-            if (data && 'error' in data) {
+            if (data && !('error' in data)) {
                 callback(data);
             } else {
-                console.log(data);
+                console.log(JSON.stringify(data));
             }
         });
     });
@@ -231,7 +231,7 @@
         var fetchedInboxHandler = function (data, textStatus) {
             console.log('Inbox requested at offset: ' + Parley.inboxCurOffset + '.');
 
-            if (data.error == 'FORBIDDEN') {
+            if (data && data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
 
                 Parley.app.dialog('info inbox-error', {
@@ -252,7 +252,7 @@
                 });
 
                 return false;
-            } else if (!_.has(data, 'error')) {
+            } else if (data && !data.error) {
                 if (textStatus != 'localStorage') Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
@@ -278,6 +278,7 @@
                     console.log('End of mailbox');
                 }
 
+/*
                 if (Parley.inbox.length < (Parley.inboxCurPage * Parley.inboxPerPage))
                     Parley.vent.trigger('message:sync');
                 else
@@ -290,6 +291,7 @@
                             opacity:1
                         })
                         .text( _t('refresh inbox') );
+*/
             } else {
                 // An error occurred
             }

@@ -261,7 +261,7 @@
                         {{#contacts}}
                             {{#pending}}
                             <tr class="inviteRow">
-                                <td> <input disabled type="checkbox" name="invite_{{email}}"> </td>
+                                <td> <input readonly type="checkbox" name="invite_{{email}}"> </td>
                                 <td> {{name}} </td>
                                 <!--{{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}-->
                                 <td> {{email}} </td>
@@ -273,7 +273,7 @@
                 </div>
             </ul> </div>
         </form>
-        <button class="default-btn" id="inviteAction" disabled name="invite">{{t_invite}}</button>
+        <button class="default-btn disabled-btn" id="inviteAction" name="invite">{{t_invite}}</button>
         <button id="cancelButton" name="cancel">{{t_cancel}}</button>
     </script>
 

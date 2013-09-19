@@ -247,9 +247,9 @@
 
                     numChecked = $('#inviteForm input:checked').length;
                     if (numChecked >= 5)
-                        $('#inviteAction').attr('disabled', 'disabled');
+                        $('#inviteAction').removeClass('disabled-btn');
                     else
-                        $('#inviteAction').removeAttr('disabled');
+                        $('#inviteAction').addClass('disabled-btn');
                         
                 },
                 'click #inviteAction': function (e) {
