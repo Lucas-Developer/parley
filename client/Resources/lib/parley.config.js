@@ -26,12 +26,13 @@
 
                     formdata = {
                         email: form.email.value,
-                        password: form.password.value
+                        password: form.password.value,
+                        remember: form.remember.checked
                     }
                     Parley.vent.trigger('setup:login', formdata);
                 },
                 'click .setupBackButton': function (e) {
-                    Parley.app.dialog('setup splash');
+                    Parley.dialog('setup splash');
                 },
                 'click #registerAction': function (e) {
                     e.preventDefault();
@@ -59,7 +60,7 @@
                 },
                 'click #importKeyDialogAction': function (e) {
                     e.preventDefault();
-                    Parley.app.dialog('show info importkey', {
+                    Parley.dialog('show info importkey', {
                         header: _t('import key'),
                         message: _t('message-import-key'),
                         extra_html: '<textarea name="key" rows="6"></textarea>',
@@ -72,7 +73,7 @@
                                     /*
                                     // Import secret key and close dialog.
                                     Parley.importSecretKey(key, function () {
-                                        Parley.app.dialog('hide info importkey');
+                                        Parley.dialog('hide info importkey');
                                     });
                                     */
                                 }
@@ -106,18 +107,18 @@
                     }
                     
                     Parley.saveUser(formdata, function (data) {
-                        if (!_.has(data, 'error')) {
+                        if (!data.error) {
                             var parsed_data = Parley.falseIsFalse(data);
 
                             Parley.currentUser.set(parsed_data);
 
-                            Parley.app.dialog('show info settings-saved', {
+                            Parley.dialog('show info settings-saved', {
                                 header: _t('success'),
                                 message: _t('message-settings-saved'),
                                 buttons: [ 'okay' ]
                             });
                         } else {
-                            Parley.app.dialog('show info settings-saveerror', {
+                            Parley.dialog('show info settings-saveerror', {
                                 header: _t('error'),
                                 message: _t('message-settings-saveerror') + "\n" + data.error,
                                 buttons: [ 'okay' ]
@@ -151,14 +152,14 @@
                     Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
                         Parley.pauseTimer = false;
 
-                        if (!_.has(data, 'error')) {
-                            Parley.app.dialog('show info password-changed', {
+                        if (!data.error) {
+                            Parley.dialog('show info password-changed', {
                                 header: _t('password changed'),
                                 message: _t('message-password-changed'),
                                 buttons: [ 'okay' ]
                             });
                         } else {
-                            Parley.app.dialog('show info password-changeerror', {
+                            Parley.dialog('show info password-changeerror', {
                                 header: _t('error'),
                                 message: _t('message-password-changeerror') + "\n" + data.error,
                                 buttons: [ 'okay' ]
@@ -175,7 +176,7 @@
 
                     Parley.registerInbox();
                     Parley.waitForRegisteredInbox(function(success) {
-                        Parley.app.dialog('hide info inbox-error');
+                        Parley.dialog('hide info inbox-error');
                         _.delay(function(){Parley.vent.trigger('message:sync');},1000);
                     });
                 }
@@ -191,7 +192,7 @@
                 'click .send': function (e) {
                     e.preventDefault();
                     var from_obj = Parley.contacts.findWhere({email: $(e.target).data('email')});
-                    Parley.app.dialog('compose', {from: from_obj});
+                    Parley.dialog('compose', {from: from_obj});
                 },
                 'click .invite': function (e) {
                     e.preventDefault();
@@ -204,14 +205,14 @@
                         Parley.showOkayWindow({header: _t('already invited'), message: _t('message-invite-already')});
                     }
                 },
-                'click #newContact': function (e) { e.preventDefault(); Parley.app.dialog('contacts newcontact'); },
-                'click #backToContactlist': function (e) { e.preventDefault(); Parley.app.dialog('contacts contactlist'); },
+                'click #newContact': function (e) { e.preventDefault(); Parley.dialog('contacts newcontact'); },
+                'click #backToContactlist': function (e) { e.preventDefault(); Parley.dialog('contacts contactlist'); },
                 'click #addContact': function (e) {
                     e.preventDefault();
                     var formdata = this.$('form[name=newcontact]').serializeArray();
-                    var email = _.findWhere(formdata, {name:'email'});
+                    var email = _(formdata).findWhere({name:'email'});
                     Parley.contacts.add({email: email.value});
-                    Parley.app.dialog('contacts contactlist');
+                    Parley.dialog('contacts contactlist');
                 }
             },
             model: {
@@ -247,9 +248,9 @@
 
                     numChecked = $('#inviteForm input:checked').length;
                     if (numChecked >= 5)
-                        $('#inviteAction').attr('disabled', 'disabled');
+                        $('#inviteAction').removeClass('disabled-btn');
                     else
-                        $('#inviteAction').removeAttr('disabled');
+                        $('#inviteAction').addClass('disabled-btn');
                         
                 },
                 'click #inviteAction': function (e) {
@@ -260,14 +261,14 @@
                         emails.push(this.name.split('_')[1]);
                     });
 
-                    Parley.app.dialog('show info inviteWait', {
+                    Parley.dialog('show info inviteWait', {
                         header: _t('sending invite'),
                         message: _t('message-invite-sending'),
                     });
 
                     Parley.vent.trigger('invite', emails, function () {
-                        Parley.app.dialog('hide invite');
-                        Parley.app.dialog('hide info inviteWait');
+                        Parley.dialog('hide invite');
+                        Parley.dialog('hide info inviteWait');
                     });
                 }
             },
@@ -287,11 +288,11 @@
                     var formdata = $('#composeForm').serializeArray()
 
                     var recipient, recipients = [], nokeyRecipients = [], errors = {};
-                    var to = _.findWhere(formdata, {name:'as_values_to'}),
-                        subject = _.findWhere(formdata, {name:'subject'}),
-                        body = _.findWhere(formdata, {name:'body'});
+                    var to = _(formdata).findWhere({name:'as_values_to'}),
+                        subject = _(formdata).findWhere({name:'subject'}),
+                        body = _(formdata).findWhere({name:'body'});
      
-                    _.each(to.value.split(','), function (ele, i) {
+                    _(to.value.split(',')).each(function (ele, i) {
                         if (recipient = Parley.contacts.findWhere({email:ele}))
                             recipients.push(recipient);
                         else if (Parley.rex.email.test(ele))
@@ -330,7 +331,7 @@
                     this.to = [respondTo];
 
                     if (this.replyAll) {
-                        _.each(this.addresses.to, _.bind(function (ele) {
+                        _(this.addresses.to).each(_.bind(function (ele) {
                             var _tmp;
                                 
                             if (ele.email == Parley.currentUser.get('email')) return false;
@@ -356,8 +357,8 @@
                     });
 
                     if (_.isArray(this.to) && !!this.to[0]) {
-                        preFill = _.map(this.to, function (ele) {
-                            return _.findWhere(items, {value: ele.get ? ele.get('email') : ele.email}) || {};
+                        preFill = _(this.to).map(function (ele) {
+                            return _(items).findWhere({value: ele.get ? ele.get('email') : ele.email}) || {};
                         });
                     } else {
                         preFill = {};
@@ -398,7 +399,7 @@
 
     Parley.showOkayWindow = function (data) {
         var time = new Date().getTime();
-        Parley.app.dialog('show info info' + time, {
+        Parley.dialog('show info info' + time, {
             header: data.header,
             message: data.message,
             buttons: ['okay']
@@ -407,7 +408,7 @@
 
     Parley.showCancelWindow = function (data, okay) {
         var time = new Date().getTime();
-        Parley.app.dialog('show info info' + time, {
+        Parley.dialog('show info info' + time, {
             header: data.header,
             message: data.message,
             buttons: [

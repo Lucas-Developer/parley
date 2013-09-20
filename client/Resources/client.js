@@ -22,23 +22,23 @@
             if (!attrs)
                 return true;
 
-            if (_.has(attrs, 'isCurrentUser')) {
+            if (attrs.isCurrentUser) {
                 // Any current user specific initialization stuff here.
-            } else if (_.has(attrs, 'pending')) {
+            } else if (attrs.pending) {
                 // Any pending user intialization stuff here.
             } else {
                 // Any normal contact (not current user, not pending user) initialization stuff here.
                 Parley.vent.trigger('contact:userinfo', {
                     contact: this,
                     callback: function (contact) {
-                        if (!_.has(contact, 'error')) {
+                        if (contact && !contact.error) {
                             var data = contact.toJSON && contact.toJSON();
                             console.log('Contact initialized: ' + data.email);
                             Parley.contacts.add(contact, { merge: true });
                             Parley.storeKeyring();
                         } else {
                             // Didn't return a proper contact object
-                            console.log(contact.error);
+                            console.log(contact);
                         }
                     }
                 });
@@ -88,7 +88,7 @@
                 from_obj = new Parley.Contact(from);
             }
 
-            if (_.has(data.person_info, from.email)) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
+            if (from.email in data.person_info) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
 
             this.set('from', from_obj);
 
@@ -120,7 +120,7 @@
                 console.log('Decrypting message.');
                 var sender = this.get('from');
                 this.decryptedMessage = this.decryptedMessage || [];
-                _.each(this.get('body'), _.bind(function (v,k) {
+                _(this.get('body')).each(_.bind(function (v,k) {
                     this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from')));
                 }, this));
                 var msg = this.decryptedMessage[0];
@@ -157,7 +157,7 @@
 	    },
 
         openContact: function () {
-            Parley.app.dialog('contacts', {single: this.model.get('from').toJSON()});
+            Parley.dialog('contacts', {single: this.model.get('from').toJSON()});
         },
 	    openMessage: function () {
               if (Parley.readMessageView && Parley.readMessageView.model.get('message_id') == this.model.get('message_id')) {
@@ -187,30 +187,23 @@
             'click .replyAll':     'openCompose'
 	    },
 	    render: function () {
-            var message_body = _.reduce(this.model.readMessage(), function (memo, val) {
-                return memo + '<p>' + val + '</p>';
-            }, '');
-            
+            var model = this.model;
+
 			this.$el
                 .addClass('message-body')
                 .html(this.template({
-                    body: message_body,
-                    date: moment(this.model.get('date') * 1000).format('MMMM Do YYYY, h:mm:ss a'),
-                    to: _.bind(function () {
-                        return _.map(this.model.get('addresses').to, function (addr) {
-                            if (addr.email == Parley.currentUser.get('email'))
-                                return '<span>' + _t('you') + '</span>';
-                            else
-                                return '<a class="contactLink" title="' + addr.email + '" href="mailto:' + addr.email + '">' + (addr.name ? addr.name : addr.email) + '</a>';
-                        });
-                    }, this)
+                    body: model.readMessage(),
+                    date: moment(model.get('date') * 1000).format('MMMM Do YYYY, h:mm:ss a'),
+                    to: _(model.get('addresses').to).map(function (addr) {
+                        return (addr.email == Parley.currentUser.get('email')) ? { user: true } : { name: addr.name, email: addr.email };
+                    })
                 }));
 			return this;
 	    },
 
         openCompose: function (e) {
             e.preventDefault();
-            Parley.app.dialog('compose',
+            Parley.dialog('compose',
                 _.extend( this.model.toJSON(),
                     {
                         'plainText': this.model.readMessage(false),
@@ -325,7 +318,6 @@
 	var AppView = Backbone.View.extend({
 	    el: $('body'),
 
-        blankTemplate: Mustache.compile($('#blankDialogTemplate').html()),
         tempDialogs: [],
 
 	    events: {
@@ -337,19 +329,19 @@
                             contact;
 
                         if (contact = Parley.contacts.findWhere({email: email}))
-                            Parley.app.dialog('show compose', { reply_to: contact });
+                            Parley.dialog('show compose', { reply_to: contact });
                         else
-                            Parley.app.dialog('show info nocontact', {
+                            Parley.dialog('show info nocontact', {
                                 message: _t('message-contacts-noexist'),
                                 buttons: [
                                     {
                                         id: 'addContactAction',
                                         text: _t('add new contact'),
-                                        handler: _.bind(function (e) {
+                                        handler: function (e) {
                                             e.preventDefault();
-                                            Parley.app.dialog('show contacts newcontact', { newemail: this} );
-                                            Parley.app.dialog('hide info nocontact');
-                                        }, email),
+                                            Parley.dialog('show contacts newcontact', { newemail: email} );
+                                            Parley.dialog('hide info nocontact');
+                                        },
                                     },
                                     'cancel'
                                 ]
@@ -362,12 +354,12 @@
             },
             'click #composeAction': function (e) {
                 console.log('Composing new message.');
-                Parley.app.dialog('compose', {'from':null,'subject':null,'plainText':null});
+                Parley.dialog('compose', {'from':null,'subject':null,'plainText':null});
             },
             'click #replyAction': function (e) {
                 var sel = Parley.inbox.findWhere({selected:true});
                 console.log('Replying to: ', sel);
-                Parley.app.dialog('compose', reply_to.toJSON());
+                Parley.dialog('compose', reply_to.toJSON());
             },
 			'click #settingsAction': function () {
                 var userdata = Parley.currentUser.toJSON();
@@ -382,13 +374,6 @@
 	    initialize: function () {
 			console.log('Initializing Parley.');
 
-            this._dialogs = [];
-            for (var i=0,l=Parley._initialDialogs.length; i<l; i++) {
-                var view = new DialogView(Parley._initialDialogs[i]);
-                var slug = Parley._initialDialogs[i].model.slug;
-                this._dialogs.push({slug:slug,view:view});
-            }
-
 			this.inbox = $('#inbox tbody');
 			this.contactsList = $('<div>');
 
@@ -397,33 +382,34 @@
 			this.listenTo(Parley.inbox, 'add', this.addMessage);
 			this.listenTo(Parley.contacts, 'add', this.addContact);
 
-            (function (user,app) {
+            (function (user) {
                 if (!Parley.installed()){
-                    app.dialog('show info installing', {
+                    Parley.dialog('show info installing', {
                         buttons:[{
                             id:'install_pgp', text:'ok',
-                            handler: _.bind(function(){
-                                Parley.install(_.bind(function(){
+                            handler: function () {
+                                Parley.install(function(){
                                     console.log('No user logged in. Showing setup dialog.');
-                                    this.dialog('hide info installing');
-                                    this.dialog('setup');
-                                }, this));
-                            }, app)
-                        }],
-                        message: _t('message-installing')
+                                    Parley.dialog('hide info installing');
+                                    Parley.dialog('setup');
+                                });
+                            }
+                        }], message: _t('message-installing')
                     });
                 }else{
                     if (!user) {
                         console.log('No user logged in. Showing setup dialog.');
-                        app.dialog('setup');
+                        Parley.dialog('setup');
                     } else {
                         console.log('User logged in: ' + user);
                         Parley.currentUser = new Parley.Contact(JSON.parse(user));
-                        app.dialog('setup login', _.extend({}, Parley.currentUser.toJSON()) );
+                        Parley.dialog('setup login', _.extend({}, Parley.currentUser.toJSON()) );
                     }
                 }
-            })(false /* localStorage.getItem('currentUser') */,this);
+            })(false /* localStorage.getItem('currentUser') */);
 	    },
+
+        dialog: function (opts, data) { Parley.dialog(opts, data); },
 
 	    render: function () {
             console.log('Rendering the app');
@@ -445,10 +431,10 @@
         This function controls the dialog boxes.
         The syntax is like:
 
-            Parley.app.dialog("(show|hide) [dialog slug] [page name]", data);
+            Parley.dialog("(show|hide) [dialog slug] [page name]", data);
             
         If you omit the first word, it assumes 'show'
-            Parley.app.dialog("[dialog slug]", data);
+            Parley.dialog("[dialog slug]", data);
 
         If you pass it 'info' for the dialog slug, it will create a brand new
         separate dialog with [page name] as the slug. Use this for "loading" windows
@@ -457,100 +443,6 @@
             button: [{id:'buttonId',text:'click me',handler:function(){}}, etc.]
         as members of 'data'.
         **/
-        dialog: function (opts,data) {
-            var _buttons = {
-                "okay": { id: "okayButton", text: _t('okay'), handler: function(e){ e.preventDefault(); this.dialog('close'); } },
-                "cancel": { id: "cancelButton", text: _t("cancel"), handler: function(e){ e.preventDefault(); this.dialog('close'); } }
-            };
-            if (_.has(data, 'buttons')) {
-                data.buttons = _.map(data.buttons, function (ele) {
-                    if (_.isString(ele) && _.has(_buttons, ele)) return _buttons[ele];
-                    else return ele;
-                });
-            }
-
-            var _images = {
-                "loading": "img/loader.gif",
-                "logo": "img/logo.png",
-                "logo_big": "img/logo_big.png"
-            };
-
-            var _blankOpts = { resizable: false, dialogClass: 'no-close', minWidth: '400' };
-
-            if (data && _.has(_images, data.image)) data.image = _images[data.image];
-
-            if (_.isString(opts)) {
-                var _a = opts.split(' ');
-                switch (_a[0]) {
-                    case 'hide':
-                        var slug = _a[1],
-                            page = _a[2];
-                        if (slug == 'info') {
-                            var dialog = this.tempDialogs[page];
-                            if (dialog) {
-                                dialog.dialog('destroy');
-                                this.tempDialogs[page] = undefined;
-                            }
-                        } else { 
-                            var dialog = _(this._dialogs).findWhere({slug:slug});
-                            if (dialog)
-                                dialog.view.hide();
-                        }
-
-                        break;
-                    case 'show':
-                        if (opts == 'show') {
-                            _.each(this._dialogs, function (ele) {
-                                if (ele.view.isOpen()) {
-                                    ele.view.show();
-                                }
-                            });
-                            if (this.curDialog) this.curDialog.view.moveToTop();
-                            break;
-                        } else {
-                            var slug = _a[1],
-                                page = _a[2];
-                        }
-                    default:
-                        var slug = slug || _a[0],
-                            page = page || _a[1];
-                        if (slug == 'info') {
-                            if (false && _.has(this.tempDialogs, page)) { // Overriden
-                                var dialog = this.tempDialogs[page];
-                                dialog.html(this.blankTemplate(data));
-                            } else {
-                                var dialog = $(this.blankTemplate(data)).dialog(_blankOpts);
-                                this.tempDialogs[page] = dialog;
-
-                                _.each(data.buttons, function (ele) {
-                                    $(document).on('click', '#'+ele.id, _.bind(ele.handler, dialog));
-                                });
-                            }
-                        } else {
-                            var dialog = this.curDialog = _(this._dialogs).findWhere({slug:slug});
-                            if (dialog) {
-                                dialog.view.setData(_.extend({page:page},data)).show();
-                            } else {
-                                var view = new DialogView({
-                                    model: data,
-                                    template: this.blankTemplate,
-                                    id: 'dialog_' + slug
-                                });
-                                dialog = this.curDialog = {
-                                    slug: slug,
-                                    view: view
-                                }
-                                this._dialogs.push(dialog);
-
-                                view.setData(_.extend(data,{page:page})).show();
-                            }
-                        }
-
-                        break;
-                }
-            }
-        },
-
 		addContact: function (contact) {
 			var view = new ContactView({model: contact});
 			this.contactsList.append(view.render().el);
@@ -572,7 +464,7 @@
             this.contactsList.empty();
             Parley.contacts.reset();
 
-            Parley.app.dialog('setup');
+            Parley.dialog('setup');
         }
 	});
 
@@ -580,6 +472,109 @@
     Parley.polyglot = new Polyglot({phrases: window._phrases, locale: 'en'});
     window._t = function (key,data) { return Parley.polyglot.t(key,data); };
     window._T = function (key,data) { var word = Parley.polyglot.t(key,data); return word.charAt(0).toUpperCase() + word.slice(1); };
+
+    Parley.dialog = (function(){
+        var _buttons = {
+            "okay": { id: "okayButton", text: _t('okay'), handler: function(e){ e.preventDefault(); this.dialog('close'); } },
+            "cancel": { id: "cancelButton", text: _t("cancel"), handler: function(e){ e.preventDefault(); this.dialog('close'); } }
+        }, _images = {
+            "loading": "img/loader.gif",
+            "logo": "img/logo.png",
+            "logo_big": "img/logo_big.png"
+        }, _blankOpts = {
+            resizable: false,
+            dialogClass: 'no-close',
+            minWidth: '400'
+        }, tempDialogs = {}, curDialog, blankTemplate, _dialogs;
+
+        blankTemplate = Mustache.compile($('#blankDialogTemplate').html());
+
+        _dialogs = _(Parley._initialDialogs).map(function (ele) {
+            return { slug: ele.model.slug, view: new DialogView(ele) };
+        });
+
+        return function (opts, data) {
+            if (data && data.buttons) {
+                data.buttons = _(data.buttons).map(function (ele) {
+                    if (_.isString(ele) && ele in _buttons) return _buttons[ele];
+                    else return ele;
+                });
+            }
+
+            if (data && data.image in _images) data.image = _images[data.image];
+
+            if (_.isString(opts)) {
+                var _a = opts.split(' ');
+                switch (_a[0]) {
+                    case 'hide':
+                        var slug = _a[1],
+                            page = _a[2];
+                        if (slug == 'info') {
+                            var dialog = tempDialogs[page];
+                            if (dialog) {
+                                dialog.dialog('destroy');
+                                tempDialogs[page] = undefined;
+                            }
+                        } else { 
+                            var dialog = _(_dialogs).findWhere({slug:slug});
+                            if (dialog)
+                                dialog.view.hide();
+                        }
+
+                        break;
+                    case 'show':
+                        if (opts == 'show') {
+                            _(_dialogs).each(function (ele) {
+                                if (ele.view.isOpen()) {
+                                    ele.view.show();
+                                }
+                            });
+                            if (curDialog) curDialog.view.moveToTop();
+                            break;
+                        } else {
+                            var slug = _a[1],
+                                page = _a[2];
+                        }
+                    default:
+                        var slug = slug || _a[0],
+                            page = page || _a[1];
+                        if (slug == 'info') {
+                            if (page in tempDialogs) { // Overriden
+                                var dialog = tempDialogs[page];
+                                dialog.html(blankTemplate(data));
+                            } else {
+                                var dialog = $(blankTemplate(data)).dialog(_blankOpts);
+                                tempDialogs[page] = dialog;
+
+                                _(data.buttons).each(function (ele) {
+                                    $(document).on('click', '#'+ele.id, _.bind(ele.handler, dialog));
+                                });
+                            }
+                        } else {
+                            var dialog = curDialog = _(_dialogs).findWhere({slug:slug});
+                            if (dialog) {
+                                dialog.view.setData(_.extend({page:page},data)).show();
+                            } else {
+                                var view = new DialogView({
+                                    model: data,
+                                    template: blankTemplate,
+                                    id: 'dialog_' + slug
+                                });
+                                dialog = curDialog = {
+                                    slug: slug,
+                                    view: view
+                                }
+                                _dialogs.push(dialog);
+
+                                view.setData(_.extend(data,{page:page})).show();
+                            }
+                        }
+
+                        break;
+                }
+            }
+        };
+    })();
 
     Parley.inbox = new MessageList;
     Parley.contacts = new Parley.ContactList;

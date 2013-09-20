@@ -5,7 +5,7 @@
 
 	<link rel="stylesheet" type="text/css" href="style/animations.css">
 	
-	<script type="text/javascript" src="lib/jquery-2.0.2.min.js"></script>
+	<script type="text/javascript" src="lib/jquery-2.0.3.js"></script>
     <script charset="UTF-8" type="text/javascript" src="lang/dict.en.json"></script>
 
 	<title>Parley</title>
@@ -77,6 +77,12 @@
                     <span class="error"></span>
                 </label>
                 <!--<a href="#" class="extra-link">Forgot password?</a>-->
+            </div>
+            <div class="row">
+                <label for="remember">
+                    <input type="checkbox" name="remember">
+                    {{t_remember_me}}
+                </label>
             </div>
         </form>
 
@@ -261,7 +267,7 @@
                         {{#contacts}}
                             {{#pending}}
                             <tr class="inviteRow">
-                                <td> <input disabled type="checkbox" name="invite_{{email}}"> </td>
+                                <td> <input readonly type="checkbox" name="invite_{{email}}"> </td>
                                 <td> {{name}} </td>
                                 <!--{{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}-->
                                 <td> {{email}} </td>
@@ -273,7 +279,7 @@
                 </div>
             </ul> </div>
         </form>
-        <button class="default-btn" id="inviteAction" disabled name="invite">{{t_invite}}</button>
+        <button class="default-btn disabled-btn" id="inviteAction" name="invite">{{t_invite}}</button>
         <button id="cancelButton" name="cancel">{{t_cancel}}</button>
     </script>
 
@@ -313,9 +319,14 @@
         <td colspan="2">
             <ul>
                 <li>Sent: {{date}}</li>
-                <li>To: {{{to}}}</li>
+                <li>To: {{#to}}
+                    {{#user}}<span>{{t_you}}</span>{{/user}}
+                    {{^user}}
+                        <a class="contactLink" title="{{email}}" href="mailto:{{email}}">{{name}}{{^name}}{{email}}{{/name}}</a>
+                    {{/user}}
+                {{/to}}</li>
             </ul>
-            {{{body}}}
+            <p>{{body}}</p>
         </td>
         <td class="buttons">
             <button class="reply">{{t_reply}}</button>
@@ -354,7 +365,7 @@
 	<script type="text/javascript" src="lib/ba-linkify.js"></script>
 	<script type="text/javascript" src="lib/jquery.i18n.js"></script>
 	<script type="text/javascript" src="lib/polyglot.js"></script>
-	<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>
+	<script type="text/javascript" src="lib/jquery.autoSuggest.js"></script>
 
 	<script type="text/javascript" src="client.js"></script>
 

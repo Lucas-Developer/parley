@@ -200,7 +200,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Parley.updateUser = function (data, finished) {
     data = data || {};
 
-    _.each(data, function (v,k) { Parley.currentUser.set(k,v); });
+    _(data).each(function (v,k) { Parley.currentUser.set(k,v); });
 
     var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(Parley.currentUser.get('email'));
     data.time = Math.floor((new Date())/1000);
@@ -249,6 +249,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
+
       $.ajax({
         type:'GET',
         url:url,
@@ -606,7 +607,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       success:function (a,b,c) {
         if (a.messages) {
           //add messages to localStorage
-          ls = _.uniq(ls.concat(_.clone(a.messages)),function (i) {return i.message_id});
+          ls = _( ls.concat( _(a.messages).clone() ) ).uniq(function (i) { return i.message_id });
           window.localStorage['parley:messages:'+Parley.currentUser.get('email')] = JSON.stringify(ls);
         }
         finished(a,b,c);
@@ -643,7 +644,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         Parley.timerDelay = Parley.timerDelay || 300000;
 
         if (!Parley.pauseTimer)
-            _.each(Parley.alarms, function (alarm) {
+            _(Parley.alarms).each(function (alarm) {
                 if (alarm.when()) alarm.todo();
             });
 
@@ -655,12 +656,12 @@ are massaged to fit. The arguments to finished on ajax error look like:
         
         var parsed_data = {};
 
-        _.each(data, function (v,k) {
+        _(data).each(function (v,k) {
             if (v == 'false')
                 v = false;
 
             if (k=='meta')
-                _.each(JSON.parse(v), function (v,k) {
+                _(JSON.parse(v)).each(function (v,k) {
                     if (v == 'false')
                         v = false;
                     parsed_data[k] = v;
@@ -676,7 +677,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         if (!_.isObject(errors) || !document.forms[fname]) return false;
 
         var form = $(document.forms[fname]), err, errSpan;
-        _.each(form.find('input'), function (v) {
+        _(form.find('input')).each(function (v) {
             errSpan = $(v).parents('label').find('.error');
             if (err = errors[v.name]) {
                 errSpan.text(err);
