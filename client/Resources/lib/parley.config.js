@@ -31,7 +31,7 @@
                     Parley.vent.trigger('setup:login', formdata);
                 },
                 'click .setupBackButton': function (e) {
-                    Parley.app.dialog('setup splash');
+                    Parley.dialog('setup splash');
                 },
                 'click #registerAction': function (e) {
                     e.preventDefault();
@@ -59,7 +59,7 @@
                 },
                 'click #importKeyDialogAction': function (e) {
                     e.preventDefault();
-                    Parley.app.dialog('show info importkey', {
+                    Parley.dialog('show info importkey', {
                         header: _t('import key'),
                         message: _t('message-import-key'),
                         extra_html: '<textarea name="key" rows="6"></textarea>',
@@ -72,7 +72,7 @@
                                     /*
                                     // Import secret key and close dialog.
                                     Parley.importSecretKey(key, function () {
-                                        Parley.app.dialog('hide info importkey');
+                                        Parley.dialog('hide info importkey');
                                     });
                                     */
                                 }
@@ -111,13 +111,13 @@
 
                             Parley.currentUser.set(parsed_data);
 
-                            Parley.app.dialog('show info settings-saved', {
+                            Parley.dialog('show info settings-saved', {
                                 header: _t('success'),
                                 message: _t('message-settings-saved'),
                                 buttons: [ 'okay' ]
                             });
                         } else {
-                            Parley.app.dialog('show info settings-saveerror', {
+                            Parley.dialog('show info settings-saveerror', {
                                 header: _t('error'),
                                 message: _t('message-settings-saveerror') + "\n" + data.error,
                                 buttons: [ 'okay' ]
@@ -152,13 +152,13 @@
                         Parley.pauseTimer = false;
 
                         if (!_.has(data, 'error')) {
-                            Parley.app.dialog('show info password-changed', {
+                            Parley.dialog('show info password-changed', {
                                 header: _t('password changed'),
                                 message: _t('message-password-changed'),
                                 buttons: [ 'okay' ]
                             });
                         } else {
-                            Parley.app.dialog('show info password-changeerror', {
+                            Parley.dialog('show info password-changeerror', {
                                 header: _t('error'),
                                 message: _t('message-password-changeerror') + "\n" + data.error,
                                 buttons: [ 'okay' ]
@@ -175,7 +175,7 @@
 
                     Parley.registerInbox();
                     Parley.waitForRegisteredInbox(function(success) {
-                        Parley.app.dialog('hide info inbox-error');
+                        Parley.dialog('hide info inbox-error');
                         _.delay(function(){Parley.vent.trigger('message:sync');},1000);
                     });
                 }
@@ -191,7 +191,7 @@
                 'click .send': function (e) {
                     e.preventDefault();
                     var from_obj = Parley.contacts.findWhere({email: $(e.target).data('email')});
-                    Parley.app.dialog('compose', {from: from_obj});
+                    Parley.dialog('compose', {from: from_obj});
                 },
                 'click .invite': function (e) {
                     e.preventDefault();
@@ -204,14 +204,14 @@
                         Parley.showOkayWindow({header: _t('already invited'), message: _t('message-invite-already')});
                     }
                 },
-                'click #newContact': function (e) { e.preventDefault(); Parley.app.dialog('contacts newcontact'); },
-                'click #backToContactlist': function (e) { e.preventDefault(); Parley.app.dialog('contacts contactlist'); },
+                'click #newContact': function (e) { e.preventDefault(); Parley.dialog('contacts newcontact'); },
+                'click #backToContactlist': function (e) { e.preventDefault(); Parley.dialog('contacts contactlist'); },
                 'click #addContact': function (e) {
                     e.preventDefault();
                     var formdata = this.$('form[name=newcontact]').serializeArray();
                     var email = _.findWhere(formdata, {name:'email'});
                     Parley.contacts.add({email: email.value});
-                    Parley.app.dialog('contacts contactlist');
+                    Parley.dialog('contacts contactlist');
                 }
             },
             model: {
@@ -260,14 +260,14 @@
                         emails.push(this.name.split('_')[1]);
                     });
 
-                    Parley.app.dialog('show info inviteWait', {
+                    Parley.dialog('show info inviteWait', {
                         header: _t('sending invite'),
                         message: _t('message-invite-sending'),
                     });
 
                     Parley.vent.trigger('invite', emails, function () {
-                        Parley.app.dialog('hide invite');
-                        Parley.app.dialog('hide info inviteWait');
+                        Parley.dialog('hide invite');
+                        Parley.dialog('hide info inviteWait');
                     });
                 }
             },
@@ -398,7 +398,7 @@
 
     Parley.showOkayWindow = function (data) {
         var time = new Date().getTime();
-        Parley.app.dialog('show info info' + time, {
+        Parley.dialog('show info info' + time, {
             header: data.header,
             message: data.message,
             buttons: ['okay']
@@ -407,7 +407,7 @@
 
     Parley.showCancelWindow = function (data, okay) {
         var time = new Date().getTime();
-        Parley.app.dialog('show info info' + time, {
+        Parley.dialog('show info info' + time, {
             header: data.header,
             message: data.message,
             buttons: [

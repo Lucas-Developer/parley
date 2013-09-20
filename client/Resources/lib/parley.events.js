@@ -117,12 +117,12 @@
         Parley.requestUser(formdata.email, function (data, textStatus) {
             if (_.isObject(data) && !_.has(data, 'error')) {
                 console.log('User exists, setting up login form.');
-                Parley.app.dialog('setup login', {
+                Parley.dialog('setup login', {
                     email: formdata.email
                 });
             } else {
                 console.log('User doesn\'t exists, showing registration form.');
-                Parley.app.dialog('setup register', {
+                Parley.dialog('setup register', {
                     email: formdata.email
                 });
             }
@@ -132,7 +132,7 @@
     Parley.vent.on('setup:register', function (formdata) {
         console.log('About to register user: ' + formdata.email);
 
-        Parley.app.dialog('show info register-wait', { header: _t('registering'), message: _t('message-register-wait') });
+        Parley.dialog('show info register-wait', { header: _t('registering'), message: _t('message-register-wait') });
 
         Parley.registerUser(formdata.name, formdata.email, formdata.password, formdata.send_key, function (data, textStatus, jqXHR) {
             console.log(JSON.stringify(data), textStatus, data.error);
@@ -143,19 +143,19 @@
 
                 Parley.registerInbox();
                 Parley.waitForRegisteredInbox(function(success) {
-                    Parley.app.dialog('hide info inbox-error');
+                    Parley.dialog('hide info inbox-error');
                     _.delay(function(){ Parley.vent.trigger('message:sync'); }, 5000);
                 });
 
-                Parley.app.dialog('hide setup');
-                Parley.app.dialog('hide info register-wait');
+                Parley.dialog('hide setup');
+                Parley.dialog('hide info register-wait');
 
                 Parley.app.render();
 
                 Parley.fetchAndDisplayContacts();
             } else {
-                Parley.app.dialog('hide info register-wait');
-                Parley.app.dialog('info register-error', {
+                Parley.dialog('hide info register-wait');
+                Parley.dialog('info register-error', {
                     header: 'Error',
                     message: _t('error-register'),
                     buttons: [ 'okay' ]
@@ -184,7 +184,7 @@
                 }
             });
 
-            Parley.app.dialog('show invite', {
+            Parley.dialog('show invite', {
                 areMembers: areMembers,
                 contacts: pendingList.toJSON()
             });
@@ -193,7 +193,7 @@
 
     Parley.vent.on('setup:login', function (formdata) {
         console.log('VENT: setup:login');
-        Parley.app.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
+        Parley.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
 
         Parley.authenticateUser(formdata.email, formdata.password, function (data, textStatus) {
             if (!_.has(data, 'error')) {
@@ -206,15 +206,15 @@
                 Parley.vent.trigger('contact:sync');
                 Parley.vent.trigger('message:sync');
 
-                Parley.app.dialog('hide setup');
-                Parley.app.dialog('hide info login-wait');
+                Parley.dialog('hide setup');
+                Parley.dialog('hide info login-wait');
 
                 Parley.app.render();
             } else {
                 console.log('Login error occurred');
 
-                Parley.app.dialog('hide info login-wait');
-                Parley.app.dialog('info login-error', {
+                Parley.dialog('hide info login-wait');
+                Parley.dialog('info login-error', {
                     header: _t('error logging in'),
                     message: _t('error-login'),
                     buttons: ['okay']
@@ -234,7 +234,7 @@
             if (data && data.error == 'FORBIDDEN') {
                 console.log('error, forbidden inbox');
 
-                Parley.app.dialog('info inbox-error', {
+                Parley.dialog('info inbox-error', {
                     message: _t('error-inbox-forbidden'),
                     buttons: [ {
                         id: 'reconnectInbox',
@@ -244,7 +244,7 @@
                             
                             Parley.registerInbox();
                             Parley.waitForRegisteredInbox(function(success) {
-                                Parley.app.dialog('hide info inbox-error');
+                                Parley.dialog('hide info inbox-error');
                                 _.delay(function(){Parley.vent.trigger('message:sync');},1000);
                             });
                         }
@@ -327,7 +327,7 @@
                 var nokeysHTML = _.reduce(nokeys, function (memo, val) {
                     return memo + '<li>' + val.email + '</li>';
                 }, '<ul>') + '</ul>';
-                Parley.app.dialog('show info nokey', {
+                Parley.dialog('show info nokey', {
                     message: _t('message-nokey'),
                     extra_html: nokeysHTML,
                     buttons: [ 
@@ -336,8 +336,8 @@
                             text: _t('invite'),
                             handler: function (e) {
                                 e.preventDefault();
-                                Parley.app.dialog('invite', { emails: nokeys });
-                                Parley.app.dialog('hide info nokey');
+                                Parley.dialog('invite', { emails: nokeys });
+                                Parley.dialog('hide info nokey');
                             }
                         },
                         'cancel'
@@ -352,7 +352,7 @@
                 var nokeysHTML = _.reduce(nokeys, function (memo, val) {
                     return memo + '<li>' + val.email + '</li>';
                 }, '<ul>') + '</ul><br>';
-                Parley.app.dialog('show info nokey', {
+                Parley.dialog('show info nokey', {
                     message: _t('message-nokey'),
                     extra_html: nokeysHTML,
                     buttons: [ 
@@ -361,8 +361,8 @@
                             text: _t('invite'),
                             handler: function (e) {
                                 e.preventDefault();
-                                Parley.app.dialog('invite', { emails: nokeys });
-                                Parley.app.dialog('hide info nokey');
+                                Parley.dialog('invite', { emails: nokeys });
+                                Parley.dialog('hide info nokey');
                             }
                         },
                         'cancel'
@@ -374,21 +374,21 @@
 
     Parley.vent.on('message:send', function (message, callback) {
         console.log('Sending email to: ' + JSON.stringify( message ));
-        Parley.app.dialog('info send-message', { message: _t('message-message-sending') })
+        Parley.dialog('info send-message', { message: _t('message-message-sending') })
 
         Parley.encryptAndSend(message.subject, message.body, message.recipients, function (data, textStatus) {
             if (textStatus != 'error') {
                 console.log('Message successfully sent.');
                 console.log( JSON.stringify(data) );
-                Parley.app.dialog('hide compose');
-                Parley.app.dialog('hide info send-message');
-                Parley.app.dialog('info sent-message', {
+                Parley.dialog('hide compose');
+                Parley.dialog('hide info send-message');
+                Parley.dialog('info sent-message', {
                     message: _t('message-message-sent'),
                     buttons: [ 'okay' ]
                 });
             } else {
                 console.log('Message not sent.');
-                Parley.app.dialog('info sent-message', {
+                Parley.dialog('info sent-message', {
                     message: _t('error-message-notsent'),
                     buttons: [ 'okay' ]
                 });
@@ -401,18 +401,18 @@
         console.log('VENT: user:kill');
         callback = callback || function () {};
 
-        Parley.app.dialog('show info revoke-confirm', {
+        Parley.dialog('show info revoke-confirm', {
             message: _t('message-key-revokeconfirm'),
             buttons: [ {
                 id: 'confirmRevokeKeyAction',
                 text: _t('confirm'),
                 handler: function () {
                     Parley.killUser(function (data, status) {
-                        Parley.app.dialog('hide info revoke-confirm');
+                        Parley.dialog('hide info revoke-confirm');
                         if (!_.has(data, 'error')) {
                             Parley.app.kill();
                         } else {
-                            Parley.app.dialog('show info revoke-info', {
+                            Parley.dialog('show info revoke-info', {
                                 message: _t('message-key-revokeerror'),
                                 buttons: [ 'okay' ]
                             });

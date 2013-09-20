@@ -313,9 +313,14 @@
         <td colspan="2">
             <ul>
                 <li>Sent: {{date}}</li>
-                <li>To: {{{to}}}</li>
+                <li>To: {{#to}}
+                    {{#user}}<span>{{t_you}}</span>{{/user}}
+                    {{^user}}
+                        <a class="contactLink" title="{{email}}" href="mailto:{{email}}">{{name}}{{^name}}{{email}}{{/name}}</a>
+                    {{/user}}
+                {{/to}}</li>
             </ul>
-            {{{body}}}
+            <p>{{body}}</p>
         </td>
         <td class="buttons">
             <button class="reply">{{t_reply}}</button>
