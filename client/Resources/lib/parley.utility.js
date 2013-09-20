@@ -249,6 +249,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
+
       $.ajax({
         type:'GET',
         url:url,

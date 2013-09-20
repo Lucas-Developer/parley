@@ -220,7 +220,7 @@
                     buttons: ['okay']
                 });
             }
-        });
+        }, formdata.remember);
     });
 
     Parley.vent.on('message:sync', _.throttle(function () {
@@ -297,7 +297,8 @@
             }
         };
         var lsInbox = Parley.requestInbox(Parley.inboxCurOffset, fetchedInboxHandler);
-        if (Parley.inbox.length == 0 && lsInbox.length > 0) fetchedInboxHandler({'messages':lsInbox});
+        //if (Parley.inbox.length == 0 && lsInbox.length > 0) fetchedInboxHandler({'messages':lsInbox});
+        if (Parley.inbox.length == 0 && lsInbox.length > 0) fetchedInboxHandler({'messages':lsInbox}, 'localStorage');
     }, 5000));
 
     Parley.vent.on('message:nokey', function (data, callback) {
