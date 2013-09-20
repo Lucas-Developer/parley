@@ -44,7 +44,7 @@
 
         var planA = function(data) {
             console.log("A");
-            if ('public_key' in data) {
+            if (data.public_key) {
                 planB();
             } else {
                 var key = Parley.importKey(data.public_key);
@@ -62,7 +62,7 @@
             var userinfo = Parley.AFIS(fingerprint);
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
 
-            if ('uids' in userinfo) {
+            if (userinfo && !userinfo.uids) {
                 callback({error: 'User not found'});
             } else {
                 var parsed = Parley.parseUID(userinfo.uids[0]);
