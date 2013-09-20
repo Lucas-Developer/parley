@@ -44,7 +44,7 @@
 
         var planA = function(data) {
             console.log("A");
-            if (!_.has(data, 'public_key')) {
+            if ('public_key' in data) {
                 planB();
             } else {
                 var key = Parley.importKey(data.public_key);
@@ -62,7 +62,7 @@
             var userinfo = Parley.AFIS(fingerprint);
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
 
-            if (!_.has(userinfo, 'uids')) {
+            if ('uids' in userinfo) {
                 callback({error: 'User not found'});
             } else {
                 var parsed = Parley.parseUID(userinfo.uids[0]);
@@ -98,7 +98,7 @@
         console.log('contact:fetch');
 
         Parley.requestContacts(function (data) {
-            if (data && !('error' in data)) {
+            if (data && !data.error) {
                 callback(data);
             } else {
                 console.log(JSON.stringify(data));
@@ -115,7 +115,7 @@
         console.log('Verifying email address: ' + formdata.email);
 
         Parley.requestUser(formdata.email, function (data, textStatus) {
-            if (_.isObject(data) && !_.has(data, 'error')) {
+            if (data && !data.error) {
                 console.log('User exists, setting up login form.');
                 Parley.dialog('setup login', {
                     email: formdata.email
@@ -137,7 +137,7 @@
         Parley.registerUser(formdata.name, formdata.email, formdata.password, formdata.send_key, function (data, textStatus, jqXHR) {
             console.log(JSON.stringify(data), textStatus, data.error);
 
-            if (!_.has(data, 'error')) {
+            if (data && !data.error) {
                 console.log('New user successfully registered with email: ' + Parley.currentUser.get('email'));
                 console.log('Registering new inbox with Context.io');
 
@@ -196,7 +196,7 @@
         Parley.dialog('info login-wait', { header: _t('logging in'), message: _t('message-login-wait') });
 
         Parley.authenticateUser(formdata.email, formdata.password, function (data, textStatus) {
-            if (!_.has(data, 'error')) {
+            if (data && !data.error) {
                 console.log('User successfully logged in.');
 
                 var parsed_data = Parley.falseIsFalse(data);
@@ -231,32 +231,11 @@
         var fetchedInboxHandler = function (data, textStatus) {
             console.log('Inbox requested at offset: ' + Parley.inboxCurOffset + '.');
 
-            if (data && data.error == 'FORBIDDEN') {
-                console.log('error, forbidden inbox');
-
-                Parley.dialog('info inbox-error', {
-                    message: _t('error-inbox-forbidden'),
-                    buttons: [ {
-                        id: 'reconnectInbox',
-                        text: _t('reconnect inbox'),
-                        handler: function (e) {
-                            e.preventDefault();
-                            
-                            Parley.registerInbox();
-                            Parley.waitForRegisteredInbox(function(success) {
-                                Parley.dialog('hide info inbox-error');
-                                _.delay(function(){Parley.vent.trigger('message:sync');},1000);
-                            });
-                        }
-                    } ]
-                });
-
-                return false;
-            } else if (data && !data.error) {
+            if (data && !data.error) {
                 if (textStatus != 'localStorage') Parley.inboxCurOffset += 100;
 
                 Parley.inbox = Parley.inbox || new MessageList;
-                if (_.has(data, 'messages') && !!data.messages) {
+                if (data.messages) {
                     console.log('Inbox: loaded ' + data.messages.length + ' messages.', data.messages);
                     for (var i = 0, t = data.messages.length; i<t; i++) {
                         Parley.inbox.add(data.messages[i], {parse:true});
@@ -277,22 +256,29 @@
                 } else {
                     console.log('End of mailbox');
                 }
+            } else if (data.error == "FORBIDDEN") {
+                console.log('error, forbidden inbox');
 
-/*
-                if (Parley.inbox.length < (Parley.inboxCurPage * Parley.inboxPerPage))
-                    Parley.vent.trigger('message:sync');
-                else
-                    $('#refreshAction')
-                        .removeAttr('disabled')
-                        .removeClass('refreshing')
-                        .animate({
-                            width:200,
-                            height:50,
-                            opacity:1
-                        })
-                        .text( _t('refresh inbox') );
-*/
+                Parley.dialog('info inbox-error', {
+                    message: _t('error-inbox-forbidden'),
+                    buttons: [ {
+                        id: 'reconnectInbox',
+                        text: _t('reconnect inbox'),
+                        handler: function (e) {
+                            e.preventDefault();
+                            
+                            Parley.registerInbox();
+                            Parley.waitForRegisteredInbox(function(success) {
+                                Parley.dialog('hide info inbox-error');
+                                _.delay(function(){Parley.vent.trigger('message:sync');},1000);
+                            });
+                        }
+                    } ]
+                });
+
+                return false;
             } else {
+                console.log(data);
                 // An error occurred
             }
         };
@@ -308,7 +294,7 @@
             nokeys = data.nokeys,
             recipient;
 
-        var nokeysBuilder = _.map(nokeys, function (ele, key) {
+        var nokeysBuilder = _(nokeys).map(function (ele, key) {
             var dfd = $.Deferred();
 
             Parley.getUserInfo(ele.email, function (recipient) {
@@ -325,7 +311,7 @@
         $.when.apply($, nokeysBuilder).then(function () {
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
-                var nokeysHTML = _.reduce(nokeys, function (memo, val) {
+                var nokeysHTML = _(nokeys).reduce(function (memo, val) {
                     return memo + '<li>' + val.email + '</li>';
                 }, '<ul>') + '</ul>';
                 Parley.dialog('show info nokey', {
@@ -350,7 +336,7 @@
             // This gets called if getUserInfo doesn't have a chance to fire the callback
             if (!_.isEmpty(nokeys)) {
                 // Couldn't find public key, open invite dialog
-                var nokeysHTML = _.reduce(nokeys, function (memo, val) {
+                var nokeysHTML = _(nokeys).reduce(function (memo, val) {
                     return memo + '<li>' + val.email + '</li>';
                 }, '<ul>') + '</ul><br>';
                 Parley.dialog('show info nokey', {
@@ -378,7 +364,7 @@
         Parley.dialog('info send-message', { message: _t('message-message-sending') })
 
         Parley.encryptAndSend(message.subject, message.body, message.recipients, function (data, textStatus) {
-            if (textStatus != 'error') {
+            if (data && !data.error) {
                 console.log('Message successfully sent.');
                 console.log( JSON.stringify(data) );
                 Parley.dialog('hide compose');
@@ -410,7 +396,7 @@
                 handler: function () {
                     Parley.killUser(function (data, status) {
                         Parley.dialog('hide info revoke-confirm');
-                        if (!_.has(data, 'error')) {
+                        if (!data.error) {
                             Parley.app.kill();
                         } else {
                             Parley.dialog('show info revoke-info', {
@@ -433,11 +419,11 @@
         else if (!_.isArray(emails))
             return false;
 
-        var inviteBuilder = _.map(emails, function (ele, key) {
+        var inviteBuilder = _(emails).map(function (ele, key) {
             var dfd = $.Deferred();
 
             Parley.invite(ele, function (recipient) {
-                if (!_.has(recipient, 'error'))
+                if (!recipient.error)
                     dfd.resolve();
             });
 

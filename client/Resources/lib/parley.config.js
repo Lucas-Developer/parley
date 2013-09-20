@@ -107,7 +107,7 @@
                     }
                     
                     Parley.saveUser(formdata, function (data) {
-                        if (!_.has(data, 'error')) {
+                        if (!data.error) {
                             var parsed_data = Parley.falseIsFalse(data);
 
                             Parley.currentUser.set(parsed_data);
@@ -152,7 +152,7 @@
                     Parley.changePass(form.cur_password.value, form.new_password_2.value, function (data, status) {
                         Parley.pauseTimer = false;
 
-                        if (!_.has(data, 'error')) {
+                        if (!data.error) {
                             Parley.dialog('show info password-changed', {
                                 header: _t('password changed'),
                                 message: _t('message-password-changed'),
@@ -210,7 +210,7 @@
                 'click #addContact': function (e) {
                     e.preventDefault();
                     var formdata = this.$('form[name=newcontact]').serializeArray();
-                    var email = _.findWhere(formdata, {name:'email'});
+                    var email = _(formdata).findWhere({name:'email'});
                     Parley.contacts.add({email: email.value});
                     Parley.dialog('contacts contactlist');
                 }
@@ -288,11 +288,11 @@
                     var formdata = $('#composeForm').serializeArray()
 
                     var recipient, recipients = [], nokeyRecipients = [], errors = {};
-                    var to = _.findWhere(formdata, {name:'as_values_to'}),
-                        subject = _.findWhere(formdata, {name:'subject'}),
-                        body = _.findWhere(formdata, {name:'body'});
+                    var to = _(formdata).findWhere({name:'as_values_to'}),
+                        subject = _(formdata).findWhere({name:'subject'}),
+                        body = _(formdata).findWhere({name:'body'});
      
-                    _.each(to.value.split(','), function (ele, i) {
+                    _(to.value.split(',')).each(function (ele, i) {
                         if (recipient = Parley.contacts.findWhere({email:ele}))
                             recipients.push(recipient);
                         else if (Parley.rex.email.test(ele))
@@ -331,7 +331,7 @@
                     this.to = [respondTo];
 
                     if (this.replyAll) {
-                        _.each(this.addresses.to, _.bind(function (ele) {
+                        _(this.addresses.to).each(_.bind(function (ele) {
                             var _tmp;
                                 
                             if (ele.email == Parley.currentUser.get('email')) return false;
@@ -357,8 +357,8 @@
                     });
 
                     if (_.isArray(this.to) && !!this.to[0]) {
-                        preFill = _.map(this.to, function (ele) {
-                            return _.findWhere(items, {value: ele.get ? ele.get('email') : ele.email}) || {};
+                        preFill = _(this.to).map(function (ele) {
+                            return _(items).findWhere({value: ele.get ? ele.get('email') : ele.email}) || {};
                         });
                     } else {
                         preFill = {};

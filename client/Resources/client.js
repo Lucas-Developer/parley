@@ -22,23 +22,23 @@
             if (!attrs)
                 return true;
 
-            if (_.has(attrs, 'isCurrentUser')) {
+            if (attrs.isCurrentUser) {
                 // Any current user specific initialization stuff here.
-            } else if (_.has(attrs, 'pending')) {
+            } else if (attrs.pending) {
                 // Any pending user intialization stuff here.
             } else {
                 // Any normal contact (not current user, not pending user) initialization stuff here.
                 Parley.vent.trigger('contact:userinfo', {
                     contact: this,
                     callback: function (contact) {
-                        if (!_.has(contact, 'error')) {
+                        if (contact && !contact.error) {
                             var data = contact.toJSON && contact.toJSON();
                             console.log('Contact initialized: ' + data.email);
                             Parley.contacts.add(contact, { merge: true });
                             Parley.storeKeyring();
                         } else {
                             // Didn't return a proper contact object
-                            console.log(contact.error);
+                            console.log(contact);
                         }
                     }
                 });
@@ -88,7 +88,7 @@
                 from_obj = new Parley.Contact(from);
             }
 
-            if (_.has(data.person_info, from.email)) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
+            if (from.email in data.person_info) from_obj.set('thumbnail', data.person_info[from.email].thumbnail);
 
             this.set('from', from_obj);
 
@@ -120,7 +120,7 @@
                 console.log('Decrypting message.');
                 var sender = this.get('from');
                 this.decryptedMessage = this.decryptedMessage || [];
-                _.each(this.get('body'), _.bind(function (v,k) {
+                _(this.get('body')).each(_.bind(function (v,k) {
                     this.decryptedMessage.push(Parley.decryptAndVerify(v.content, this.get('from')));
                 }, this));
                 var msg = this.decryptedMessage[0];
@@ -187,9 +187,6 @@
             'click .replyAll':     'openCompose'
 	    },
 	    render: function () {
-            var message_body = _.reduce(this.model.readMessage(), function (memo, val) {
-                return memo + '<p>' + val + '</p>';
-            }, '');
             var model = this.model;
 
 			this.$el
@@ -197,7 +194,7 @@
                 .html(this.template({
                     body: model.readMessage(),
                     date: moment(model.get('date') * 1000).format('MMMM Do YYYY, h:mm:ss a'),
-                    to: _.map(model.get('addresses').to, function (addr) {
+                    to: _(model.get('addresses').to).map(function (addr) {
                         return (addr.email == Parley.currentUser.get('email')) ? { user: true } : { name: addr.name, email: addr.email };
                     })
                 }));
@@ -340,11 +337,11 @@
                                     {
                                         id: 'addContactAction',
                                         text: _t('add new contact'),
-                                        handler: _.bind(function (e) {
+                                        handler: function (e) {
                                             e.preventDefault();
-                                            Parley.dialog('show contacts newcontact', { newemail: this} );
+                                            Parley.dialog('show contacts newcontact', { newemail: email} );
                                             Parley.dialog('hide info nocontact');
-                                        }, email),
+                                        },
                                     },
                                     'cancel'
                                 ]
@@ -498,7 +495,7 @@
 
         return function (opts, data) {
             if (data && data.buttons) {
-                data.buttons = _.map(data.buttons, function (ele) {
+                data.buttons = _(data.buttons).map(function (ele) {
                     if (_.isString(ele) && ele in _buttons) return _buttons[ele];
                     else return ele;
                 });
@@ -527,7 +524,7 @@
                         break;
                     case 'show':
                         if (opts == 'show') {
-                            _.each(_dialogs, function (ele) {
+                            _(_dialogs).each(function (ele) {
                                 if (ele.view.isOpen()) {
                                     ele.view.show();
                                 }
@@ -542,14 +539,14 @@
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            if (false && _.has(tempDialogs, page)) { // Overriden
+                            if (page in tempDialogs) { // Overriden
                                 var dialog = tempDialogs[page];
                                 dialog.html(blankTemplate(data));
                             } else {
                                 var dialog = $(blankTemplate(data)).dialog(_blankOpts);
                                 tempDialogs[page] = dialog;
 
-                                _.each(data.buttons, function (ele) {
+                                _(data.buttons).each(function (ele) {
                                     $(document).on('click', '#'+ele.id, _.bind(ele.handler, dialog));
                                 });
                             }
