@@ -291,11 +291,15 @@ ne
       var userIdString = (new openpgp_packet_userid()).write_packet(userId);
 
       pubKey.armored = openpgp_encoding_armor(4, publicKeyHeader + publicKeyString + userIdString + signature.openpgp );
-      var header = openpgp_packet.write_packet_header(4,privateKeyString.length);
-      privKey.armored = openpgp_encoding_armor(5,header+privateKeyString+userIdString+signature.openpgp); //this line doesn't work...
+      privateKeyString += userIdString + signature.openpgp;
 
-      privKey.obj = openpgp.read_privateKey(privKey.armored);
-      pubKey.obj = openpgp.read_publicKey(pubKey.armored);
+      var header = openpgp_packet.write_packet_header(5,privateKeyString.length);
+      privKey.armored = openpgp_encoding_armor(5,header+privateKeyString);
+
+      privKey.obj = openpgp.read_privateKey(privKey.armored)[0];
+      pubKey.obj = openpgp.read_publicKey(pubKey.armored)[0];
+      //TODO assign fingerprint, etc as in import fn
+      //TODO: fix userIDs!! they're not getting re-imported :(
 
       //TODO:implement currentUser.publish attribute
       if (Parley.currentUser.get('publish')) HKPsubmit(pubKey.armored,console.log);
@@ -362,10 +366,10 @@ ne
           newAmble += IV + ciphertextMPIs;
 	  break;
       }
-      var newKey = preAmble + newAmble;
+      var newKey = preAmble + newAmble + postAmble;
       var header = openpgp_packet.write_packet_header(5,newKey.length);
-      privateKey.armored = openpgp_encoding_armor(5,header+newKey+postAmble);
-      privateKey.obj = openpgp.read_privateKey(privateKey.armored);
+      privateKey.armored = openpgp_encoding_armor(5,header+newKey);
+      privateKey.obj = openpgp.read_privateKey(privateKey.armored)[0];
 
       var success = 'success', error = 'none';
       //this weird return format is for backwards compatibility.
