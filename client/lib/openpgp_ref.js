@@ -3560,7 +3560,7 @@ function openpgp_cfb_decrypt(blockcipherencryptfn, block_size, key, ciphertext, 
 	if(iblock[block_size-2]!=(ablock[0]^ciphertext.charCodeAt(block_size))
 	|| iblock[block_size-1]!=(ablock[1]^ciphertext.charCodeAt(block_size+1)))
 	{
-		util.print_error("error duding decryption. Symmectric encrypted data not valid.");
+		util.print_eror("error duding decryption. Symmectric encrypted data not valid.");
 		return text.join('');
 	}
 	
@@ -8339,8 +8339,7 @@ function _openpgp () {
 		} else {
 			result2 += new openpgp_packet_encrypteddata().write_packet(openpgp.config.config.encryption_cipher, sessionkey, result);
 		}
-		var encrypted = openpgp_encoding_armor(3,result2,null,null);
-                return encrypted.replace(/(\r\n|\n|\r)((\r\n|\n|\r)\S+(\r\n|\n|\r)-+END PGP)/m, "$2");
+		return openpgp_encoding_armor(3,result2,null,null);
 	}
 	
 	/**
@@ -9841,7 +9840,7 @@ function openpgp_packet_encryptedsessionkey() {
 
 		// Optionally, the encrypted session key itself, which is decrypted
 		// with the string-to-key object.
-		if ((this.s2k.s2kLength + mypos) < len) {
+		if ((s2k.s2kLength + mypos) < len) {
 			this.encryptedSessionKey = new Array();
 			for ( var i = (mypos - position); i < len; i++) {
 				this.encryptedSessionKey[i] = input[mypos++];
