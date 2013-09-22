@@ -38,13 +38,13 @@
 
             contact.set({email:email});
         } else {
-            var email = contact.get('email'),
+            var email = contact.get('email') || Parley.parseUID(contact.get('uids')[0]).email,
                 fingerprint = contact.get('fingerprint');
         }
 
         var planA = function(data) {
             console.log("A");
-            if (data.public_key) {
+            if (!data.public_key) {
                 planB();
             } else {
                 var key = Parley.importKey(data.public_key);
@@ -59,7 +59,7 @@
                 callback({error: 'User not found'});
 
             fingerprint = fingerprint || Parley.requestPublicKey(email);
-            var userinfo = Parley.AFIS(fingerprint);
+            var userinfo = Parley.AFIS(fingerprint) || contact.attributes;
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
 
             if (userinfo && !userinfo.uids) {
