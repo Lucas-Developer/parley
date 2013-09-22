@@ -370,11 +370,13 @@ ne
       return [success, error];
     },
     'encryptAndSign': function(data, recipients, signer, passphrase) {
+      console.log(recipients);
       var privateKey = openpgp.keyring.getPrivateKeyForKeyId(
-          signer.subtr(signer.length-8));
+          signer.substr(signer.length-8))[0].key;
       var publicKeys = _.map(recipients, function(i){
-        i.substr(i.length-8);
-      });
+        openpgp.keyring.getPublicKeysForKeyId(
+          i.substr(i.length-8));
+      })[0];
       var encrypted = openpgp.write_signed_and_encrypted_message(privateKey,publicKeys,data);
       return encrypted;
     },
@@ -718,6 +720,7 @@ ne
   Accepts clearTextMessage as a String and recipients as an array of Contacts.
   Also takes finished callback. */
   Parley.encryptAndSend = function(clearTextSubject, clearTextMessage, recipients, finished) {
+    //TODO:de-synchronize calls to requestPublicKey!!!
     var recipientKeys = _(recipients).map(function(recipient) {
       if (_.isString(recipient)) {
         return Parley.requestPublicKey(recipient);
@@ -765,6 +768,7 @@ ne
   */
   Parley.decryptAndVerify = function(encryptedMessage, sender) {
 
+    //TODO:desynchronize calls to requestPublicKey!!
     var keyid, email;
     if (_.isString(sender)) {
       email = sender;

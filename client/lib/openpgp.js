@@ -7888,6 +7888,7 @@ function openpgp_encoding_eme_pkcs1_encode(message, length) {
  * @return {String} decoded message 
  */
 function openpgp_encoding_eme_pkcs1_decode(message, len) {
+        console.log(message,len);
 	if (message.length < len)
 	    message = String.fromCharCode(0)+message;
 	if (message.length < 12 || message.charCodeAt(0) != 0 || message.charCodeAt(1) != 2)
