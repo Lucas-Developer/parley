@@ -513,7 +513,7 @@
                             var dialog = tempDialogs[page];
                             if (dialog) {
                                 dialog.dialog('destroy');
-                                tempDialogs[page] = undefined;
+                                delete tempDialogs[page];
                             }
                         } else { 
                             var dialog = _(_dialogs).findWhere({slug:slug});

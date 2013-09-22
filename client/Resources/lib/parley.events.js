@@ -145,14 +145,14 @@
                 Parley.waitForRegisteredInbox(function(success) {
                     Parley.dialog('hide info inbox-error');
                     _.delay(function(){ Parley.vent.trigger('message:sync'); }, 5000);
+
+                    Parley.fetchAndDisplayContacts();
                 });
 
                 Parley.dialog('hide setup');
                 Parley.dialog('hide info register-wait');
 
                 Parley.app.render();
-
-                Parley.fetchAndDisplayContacts();
             } else {
                 Parley.dialog('hide info register-wait');
                 Parley.dialog('info register-error', {
