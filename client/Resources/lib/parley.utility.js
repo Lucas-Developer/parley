@@ -138,8 +138,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
     return $.ajax({
       type:'GET',
       url:Parley.BASE_URL+'/u/'+Parley.encodeEmail(email),
-      success:finished,
-      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      success: finished,
+      error: finished ? function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)} : undefined,
       dataType:'json'
     });
   }
