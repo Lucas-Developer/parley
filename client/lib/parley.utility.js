@@ -92,6 +92,14 @@ ne
         //packets (tagType == 3) properly.
         //TODO: contribute a fix, and implement it more cleanly here
         //-see http://tools.ietf.org/html/rfc4880#section-5.3
+        //
+        //TODO: this fails for large keys (actually, the only one that
+        //works so far is mine and the only one that broke so far
+        //is Matt's--size may not necessarily be the determining factor).
+        //I'm not sure decompression is
+        //the problem--it could happen earlier, like maybe
+        //the last block(s) of the cipher aren't being returned, or maybe
+        //the wrong length is beign sent to the decipher fn
 
         openpgp.config.debug = true;
         var debug = {'base64inputLength':b64CipherText.length};
