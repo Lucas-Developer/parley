@@ -20,6 +20,15 @@ $b20:   rgba(0,0,0,0.2)
 $font1: "Raleway"
 $font2: "Open Sans"
 
+@mixin button-layout
+    outline: none
+    border: none
+    cursor: pointer
+    padding: 8px 16px
+    white-space: nowrap
+    font-weight: 500
+    text-transform: capitalize 
+
 @mixin default-button
     background-color: $w80
     color: $orange
@@ -47,6 +56,11 @@ $font2: "Open Sans"
     outline: none
     border-color: $orange
 
+@import "reset"
+
+@import "jquery-ui"
+@import "autoSuggest"
+
 @font-face 
     font-family: "Raleway"
     src: url(Raleway-Medium.ttf) format("truetype")
@@ -62,20 +76,20 @@ $font2: "Open Sans"
 
 @font-face
     font-family: "Open Sans"
-    src: url(OpenSans-Regular.otf) format("opentype")
+    src: url(OpenSans-Regular.ttf) format("truetype")
     font-weight: 400
 @font-face
     font-family: "Open Sans"
-    src: url(OpenSans-Semibold.otf) format("opentype")
+    src: url(OpenSans-Semibold.ttf) format("truetype")
     font-weight: 600
 @font-face
     font-family: "Open Sans"
-    src: url(OpenSans-Italic.otf) format("opentype")
+    src: url(OpenSans-Italic.ttf) format("truetype")
     font-weight: 400
     font-style: italic
 @font-face
     font-family: "Open Sans"
-    src: url(OpenSans-SemiboldItalic.otf) format("opentype")
+    src: url(OpenSans-SemiboldItalic.ttf) format("truetype")
     font-weight: 600
     font-style: italic
 
@@ -89,9 +103,8 @@ body
     background: url(../img/wavegrid.png) 0 0 repeat
 body, p, .ui-widget
     font-family: $font1 
-button
-    font-weight: 500
-    text-transform: capitalize 
+a
+    color: $orange
 input, textarea
     font-family: $font2 
 
@@ -99,14 +112,36 @@ body
     color: $grey
 h1, h2, h3, h4, h5, h6
     color: $grey
+    font-weight: 300
+    text-transform: capitalize 
+
+.ui-dialog-title
+    color: $orange
+    font-weight: 300
+    text-transform: capitalize 
+    
+h2, .ui-dialog-title
+    font-size: 1.5em
+h3
+    text-align: left
+    font-size: 1.3em
+h4
+    .links
+        width: auto
+        a
+            color: $orange
+            font-size: 0.8em
+            text-align: right
 
 button
+    @include button-layout
     @include default-button
-    &.send
+    &.sendBtn
         background-color: transparent
         color: $orange
     &:hover, &:active
         @include default-button-over
+        outline: none
 
 textarea
     @include default-input
@@ -118,6 +153,8 @@ textarea
 input[type=checkbox]
     display: block
     float: left
+    &:disabled
+        opacity: 1
 
 .as-selections
     @include default-input
@@ -147,11 +184,57 @@ input[readonly]
 header
     background: #fff
     background: -webkit-gradient(linear, left top, right bottom, color-stop(0%, rgba(255,255,255,.9)), color-stop(100%, rgba(255,255,255,.5))) /* Chrome,Safari4+ */
+
+    display: none
+    width: 100%
+    padding: 10px 20px 0
+    height: 90px
+    position: relative
+    line-height: 58px
+
+    h1 
+        float: left
+        width: 250px
+        height: 60px
+        background: url(../img/logo.png) no-repeat 0 8px
     .email
         color: $grey
-    nav button span 
-        color: $grey
-        -webkit-text-shadow: 0 0 1px #f0f0f0
+        padding: 12px 0 0 20px
+        font-weight: 500
+        display: inline-block
+        float: left
+    nav 
+        overflow: visible
+        padding: 8px 0
+        display: inline-block
+        float: right
+
+        button 
+            display: inline-block
+            text-align: center
+            float: left
+            width: 80px
+            height: 70px
+            border-radius: 4px
+            padding: 40px 0 0 0
+            background-color: transparent
+            background-position: top center
+            background-repeat: no-repeat
+            span
+                color: $grey
+                -webkit-text-shadow: 0 0 1px #f0f0f0
+                visibility: hidden
+                text-align: center
+                font-size: 0.8em
+            &:hover span
+                visibility: visible
+
+    #composeAction
+        background-image: url(../img/compose.png)
+    #settingsAction
+        background-image: url(../img/settings.png)
+    #contactsAction
+        background-image: url(../img/contacts.png)
 
 #refreshAction.refreshing:hover
     cursor: default
@@ -162,25 +245,16 @@ table
         tr
             border-bottom: 1px solid rgba(0,0,0,0.1)
             &:hover
-                background-color: #eee
+                background-color: #e9e9e9
             td
                 @include default-cell
                 
-        .selector a 
-            border: 1px solid $grey 
-            &.clicked 
-                background-color: $grey
-
     thead
         tr
             background-color: $grey
             color: #eee
             th
                 @include default-cell
-        .selector a
-            border: 1px solid $vltgrey 
-            &.clicked
-                background-color: $vltgrey
 
 .contactLink
     padding-left: 5px
@@ -194,21 +268,49 @@ table
     background-color: rgba(240,240,240,.95) !important
     border: 1px solid rgba(77, 104, 141, .3)
 
+    p
+        margin: 5px 0 10px
+    input[type=text], input[type=password], input[type=email]
+        width: 100%
+    input[type=search]
+        width: 100%
+
+    table
+        width: 100%
+        td
+            vertical-align: top
+            
+        .contact
+            cursor: pointer
+            td
+                vertical-align: middle
+                .sendBtn
+                    border: 1px solid transparent
+                    display: inline-block
+                    @include button-layout
+
+        .thumbnail
+            padding: 2px
+            width: 32px
+            height: 32px
+
     .page, .tab
         display: none
         clear: both
         &.page-active, &.tab-active
             display: block
 
+    .ui-dialog-title, h2
+        color: #f0961e 
+
+    h4
+        border-bottom: 1px solid #ccc
+
     .ui-dialog-content
         background: transparent none !important 
 
     .section
         border-bottom: 1px solid #eee
-    .ui-dialog-titlebar, h2
-        border-bottom: 1px solid #f0961e
-        color: #f0961e 
-
     button
         display: inline-block
         &.clear-btn
@@ -219,24 +321,13 @@ table
         &.default-btn
             border: 1px solid #f0961e 
 
-#contactsListTable tr:nth-child(odd)
+
+.niceTable tr:nth-child(odd)
     background-color: #f0f0f0 
 
 #composeAction:hover, #settingsAction:hover, #contactsAction:hover 
     background-color: transparent
 
-
-
-.ui-dialog-title, h1, h2, h3, h4, h5, h6
-    font-weight: 300
-    text-transform: capitalize 
-.ui-dialog-title, h2
-    font-size: 1.5em
-h3
-    text-align: left
-    font-size: 1.3em
-.ui-dialog h4
-    border-bottom: 1px solid #ccc
 
 p
     font-size: 0.9em
@@ -248,15 +339,6 @@ p.small-text
     display: block
     margin-top: 5px
     font-weight: 500
-
-button
-    outline: none
-    border: none
-    cursor: pointer
-    padding: 8px 16px
-    white-space: nowrap
-    &:hover, &:active
-        outline: none
 
 .row
     display: table
@@ -319,14 +401,14 @@ button
     font-size: 0.7em
 
 
-#contactsListWrapper
+.niceTableWrapper
     height: 350px
     overflow-y: scroll
     overflow-x: visible
-#contactsListTable
-    width: 100%
-    min-width: 600px
-    background-color: transparent
+    .niceTable
+        width: 100%
+        min-width: 600px
+        background-color: transparent
 
 .ui-state-default
     background-color: transparent
@@ -358,55 +440,6 @@ button
 .close-button
     display: inline-block
     float: right
-
-header
-    display: none
-    width: 100%
-    padding: 10px 20px 0
-    height: 90px
-    position: relative
-    line-height: 58px
-    h1 
-        float: left
-        width: 250px
-        height: 60px
-        background: url(../img/logo.png) no-repeat 0 8px
-    .email
-        padding: 12px 0 0 20px
-        font-weight: 500
-        display: inline-block
-        float: left
-    nav 
-        overflow: visible
-        padding: 8px 0
-        display: inline-block
-        float: right
-
-        button 
-            display: inline-block
-            text-align: center
-            float: left
-            width: 80px
-            height: 70px
-            border-radius: 4px
-            padding: 40px 0 0 0
-            background-color: transparent
-            background-position: top center
-            background-repeat: no-repeat
-            span
-                visibility: hidden
-                text-align: center
-                font-size: 0.8em
-                color: $ltgrey
-            &:hover span
-                visibility: visible
-
-    #composeAction
-        background-image: url(../img/compose.png)
-    #settingsAction
-        background-image: url(../img/settings.png)
-    #contactsAction
-        background-image: url(../img/contacts.png)
 
 .loggedin header, .loggedin header .email, .loggedin header nav, .loggedin #inbox
     display: block
@@ -483,32 +516,11 @@ header
     margin: 20px auto
     display: block
 
-.ui-dialog p
-    margin: 5px 0 10px
-.ui-dialog input[type=text], .ui-dialog input[type=password], .ui-dialog input[type=email]
-    width: 100%
-
-.ui-dialog table
-    width: 100%
-.ui-dialog table td
-    vertical-align: top
-.ui-dialog input[type=search]
-    width: 100%
-
-.ui-dialog table .thumbnail
-    padding: 2px
-    width: 32px
-    height: 32px
-
-.ui-dialog-titlebar button, .ui-dialog-titlebar span
-    outline: none
-.thumbnail img
-    width: 50px
-    height: 50px
-tr.contact td
-    vertical-align: middle
-tr.contact
-    cursor: pointer
+img.avatar
+    float: left
+    width: 48px
+    height: 48px
+    margin: 2px 4px 0 0
 
 /* Some overrides for the autoSuggest plugin (should modify that css, WILL do this eventually! */
 .as-selections input
@@ -525,3 +537,4 @@ tr.contact
 
 /* Gonna start putting responsive stuff here */
 // @media screen and (max-width: 9000px) and (min-width: 0px)
+

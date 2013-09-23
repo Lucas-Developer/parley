@@ -193,6 +193,17 @@
                     var from_obj = Parley.contacts.findWhere({email: $(e.target).data('email')});
                     Parley.app.dialog('compose', {from: from_obj});
                 },
+                'click .invite': function (e) {
+                    e.preventDefault();
+                    var email = $(e.target).data('email'),
+                        from_obj = Parley.contacts.findWhere({email: email});
+
+                    if (!from_obj.invited()) {
+                        Parley.vent.trigger('invite', email, _.bind(function () { this.set({invited: true}); }, from_obj));
+                    } else {
+                        Parley.showOkayWindow({header: _t('already invited'), message: _t('message-invite-already')});
+                    }
+                },
                 'click #newContact': function (e) { e.preventDefault(); Parley.app.dialog('contacts newcontact'); },
                 'click #backToContactlist': function (e) { e.preventDefault(); Parley.app.dialog('contacts contactlist'); },
                 'click #addContact': function (e) {
@@ -215,27 +226,55 @@
                 }
             }
         },
-        {   id: 'dialog_nokey',
-            template: Mustache.compile($('#nokeyDialogTemplate').html()),
+        {
+            id: 'dialog_invite',
+            template: Mustache.compile($('#inviteDialogTemplate').html()),
             events: {
+                'click #selectAllInvite': function () {
+                    $('#inviteList input').each(function () {
+                        this.checked = true;
+                    });
+                },
+                'click #selectNoneInvite': function () {
+                    $('#inviteList input').each(function () {
+                        this.checked = false;
+                    });
+                },
+                'click .inviteRow': function (e) {
+                    var numChecked, checkbox = $(e.currentTarget).find('input')[0];
+                    if (checkbox)
+                        checkbox.checked = !checkbox.checked;
+
+                    numChecked = $('#inviteForm input:checked').length;
+                    if (numChecked >= 5)
+                        $('#inviteAction').attr('disabled', 'disabled');
+                    else
+                        $('#inviteAction').removeAttr('disabled');
+                        
+                },
                 'click #inviteAction': function (e) {
                     e.preventDefault();
-                    var emails = [], selected = $('#nokeysForm input:checked');
+                    var emails = [], selected = $('#inviteForm input:checked');
 
                     selected.each(function (e) {
                         emails.push(this.name.split('_')[1]);
                     });
 
+                    Parley.app.dialog('show info inviteWait', {
+                        header: _t('sending invite'),
+                        message: _t('message-invite-sending'),
+                    });
+
                     Parley.vent.trigger('invite', emails, function () {
-                        Parley.app.dialog('hide nokey');
-                        
+                        Parley.app.dialog('hide invite');
+                        Parley.app.dialog('hide info inviteWait');
                     });
                 }
             },
             model: {
-                slug: 'nokey',
+                slug: 'invite',
                 opts: {},
-                title: 'Public PGP keys not found.'
+                title: 'Invite your friends.'
             }
         },
         {   
@@ -356,4 +395,29 @@
             todo: function () { Parley.vent.trigger('message:sync'); }
         }
     ]
+
+    Parley.showOkayWindow = function (data) {
+        var time = new Date().getTime();
+        Parley.app.dialog('show info info' + time, {
+            header: data.header,
+            message: data.message,
+            buttons: ['okay']
+        });
+    }
+
+    Parley.showCancelWindow = function (data, okay) {
+        var time = new Date().getTime();
+        Parley.app.dialog('show info info' + time, {
+            header: data.header,
+            message: data.message,
+            buttons: [
+                {
+                    id: 'performAction' + time,
+                    text: okay.label,
+                    handler: okay.action
+                },
+                'cancel'
+            ]
+        });
+    }
 }(window.Parley = window.Parley || {}, jQuery));

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-	<link rel="stylesheet" type="text/css" href="style/html5-doctor-reset-stylesheet.min.css">
-	<link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.10.3.custom/css/humanity/jquery-ui.css">
 	<link rel="stylesheet" type="text/css" href="style/client.css">
-	<link rel="stylesheet" type="text/css" href="style/autoSuggest.css">
+
+	<!--<link rel="stylesheet" type="text/css" href="style/animations.css">-->
 	
 	<script type="text/javascript" src="lib/jquery-2.0.2.min.js"></script>
     <script charset="UTF-8" type="text/javascript" src="lang/dict.en.json"></script>
@@ -187,8 +186,8 @@
         <div class="row">
             <button id="newContact">{{t_new_contact}}</button>
         </div>
-        <div id="contactsListWrapper">
-            <table id="contactsListTable" class="sortable">
+        <div class="niceTableWrapper" id="contactsListWrapper">
+            <table id="contactsListTable" class="sortable niceTable">
                 <!--<thead>
                 <tr><th class="thumbnail"></th><th>{{t_name}}</th><th>{{t_email}}</th><th class="buttons"></th></tr>
                       </thead>-->
@@ -212,28 +211,62 @@
 	    </div>
     </form>
 
-    <button id="addContact">{{t_save_contact}}</button>
+    <button class="default-btn" id="addContact">{{t_save_contact}}</button>
     <button id="backToContactlist">{{t_cancel}}</button>
 
     </div>
 </script>
 
-    <script type="text/template" id="nokeyDialogTemplate">
-        <p>{{t_message-nokey}}</p>
+    <script type="text/template" id="inviteDialogTemplate">
+        {{#areMembers}}
+            <p>{{areMembers}} of your friends already use Parley.</p>
+            <table id="inviteListTable" class="sortable niceTable">
+                <tbody id="inviteList">
+                    {{#contacts}}
+                        {{^pending}}
+                        <tr class="inviteRow">
+                            <td> </td>
+                            <td> {{name}} </td>
+                            <!--{{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}-->
+                            <td> {{email}} </td>
+                        </tr>
+                        {{/pending}}
+                    {{/contacts}}
+                </tbody>
+            </table>
+            <p>{{t_message-invite}}</p>
+        {{/areMembers}}
+        {{^areMembers}}
+            <p>{{t_message-invite}}</p>
+        {{/areMembers}}
     
-        <form name="nokeys" id="nokeysForm">
-            <h4>{{t_invite_users}}</h4>
+        <form name="invite" id="inviteForm">
+            <h4> <span class="links">
+                <a href="#" id="selectAllInvite">{{t_select_all}}</a> / <a href="#" id="selectNoneInvite">{{t_select_none}}</a>
+            </span> </h4>
             <div class="row"> <ul>
-                {{#nokeys}}
-                    <li> <label for="invite_{{email}}">
-                        <input type="checkbox" name="invite_{{email}}">
-                        {{email}}
-                    </label> </li>
-                {{/nokeys}}
+                <div class="niceTableWrapper" id="inviteListWrapper">
+                    <table id="inviteListTable" class="sortable niceTable">
+                        <tbody id="inviteList">
+                        {{#contacts}}
+                            {{#pending}}
+                            <tr class="inviteRow">
+                                <td> <input disabled type="checkbox" name="invite_{{email}}"> </td>
+                                <td> {{name}} </td>
+                                <!--{{#thumbnail}}<img class="avatar" src="{{thumbnail}}">{{/thumbnail}}-->
+                                <td> {{email}} </td>
+                            </tr>
+                            {{/pending}}
+                        {{/contacts}}
+                        </tbody>
+                    </table>
+                </div>
             </ul> </div>
         </form>
-        <button id="inviteAction" name="invite">{{t_invite}}</button>
+        <button class="default-btn" id="inviteAction" disabled name="invite">{{t_invite}}</button>
+        <button id="cancelButton" name="cancel">{{t_cancel}}</button>
     </script>
+
 	<script type="text/template" id="composeDialogTemplate">
 	    <form name="compose" id="composeForm">
             <div class="no-line row" id="recipients">
@@ -280,27 +313,39 @@
         </td>
 	</script>
 	<script type="text/template" id="contactTemplate">
-		<td class="thumbnail">{{#thumbnail}}<img alt="{{name}}" src="{{thumbnail}}">{{/thumbnail}}</td>
+		<!--<td class="thumbnail">{{#thumbnail}}<img alt="{{name}}" src="{{thumbnail}}">{{/thumbnail}}</td>-->
 	    <td>{{name}}</td>
 	    <td>{{email}}</td>
-		<td class="buttons"><button data-email="{{email}}" class="send">{{t_send_email}}</button></td>
+		<td class="buttons">
+            {{#pending}}
+                {{#invited}}
+                    <span class="sendBtn inactive">{{t_invited}}</span>
+                {{/invited}}
+                {{^invited}}
+                    <button data-email="{{email}}" class="sendBtn invite">{{t_invite}}</button>
+                {{/invited}}
+            {{/pending}}
+            {{^pending}}<button data-email="{{email}}" class="sendBtn send">{{t_send_email}}</button>{{/pending}}
+        </td>
 	</script>
 	
-	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
-        <!--SWITCH THE FOLLOWING TO THEIR MINIFIED LIB VERSIONS FOR PRODUCTION!!!-->
-	<script type="text/javascript" src="http://underscorejs.org/underscore.js"></script>
-	<script type="text/javascript" src="lib/openpgp.js"></script>
+    <!--SWITCH THE FOLLOWING TO THEIR MINIFIED LIB VERSIONS FOR PRODUCTION!!!-->
+	<script type="text/javascript" src="lib/openpgp.min.js"></script>
+	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom.js"></script>
+
+	<script type="text/javascript" src="lib/underscore.js"></script>
+
 	<script type="text/javascript" src="lib/parley.utility.js"></script>
-	<script type="text/javascript" src="lib/backbone-min.js"></script>
+	<script type="text/javascript" src="lib/backbone.js"></script>
 	<script type="text/javascript" src="lib/mustache.js"></script>
 
 	<script type="text/javascript" src="lib/parley.config.js"></script>
 	<script type="text/javascript" src="lib/parley.events.js"></script>
 
-	<script type="text/javascript" src="lib/moment.min.js"></script>
+	<script type="text/javascript" src="lib/moment.js"></script>
 
-	<script type="text/javascript" src="lib/ba-linkify.min.js"></script>
-	<script type="text/javascript" src="lib/jquery.i18n.min.js"></script>
+	<script type="text/javascript" src="lib/ba-linkify.js"></script>
+	<script type="text/javascript" src="lib/jquery.i18n.js"></script>
 	<script type="text/javascript" src="lib/polyglot.js"></script>
 	<script type="text/javascript" src="lib/jquery.autoSuggest.min.js"></script>
 
