@@ -41,7 +41,7 @@ window._phrases = {
 "log in": "Log in",
 "logging in": "Logging in",
 "error logging in": "Error logging in",
-
+"remember me": "Remember me",
 "import key": "Import key",
 "revoke key": "Revoke key",
 "generate new key": "Generate New Key",
@@ -77,7 +77,7 @@ window._phrases = {
 "message-welcome": "Welcome to the Parley Pre-Beta! It's still obviously a work in progress, but we hope you find it useful and look forward to your feedback.",
 "message-login": "Enter your password to access the magic of Parley!",
 "message-login-wait": "Downloading encrypted keys and contacts from the Parley server...",
-"message-register": "Register for Parley! Keep in mind, this will only work if you have already signed up for the service at http://parley.co",
+"message-register": "Register for Parley! Keep in mind, this will only work if you have already signed up for the service at <a href=\"https://parley.co/#signup\" target=\"registerWindow\">parley.co</a>",
 
 "message-keygen": "To use encrypted email, you must have a <strong>secret key</strong>. If you have never used PGP encryption, select <strong>Generate New Key</strong> and the Parley client will set you up. If you have an existing key, I don't need to tell you to click <strong>Import Private Key</strong>.",
 "message-keygen-confirm": "Do not generate a new key if you already have a public PGP key. If you do not have a public PGP key, or if you are unsure about it, generate yourself a new one! (You would know if you had one).",

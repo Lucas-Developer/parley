@@ -22,6 +22,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //node-webkit allows us to use node modules
   var crypto = require('crypto');
   var http = require('http');
+  var zlib = require('zlib');
 
   //wrappers, because Node's http is annoying
   var HKPrequest = function(op, search, callback) {
@@ -72,45 +73,29 @@ ne
         HKPsubmit(keyPair.publicKeyArmored,console.log);
       }
     },
-    'importEncryptedKeyring': function(b64Keyring) {
+    'importEncryptedKeyring': function(b64Keyring,cb) {
 
       //legacy support:
       //old pure-Python AES
-      var oldAES = function(b64CipherText, passphrase) {
+      var oldAES = function(b64CipherText, passphrase, callback) {
         var buf = new Buffer(b64CipherText,'base64');
         var iv = buf.slice(0,16);
         var data = buf.slice(16);
         var key = passphrase.substr(0,32);
         var decipher = crypto.createDecipheriv('aes-256-cbc',key,iv);
-        return decipher.update(data,'utf8','utf8') + decipher.final('utf8');
+        callback(decipher.update(data,'utf8','utf8') + decipher.final('utf8'));
       }
 
       //old GPG
-      var oldGPG = function(b64CipherText, passphrase) {
+      var oldGPG = function(b64CipherText, passphrase, callback) {
         //the following was really fucking hard to figure out, because
         //openpgp.js doesn't support symmetric-key encrypted session key
         //packets (tagType == 3) properly.
         //TODO: contribute a fix, and implement it more cleanly here
         //-see http://tools.ietf.org/html/rfc4880#section-5.3
-        //
-        //TODO: this fails for large keys (actually, the only one that
-        //works so far is mine and the only one that broke so far
-        //is Matt's--size may not necessarily be the determining factor).
-        //I'm not sure decompression is
-        //the problem--it could happen earlier, like maybe
-        //the last block(s) of the cipher aren't being returned, or maybe
-        //the wrong length is beign sent to the decipher fn
-
-        openpgp.config.debug = true;
-        var debug = {'base64inputLength':b64CipherText.length};
 
         var cipherText = openpgp_encoding_base64_decode(b64CipherText);
         var ctLength = cipherText.length;
-
-        debug.ctLength = ctLength;
-        var reB64 = openpgp_encoding_base64_encode(cipherText);
-        debug.reB64length = reB64.length;
-        console.log(debug);
 
         var sessionKey = openpgp_packet.read_packet(cipherText,0,ctLength);
         var skLength = sessionKey.headerLength + sessionKey.packetLength;
@@ -134,21 +119,50 @@ ne
             compressedData,
             0,
             compressedData.length);
-        var data = compressedPacket.decompress();
 
-        console.log('data length', data.length);
-        openpgp.config.debug = false;
+        try {
+          var data = compressedPacket.decompress();
+          //in the test case, the decompressed data appeared to have nonsense
+          //bits prepended to it.
+          //For our own purposes, the following fix is sufficient:
+          callback(data.substr(data.indexOf('{"public"')));
+        } catch (e) {
+          var compressedBuffer = new Buffer(compressedPacket.compressedData);
 
-        //in the test case, the decompressed data appeared to have nonsense
-        //bits prepended to it--presumably openpgp_packet_compressed.read_packet
-        //is failing to strip some header info.
-        //For our own purposes, the following fix is sufficient:
-        return data.substr(data.indexOf('{"public"'));
+          zlib.inflateRaw(compressedBuffer, function (err, buffer) {
+            if (err) { console.log(err); }
+            else {
+              var data = buffer.toString();
+
+              //in the test case, the decompressed data appeared to have nonsense
+              //bits prepended to it.
+              //For our own purposes, the following fix is sufficient:
+              callback(data.substr(data.indexOf('{"public"')));
+            }
+          });
+        }
       }
 
       //var cipherText = new Buffer(b64Keyring,'base64').toString('utf8');
       var passphrase = Parley.currentUser.get('passwords').local;
-      var json = '';
+
+      var jsonHandler = function(json) {
+        try {
+          var keyObj = JSON.parse(json);
+
+          openpgp.keyring.importPrivateKey(keyObj['private'],Parley.currentUser.get('passwords').local);
+          openpgp.keyring.importPublicKey(keyObj['public']);
+          //add fingerprints to imported keys, as well as any other expected attributes
+          _.each(openpgp.keyring.publicKeys, function (key) {
+            key.fingerprint = key.obj.getFingerprint();
+            key.keyId = key.keyid = key.obj.getKeyId();
+            key.uids = _.map(key.obj.userIds, function(uid) { return uid.text });
+          });
+          cb();
+        } catch (e) {
+          console.log('Caught possibly harmless error: '+e.message);
+        }
+      }
 
       //have to do this in a very convoluted fashion
       //because who knows what will cause an error and what won't
@@ -157,41 +171,24 @@ ne
         //module, using OpenSSL)
         var key = new Buffer(passphrase,'hex');
         var decipher = crypto.createDecipher('aes256',key);
-        return decipher.update(b64Keyring, 'base64', 'utf8') + decipher.final('utf8');
+        jsonHandler(decipher.update(b64Keyring, 'base64', 'utf8') + decipher.final('utf8'));
       } catch (e) {
-        console.log(e.message);
+        console.log('Possibly harmless: '+e.message);
       }
 
-      if (!json) {
-        //try old GPG decryption
-        try {
-          json = oldGPG(b64Keyring, passphrase);
-        } catch (e) {
-          console.log(e.message);
-        }
+      //try old GPG decryption
+      try {
+        oldGPG(b64Keyring, passphrase, jsonHandler);
+      } catch (e) {
+        console.log('Possibly harmless: '+e.message);
       }
 
-      if (!json) {
-        //try old "pure python AES"
-        try {
-          json = oldAES(b64Keyring, passphrase);
-        } catch (e) {
-          console.log(e.message);
-        }
+      //try old "pure python AES"
+      try {
+        oldAES(b64Keyring, passphrase, jsonHandler);
+      } catch (e) {
+        console.log('Possibly harmless: '+e.message);
       }
-
-      console.log(json);
-      var keyObj = JSON.parse(json);
-
-      openpgp.keyring.importPrivateKey(keyObj['private'],Parley.currentUser.get('passwords').local);
-      openpgp.keyring.importPublicKey(keyObj['public']);
-      //add fingerprints to imported keys, as well as any other expected attributes
-      _.each(openpgp.keyring.publicKeys, function (key) {
-        key.fingerprint = key.obj.getFingerprint();
-        key.keyId = key.keyid = key.obj.getKeyId();
-        key.uids = _.map(key.obj.userIds, function(uid) { return uid.text });
-      });
-      return true;
     },
     'getEncryptedKeyring': function() {
       var publicKeys = _.pluck(openpgp.keyring.publicKeys, 'armored');
@@ -588,11 +585,14 @@ ne
         data:{'time':time,'sig':sig},
         success:function(data, textStatus, jqXHR) {
           if (data.keyring) {
-            Parley.PGP.importEncryptedKeyring(data.keyring);
+            Parley.PGP.importEncryptedKeyring(
+              data.keyring,
+              function() {finished(data,textStatus,jqXHR);}
+            );
           } else {
             data.error = 'Failed to authenticate. Returning public user info.';
+            finished(data, textStatus, jqXHR);
           }
-          finished(data, textStatus, jqXHR);
         },
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
         dataType:'json'
