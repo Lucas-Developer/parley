@@ -226,9 +226,15 @@
     Parley.vent.on('message:sync', _.throttle(function () {
         console.log('VENT: message:sync');
 
+        if (!Parley.currentUser)
+            return false;
+
         $('#refreshAction').attr('disabled', 'disabled').addClass('refreshing').animate({width:300,height:200,opacity:.5}).text( _t('loading inbox') );
 
         var fetchedInboxHandler = function (data, textStatus) {
+            if (!Parley.currentUser)
+                return false;
+
             console.log('Inbox requested at offset: ' + Parley.inboxCurOffset + '.');
 
             if (data && !data.error) {
@@ -397,7 +403,9 @@
                     Parley.killUser(function (data, status) {
                         Parley.dialog('hide info revoke-confirm');
                         if (!data.error) {
-                            Parley.app.kill();
+                            // **TODO: Should destroy records from local storage too.
+
+                            Parley.app.quit();
                         } else {
                             Parley.dialog('show info revoke-info', {
                                 message: _t('message-key-revokeerror'),

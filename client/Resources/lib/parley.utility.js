@@ -639,18 +639,6 @@ are massaged to fit. The arguments to finished on ajax error look like:
     });
   }
 
-    // This function processes all of [Parley.alarms] (in parley.config.js) every [Parley.timerDelay] seconds.
-    Parley.timer = function () {
-        Parley.timerDelay = Parley.timerDelay || 300000;
-
-        if (!Parley.pauseTimer)
-            _(Parley.alarms).each(function (alarm) {
-                if (alarm.when()) alarm.todo();
-            });
-
-        window.setTimeout(Parley.timer, Parley.timerDelay);
-    }
-    
     Parley.falseIsFalse = function (data) {
         console.log('\'false\' is false');
         
@@ -673,6 +661,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         return parsed_data;
     };
 
+    // Display errors in a form _fname_, according to an object _errors_ = { [input name] : [error msg], ... }
     Parley.formErrors = function (fname, errors) {
         if (!_.isObject(errors) || !document.forms[fname]) return false;
 

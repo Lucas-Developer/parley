@@ -386,17 +386,6 @@
         email: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
     };
 
-    Parley.alarms = [
-        {
-            when: function () { return true; },
-            todo: function () { console.log('TICK'); }
-        },
-        {
-            when: function () { return Parley.currentUser && Parley.currentUser.get('auto_refresh'); },
-            todo: function () { Parley.vent.trigger('message:sync'); }
-        }
-    ]
-
     Parley.showOkayWindow = function (data) {
         var time = new Date().getTime();
         Parley.dialog('show info info' + time, {
@@ -421,4 +410,40 @@
             ]
         });
     }
+
+    Parley.timer = {
+        _clock: null,
+        _delay: 300000,
+        _alarms: [
+            {
+                when: function () { return true; },
+                todo: function () { console.log('TICK'); }
+            },
+            {
+                when: function () { return Parley.currentUser && Parley.currentUser.get('auto_refresh'); },
+                todo: function () { Parley.vent.trigger('message:sync'); }
+            }
+        ],
+
+        // "private" functions (not actually scoped, just named differently for clarity)
+        _tick: function () {
+            _(this._alarms).each(function (alarm) {
+                if (alarm.when()) alarm.todo();
+            });
+        },
+
+        // "public" functions
+        start: function () {
+            this._clock = this._clock || window.setInterval(this._tick, this._delay);
+
+            return this._clock;
+        },
+        stop: function () {
+            window.clearInterval(this._clock);
+            this._clock = null;
+
+            return true;
+        }
+    };
+    
 }(window.Parley = window.Parley || {}, jQuery));

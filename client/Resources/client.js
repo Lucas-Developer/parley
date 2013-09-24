@@ -417,7 +417,7 @@
 			this.$el.addClass('loggedin').removeClass('loggedout');
 			this.$('.email').text(Parley.currentUser.get('email'));
 
-            window.setTimeout(Parley.timer, Parley.timerDelay);
+            Parley.timer.start();
 
             return this;
 		},
@@ -453,18 +453,36 @@
 			this.inbox.append(view.render().el);
 	    },
 
-        kill: function () {
-            // Clear local storage
+        quit: function () {
 			this.$el.addClass('loggedout').removeClass('loggedin');
-			this.$('.email').text(Parley.currentUser.get('email'));
+			this.$('.email').text('');
 
+            // Stop the timer.
+            Parley.timer.stop();
+
+            // Remove the DOM elements from the inbox and empty the collection.
             this.inbox.empty();
             Parley.inbox.reset();
 
+            // Remove the DOM elements from the contact list and empty the collection.
             this.contactsList.empty();
             Parley.contacts.reset();
 
-            Parley.dialog('setup');
+            if (Parley.currentUser) {
+                // Clear the current user.
+                if (!Parley.currentUser.get('remember')) {
+                    // **TODO: purge records from local storage
+                }
+
+                Parley.currentUser.clear({silent:true});
+            }
+
+            console.log( "inbox: " + JSON.stringify(Parley.inbox.toJSON()) );
+            console.log( "contacts: " + JSON.stringify(Parley.contacts.toJSON()) );
+            console.log( "user: " + JSON.stringify(Parley.currentUser.toJSON()) );
+            console.log( "Thank you." );
+
+            _.delay(Parley.dialog, 2000, 'setup verify');
         }
 	});
 
@@ -509,7 +527,9 @@
                     case 'hide':
                         var slug = _a[1],
                             page = _a[2];
-                        if (slug == 'info') {
+                        if (slug == 'all') {
+                            _(_dialogs).each(function (ele) { ele.hide(); });
+                        } else if (slug == 'info') {
                             var dialog = tempDialogs[page];
                             if (dialog) {
                                 dialog.dialog('destroy');
