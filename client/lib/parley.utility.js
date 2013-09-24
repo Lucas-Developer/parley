@@ -135,14 +135,12 @@ ne
 
           zlib.inflateRaw(compressedBuffer, function (err, buffer) {
             if (err) { console.log(err); }
-            else {
-              var data = buffer.toString();
+            var data = buffer.toString();
 
-              //in the test case, the decompressed data appeared to have nonsense
-              //bits prepended to it.
-              //For our own purposes, the following fix is sufficient:
-              callback(JSON.parse(data.substr(data.indexOf('{"public"'))));
-            }
+            //in the test case, the decompressed data appeared to have nonsense
+            //bits prepended to it.
+            //For our own purposes, the following fix is sufficient:
+            callback(JSON.parse(data.substr(data.indexOf('{"public"'))));
           });
         }
       }
