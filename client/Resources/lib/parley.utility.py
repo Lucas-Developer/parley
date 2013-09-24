@@ -158,6 +158,15 @@ window.PYsignAPIRequest = PYsignAPIRequest
 
 
 def PYpbkdf2(data):
+  salt = window.Parley.currentUser.attributes.email
+  return pbkdf2.pbkdf2_hex(data, salt.lower(), 100000, 32, hashlib.sha256)
+
+window.PYpbkdf2 = PYpbkdf2
+
+
+#thanks to @adamcaudill on Twitter for pointing out this boneheaded move
+#users are automatically switched to the correct way, above
+def PYoldPbkdf2(data):
   salt = window.Parley.currentUser.attributes.email + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db'
   return pbkdf2.pbkdf2_hex(data, salt.lower(), 2048, 32)
 

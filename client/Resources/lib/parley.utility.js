@@ -181,6 +181,16 @@ are massaged to fit. The arguments to finished on ajax error look like:
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
     var modifiedCallback = function(a,b,c) {
+      if (data.error) {
+        //try old hash (and update hash on success)
+        passwords.local = Parley.PYoldPbkdf2(clearTextPassword);
+        passwords.remote = Parley.PYoldPbkdf2(passwords.local);
+        requestKeyring(function(a,b,c){
+          if (a.keyring) {
+            Parley.updatePassHash(clearTextPassword, finished);
+          }
+        });
+      }
       finished(a,b,c);
 
       //make sure email is available in list of local users
@@ -358,6 +368,40 @@ are massaged to fit. The arguments to finished on ajax error look like:
         dataType:'json'
       });
     }
+  }
+
+  Parley.updatePassHash = function(clearTextPassword, finished) {
+    var oldLocal, newLocal, oldRemote, newRemote, passwords = Parley.currentUser.get('passwords');
+    oldLocal = passwords.local;
+    oldRemote = passwords.remote;
+    passwords.local = newLocal = Parley.pbkdf2(clearTextPassword);
+    passwords.remote = newRemote = Parley.pbkdf2(newLocal);
+    window.PYchangePass(newLocal); //change keyring passphrase
+
+    //update passwords on server along with keyring
+    var email = Parley.currentUser.get('email');
+    var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
+    var keyring = window.PYgetEncryptedKeyring();
+    var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':window.PYgetPublicKey(),'secret':newRemote};
+
+    //reset to old passwords temporarily for signing API request
+    //(because the server will validate agains the old secret)
+    passwords.local = oldLocal;
+    passwords.remote = oldRemote;
+    var sig = Parley.signAPIRequest(url,'POST',data);
+    passwords.local = newLocal;
+    passwords.remote = newRemote;
+    data.sig = sig;
+
+    $.ajax({
+      type:'POST',
+      url:url,
+      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time': data.time},
+      data:data,
+      success: finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
+      dataType:'json'
+    });
   }
 
 
