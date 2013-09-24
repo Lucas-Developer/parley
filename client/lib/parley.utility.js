@@ -128,8 +128,8 @@ ne
           data = data.substr(data.indexOf('{"public"'));
           
           //try to JSON parse things first, if the data is cut off then
-          //use zlib fallback
-          JSON.parse(data) && callback(data);
+          //catch error to use zlib fallback
+          callback(JSON.parse(data));
         } catch (e) {
           var compressedBuffer = new Buffer(compressedPacket.compressedData);
 
@@ -141,7 +141,7 @@ ne
               //in the test case, the decompressed data appeared to have nonsense
               //bits prepended to it.
               //For our own purposes, the following fix is sufficient:
-              callback(data.substr(data.indexOf('{"public"')));
+              callback(JSON.parse(data.substr(data.indexOf('{"public"'))));
             }
           });
         }
@@ -150,10 +150,8 @@ ne
       //var cipherText = new Buffer(b64Keyring,'base64').toString('utf8');
       var passphrase = Parley.currentUser.get('passwords').local;
 
-      var jsonHandler = function(json) {
+      var jsonHandler = function(keyObj) {
         try {
-          var keyObj = JSON.parse(json);
-
           openpgp.keyring.importPrivateKey(keyObj['private'],Parley.currentUser.get('passwords').local);
           openpgp.keyring.importPublicKey(keyObj['public']);
           //add fingerprints to imported keys, as well as any other expected attributes
@@ -175,7 +173,8 @@ ne
         //module, using OpenSSL)
         var key = new Buffer(passphrase,'hex');
         var decipher = crypto.createDecipher('aes256',key);
-        jsonHandler(decipher.update(b64Keyring, 'base64', 'utf8') + decipher.final('utf8'));
+        var json = JSON.parse(decipher.update(b64Keyring, 'base64', 'utf8') + decipher.final('utf8'));
+        jsonHandler(json);
       } catch (e) {
         console.log('Possibly harmless: '+e.message);
       }
