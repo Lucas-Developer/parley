@@ -590,7 +590,9 @@ ne
           if (data.keyring) {
             Parley.PGP.importEncryptedKeyring(
               data.keyring,
-              function() {finished(data,textStatus,jqXHR);}
+              function() {
+                finished(data,textStatus,jqXHR);
+              }
             );
           } else {
             data.error = 'Failed to authenticate. Returning public user info.';
