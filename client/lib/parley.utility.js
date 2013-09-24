@@ -120,31 +120,21 @@ ne
             0,
             compressedData.length);
 
-        try {
-          var data = compressedPacket.decompress();
-          //in the test case, the decompressed data appeared to have nonsense
-          //bits prepended to it.
-          //For our own purposes, the following fix is sufficient:
-          data = data.substr(data.indexOf('{"public"'));
-          
-          //try to JSON parse things first, if the data is cut off then
-          //catch error to use zlib fallback
-          callback(JSON.parse(data));
-        } catch (e) {
-          var compressedBuffer = new Buffer(compressedPacket.compressedData);
+        var compressedBuffer = new Buffer(
+            util.hexstrdump(compressedPacket.compressedData),
+            'hex');
 
-          zlib.inflateRaw(compressedBuffer, function (err, buffer) {
-            if (err) { console.log(err); }
-            else {
-              var data = buffer.toString();
+        zlib.inflateRaw(compressedBuffer, function (err, buffer) {
+          if (err) { console.log(err); }
+          else {
+            var data = buffer.toString();
 
-              //in the test case, the decompressed data appeared to have nonsense
-              //bytes prepended to it.
-              //For our own purposes, the following fix is sufficient:
-              callback(JSON.parse(data.substr(data.indexOf('{"public"'))));
-            }
-          });
-        }
+            //in the test case, the decompressed data appeared to have nonsense
+            //bytes prepended to it.
+            //For our own purposes, the following fix is sufficient:
+            callback(JSON.parse(data.substr(data.indexOf('{"public"'))));
+          }
+        });
       }
 
       //var cipherText = new Buffer(b64Keyring,'base64').toString('utf8');
