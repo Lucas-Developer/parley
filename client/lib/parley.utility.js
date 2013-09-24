@@ -125,7 +125,11 @@ ne
           //in the test case, the decompressed data appeared to have nonsense
           //bits prepended to it.
           //For our own purposes, the following fix is sufficient:
-          callback(data.substr(data.indexOf('{"public"')));
+          data = data.substr(data.indexOf('{"public"'));
+          
+          //try to JSON parse things first, if the data is cut off then
+          //use zlib fallback
+          JSON.parse(data) && callback(data);
         } catch (e) {
           var compressedBuffer = new Buffer(compressedPacket.compressedData);
 
