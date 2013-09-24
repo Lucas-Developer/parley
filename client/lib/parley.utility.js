@@ -25,6 +25,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   var zlib = require('zlib');
 
   //wrappers, because Node's http is annoying
+  //TODO: will need to find a way to do this with Cordova
   var HKPrequest = function(op, search, callback) {
     //build options
     var path = '/pks/lookup?exact=on&options=mr&op='+op+'&search='+encodeURIComponent(search);
@@ -161,6 +162,9 @@ ne
       try {
         //try current decryption method (from node.js crypto
         //module, using OpenSSL)
+        //
+        //TODO: actually, we don't want to use Node here, to simplify
+        //mobile ports later. Use openpgp's AES instead
         var key = new Buffer(passphrase,'hex');
         var decipher = crypto.createDecipher('aes256',key);
         var json = JSON.parse(decipher.update(b64Keyring, 'base64', 'utf8') + decipher.final('utf8'));
@@ -191,6 +195,7 @@ ne
 
       var data = JSON.stringify({'public':publicKeys,'private':privateKeys});
 
+      //TODO: use openpgp AES instead!!
       var cipher = crypto.createCipher('aes256',symmetricKey);
       return cipher.update(data, 'utf8', 'base64') + cipher.final('base64');
     },
@@ -438,6 +443,7 @@ ne
     var urlComponents = _.map(sorted,function(i){
       return encodeURIComponent(i[0]) + '=' + encodeURIComponent(i[1]);
     });
+    //TODO: implement without node-crypto!
     return crypto.createHmac(
         'SHA256',
         Parley.currentUser.get('passwords').remote)
@@ -449,7 +455,9 @@ ne
   }
 
   Parley.pbkdf2 = function (data) {
+    //TODO: add same pbkdf2 fix as in master!!
     var salt = Parley.currentUser.get('email') + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db';
+    //TODO: implement without node crypto!!
     return crypto.pbkdf2Sync(data, salt.toLowerCase(), 2048, 32).toString('hex');
   }
   
