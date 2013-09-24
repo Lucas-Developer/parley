@@ -3,9 +3,9 @@
     <head>
 	<link rel="stylesheet" type="text/css" href="style/client.css">
 
-	<link rel="stylesheet" type="text/css" href="style/animations.css">
+	<!--<link rel="stylesheet" type="text/css" href="style/animations.css">-->
 	
-	<script type="text/javascript" src="lib/jquery-2.0.3.js"></script>
+	<script type="text/javascript" src="lib/jquery-2.0.3.min.js"></script>
     <script charset="UTF-8" type="text/javascript" src="lang/dict.en.json"></script>
 
 	<title>Parley</title>
@@ -25,16 +25,6 @@
             <button id="refreshAction">Refresh Inbox</button>
         </section>
         <div id="dialogWrapper"></div>
-
-<!-- IF YOU SEE THIS, I FUCKED UP AND PUSHED THIS CODE. DELETE IT, IT'S BAD. -->
-<!-- IT MUST BE COMMENTED OUT, IT ONLY EXISTS BECAUSE I CAN'T USE THE GODDAMNED FUCKING INSPECTOR ON LINUX -->
-<!--
-<form target="_blank" id="debugMenu" style="width:100%;background-color:rgba(255,255,255,.9);position:absolute;z-index:1000;">
-<input name="cmd" style="width:100%;"><button onclick="javascript:console.log(eval(document.forms.debugMenu.cmd.value));return false;">_</button>
-</form>
--->
-<!-- -->
-
 
 <script id="blankDialogTemplate" type="text/template">
     <div class="page page-active">
@@ -350,9 +340,11 @@
         </td>
 	</script>
 	
+	<script type="text/javascript" src="lib/openpgp.js"></script>
 	<script type="text/javascript" src="lib/jquery-ui-1.10.3.custom.js"></script>
+
 	<script type="text/javascript" src="lib/underscore.js"></script>
-	<script type="text/python" src="lib/parley.utility.py"></script>
+
 	<script type="text/javascript" src="lib/parley.utility.js"></script>
 	<script type="text/javascript" src="lib/backbone.js"></script>
 	<script type="text/javascript" src="lib/mustache.js"></script>

@@ -1,3 +1,0 @@
-# Parley Client
-
-etc.

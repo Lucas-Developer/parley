@@ -503,7 +503,6 @@ input.ui-button::-moz-focus-inner, button.ui-button::-moz-focus-inner {
     margin: -1px;
     height: 100%; }
   .ui-progressbar .ui-progressbar-overlay {
-    background: url("images/animated-overlay.gif");
     height: 100%;
     filter: alpha(opacity=25);
     opacity: 0.25; }
@@ -776,7 +775,6 @@ body .ui-tooltip {
  *---------------------------------- */
 .ui-state-highlight, .ui-widget-content .ui-state-highlight, .ui-widget-header .ui-state-highlight {
   border: 1px solid #d9bb73;
-  background: #f5f5b5 url(images/ui-bg_highlight-hard_75_f5f5b5_1x100.png) 50% top repeat-x;
   color: #060200; }
 
 .ui-state-highlight a, .ui-widget-content .ui-state-highlight a, .ui-widget-header .ui-state-highlight a {
@@ -784,7 +782,6 @@ body .ui-tooltip {
 
 .ui-state-error, .ui-widget-content .ui-state-error, .ui-widget-header .ui-state-error {
   border: 1px solid #f8893f;
-  background: #fee4bd url(images/ui-bg_highlight-hard_65_fee4bd_1x100.png) 50% top repeat-x;
   color: #592003; }
 
 .ui-state-error a, .ui-widget-content .ui-state-error a, .ui-widget-header .ui-state-error a, .ui-state-error-text, .ui-widget-content .ui-state-error-text, .ui-widget-header .ui-state-error-text {
@@ -812,26 +809,7 @@ body .ui-tooltip {
 /* states and images */
 .ui-icon {
   width: 16px;
-  height: 16px;
-  background-image: url(images/ui-icons_c47a23_256x240.png); }
-
-.ui-widget-content .ui-icon {
-  background-image: url(images/ui-icons_c47a23_256x240.png); }
-
-.ui-widget-header .ui-icon {
-  background-image: url(images/ui-icons_ffffff_256x240.png); }
-
-.ui-state-default .ui-icon, .ui-state-hover .ui-icon, .ui-state-focus .ui-icon {
-  background-image: url(images/ui-icons_f08000_256x240.png); }
-
-.ui-state-active .ui-icon {
-  background-image: url(images/ui-icons_f35f07_256x240.png); }
-
-.ui-state-highlight .ui-icon {
-  background-image: url(images/ui-icons_cb672b_256x240.png); }
-
-.ui-state-error .ui-icon, .ui-state-error-text .ui-icon {
-  background-image: url(images/ui-icons_ff7519_256x240.png); }
+  height: 16px; }
 
 /* positioning */
 .ui-icon-blank {
@@ -1560,23 +1538,23 @@ x:-moz-any-link, x:default {
 
 @font-face {
   font-family: "Open Sans";
-  src: url(OpenSans-Regular.otf) format("opentype");
+  src: url(OpenSans-Regular.ttf) format("truetype");
   font-weight: 400; }
 
 @font-face {
   font-family: "Open Sans";
-  src: url(OpenSans-Semibold.otf) format("opentype");
+  src: url(OpenSans-Semibold.ttf) format("truetype");
   font-weight: 600; }
 
 @font-face {
   font-family: "Open Sans";
-  src: url(OpenSans-Italic.otf) format("opentype");
+  src: url(OpenSans-Italic.ttf) format("truetype");
   font-weight: 400;
   font-style: italic; }
 
 @font-face {
   font-family: "Open Sans";
-  src: url(OpenSans-SemiboldItalic.otf) format("opentype");
+  src: url(OpenSans-SemiboldItalic.ttf) format("truetype");
   font-weight: 600;
   font-style: italic; }
 

@@ -14,6 +14,33 @@
         Parley.contacts.set(keychain, {parse:true});
     });
 
+
+    /**
+    Once we have a fingerprint, we can get some AFIS info and merge it into the existing contact.
+    **/
+    Parley.getAFISInfo = function (contact, fingerprint, callback) {
+        console.log('getAFISInfo');
+
+        var userinfo, callback = callback || function () {};
+
+        userinfo = Parley.AFIS(fingerprint);
+
+        if (!_.has(userinfo, 'uids')) {
+            callback({error: 'User not found'});
+        } else {
+            var parsed = Parley.parseUID(userinfo.uids[0]);
+            userinfo.name = parsed.name;
+            userinfo.email = parsed.email;
+
+            if (_.isString(contact))
+                contact = Parley.contacts.findWhere({email:contact});
+                
+            contact.set(userinfo);
+
+            callback(contact);
+        }
+    }
+
     /**
     Gets as much info about a contact as possible. This can take an email or fingerprint, with which it searches:
 
@@ -23,25 +50,45 @@
     This will return as much information as it can find.
 
     @method getUserInfo
-    @param {Object|String} contact Either an email string or an object containing at least one of _email_ or _fingerprint_ as properties.
+    @param {Object|String} contact Either an email string or a contact object.
     @param {Function} callback
     @return null
     **/
     Parley.getUserInfo = function (contact, callback) {
-        callback = callback || function () {};
+        console.log('getUserInfo');
+
+        var email, fingerprint, callback = callback || function () {};
 
         if (typeof contact == 'string') {
-            var email = contact;
+            email = contact;
 
             // Instantiated without arguments so as not to trigger a certain event
-            contact = new Parley.Contact;
+            contact = Parley.contacts.findWhere({email: email}) || new Parley.Contact({pending:true});
 
             contact.set({email:email});
         } else {
+<<<<<<< HEAD:client/lib/parley.events.js
             var email = contact.get('email') || Parley.parseUID(contact.get('uids')[0]).email,
                 fingerprint = contact.get('fingerprint');
+=======
+            email = contact.get('email'),
+            fingerprint = contact.get('fingerprint');
+>>>>>>> pure_js:client/lib/parley.events.js
         }
 
+        if (!email) {
+            if (!fingerprint)
+                callback({error: 'Invalid argument. Needs at least one of "email" or "fingerprint".'});
+            else
+                Parley.getAFISInfo(contact, fingerprint, callback);
+        } else {
+            Parley.requestUser(email, function (fingerprint) {
+                Parley.importKey(fingerprint);
+                Parley.getAFISInfo(contact, fingerprint, callback);
+            });
+        }
+
+/*
         var planA = function(data) {
             console.log("A");
             if (!data.public_key) {
@@ -55,12 +102,15 @@
         }
         var planB = function(data, textStatus) {
             console.log("B");
-            if (!email && !fingerprint)
-                callback({error: 'User not found'});
 
             fingerprint = fingerprint || Parley.requestPublicKey(email);
+<<<<<<< HEAD:client/lib/parley.events.js
             var userinfo = Parley.AFIS(fingerprint) || contact.attributes;
             userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
+=======
+
+            var userinfo = Parley.AFIS(fingerprint);
+>>>>>>> pure_js:client/lib/parley.events.js
 
             if (userinfo && !userinfo.uids) {
                 callback({error: 'User not found'});
@@ -78,6 +128,7 @@
         } else {
             return planB();
         }
+*/
     }
 
     /**
@@ -153,6 +204,27 @@
                 Parley.dialog('hide info register-wait');
 
                 Parley.app.render();
+
+                Parley.vent.trigger('contact:fetch', function (data) {
+                    var contact, areMembers, pendingList = new Parley.ContactList;
+
+                    _(data.contacts).each(function (ele) {
+                        if (contact = Parley.contacts.findWhere({email:ele.email})) {
+                            areMembers = (areMembers || 0) + 1;
+                            pendingList.unshift(contact);
+                        } else {
+                            ele.pending = true;
+                            contact = new Parley.Contact(ele);
+                            pendingList.push(contact);
+                            Parley.contacts.push(contact);
+                        }
+                    });
+
+                    Parley.app.dialog('show invite', {
+                        areMembers: areMembers,
+                        contacts: pendingList.toJSON()
+                    });
+                });
             } else {
                 Parley.dialog('hide info register-wait');
                 Parley.dialog('info register-error', {
@@ -210,8 +282,12 @@
                 Parley.dialog('hide info login-wait');
 
                 Parley.app.render();
+<<<<<<< HEAD:client/lib/parley.events.js
+=======
+
+>>>>>>> pure_js:client/lib/parley.events.js
             } else {
-                console.log('Login error occurred');
+                console.log('Login error:', data.error);
 
                 Parley.dialog('hide info login-wait');
                 Parley.dialog('info login-error', {

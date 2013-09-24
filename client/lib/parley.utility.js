@@ -1,64 +1,5 @@
 /*
-
-   Here are some newer miscellaneous notes about Parley while they're on my mind:
-   
-   -we need to think about what data, if any, we'll persist between uses
-     -ie. does a user stay logged in if they open/close the app? Are contacts
-     stored in localStorage or regenerated from the keyring every time?
-     -I'm tempted to err towards the least storage possible until we consider
-     the usability/security tradeoffs at hand
-     -Note that the keyring itself will generally stay on the clients as a separate (encrypted) file, as per gpg's typical behaviour
-   -I added parley.listKeys() to list every public key in a keyring--we could
-   easily use that to build a contact list every time the user logs in. Here's
-   some sample output for a single key:
-     
-     [
-       {
-         "dummy": "",
-         "keyid": "5CA687A5B91D848E",
-         "expires": "1372256185",
-         "subkeys": [
-           [ "E45C139F7291E0F6", "e" ]
-         ],
-         "length": "2048",
-         "ownertrust": "-",
-         "algo": "1",
-         "fingerprint": "B1E44BDDB11E03815D9CEE435CA687A5B91D848E",
-         "date": "1371651385",
-         "trust": "-",
-         "type": "pub",
-         "uids": [ "Jim John <test@example.com>" ]
-       }
-     ]
-
-     -uids take the form "First Name (Optional comment here) <email@example.com>"
-       -it probably makes sense to pull names and email addresses from the uid with a regex in order to build the Contact model
-
-   -I've taken some care to make these functions accept email addresses and Contact objects interchangeably, but it probably makes sense to build Contact objects from email addresses before calling the functions (see note on Parley.requestPublicKey)
-
-   ---------------Older Note:--------------------
-Methods and data models
-Parley.setup (stores IMAP credentials and downloads encrypted keyring from Parley server)
-Parley.contacts (collection)
-Parley.inbox (collection)
-  .fetch retrieves paginated list of PGP encrypted mail (and unencrypted messages from Parley, ie. for
-  verification), both sent and received, ordered by time via IMAP (using context.io)
-
-The client should walk the user through a setup process on initial use (or after logging out) that
-involves getting the user's email address and checking to see if it is registered with Parley. If so,
-the program should accept the user's password and retrieve the keyring from the Parley server. Otherwise,
-the program should create a new account for the user and generate a keypair.
-
-The setup process also needs to collect and store (locally) the user's IMAP credentials.
-
-There should be a settings panel where the user can change their password, IMAP credentials or log out.
-
-There should be a "Contacts" panel (separate from the one that pops up while composing a message) where
-the user can manage their contacts and invite new users to Parley.
-
---------------General docstring:--------------
-
-The following utilities will encapsulate any external Python calls (ie. for crypto/key management) and
+The following utilities will encapsulate any crypto and
 remote API calls (IMAP/SMTP/Parley).
 
 NB. I've replaced jQuery's usual success and error callbacks with a single
@@ -67,21 +8,394 @@ are massaged to fit. The arguments to finished on ajax error look like:
   {'error':ErrorString},textStatus,jqXHR
 */
 
+
+/*
+ * for changing uid and pass, we'll probably need to play aroudn with low-level
+ * stuff:
+ * see generate_key_pair and openpgp_crypto_generateKeyPair for clues
+ * */
+
 (function (Parley) {
 
   Parley.BASE_URL = "https://api.parley.co";
 
-    /**
-    Wrapping encodeURIComponent in case we accidentally call it twice.
-    Ideally this doesn't exist, but for now, until we get tidier, voila.
+  //node-webkit allows us to use node modules
+  var crypto = require('crypto');
+  var http = require('http');
+  var zlib = require('zlib');
 
-    If a string is NOT encoded OR does not contain an @, it will be encoded
-    **/
-    Parley.encodeEmail = function (email) {
-        if (email)
-            return (!~email.indexOf('%40') ? email : encodeURIComponent(email));
-        return '';
+  //wrappers, because Node's http is annoying
+  var HKPrequest = function(op, search, callback) {
+    //build options
+    var path = '/pks/lookup?exact=on&options=mr&op='+op+'&search='+encodeURIComponent(search);
+    var options = {
+      'hostname': 'pgp.mit.edu',
+      'port': 11371,
+      'path': path,
+      'method': 'GET'
     }
+    var req = http.request(options, callback);
+    req.end();
+  }
+  var HKPsubmit = function(armoredKey, callback) {
+    //build options
+    var path = '/pks/add';
+    var options = {
+      'hostname': 'pgp.mit.edu',
+      'port': 11371,
+      'path': path,
+      'method': 'POST'
+    }
+    var req = http.request(options, callback);
+    req.write('keytext='+encodeURIComponent(armoredKey)+'\n');
+    req.end();
+  }
+
+  //clear stored keys before initializing, for multi-user scenario
+  window.localStorage.removeItem('privatekeys');
+  window.localStorage.removeItem('publickeys');
+  window.showMessages = function (text) { //because openpgp.js is weird
+    console.log($(text).text());
+  }
+  openpgp.init(); //openpgp.min.js must be included in index.html
+
+  Parley.PGP = {
+    'genKey': function(sendKey) {
+      var uid = Parley.currentUser.get('name') + ' (Generated by Parley) '
+        + Parley.currentUser.get('email');
+      var keyPair = openpgp.generate_key_pair(1,4096,uid,
+        Parley.currentUser.get('passwords').local);
+      openpgp.keyring.importPrivateKey(keyPair.privateKeyArmored,Parley.currentUser.get('passwords').local);
+ne
+      openpgp.keyring.importPublicKey(keyPair.publicKeyArmored);
+      if (sendKey) {
+        Parley.currentUser.set('publish',true);
+        HKPsubmit(keyPair.publicKeyArmored,console.log);
+      }
+    },
+    'importEncryptedKeyring': function(b64Keyring,cb) {
+
+      //legacy support:
+      //old pure-Python AES
+      var oldAES = function(b64CipherText, passphrase, callback) {
+        var buf = new Buffer(b64CipherText,'base64');
+        var iv = buf.slice(0,16);
+        var data = buf.slice(16);
+        var key = passphrase.substr(0,32);
+        var decipher = crypto.createDecipheriv('aes-256-cbc',key,iv);
+        callback(decipher.update(data,'utf8','utf8') + decipher.final('utf8'));
+      }
+
+      //old GPG
+      var oldGPG = function(b64CipherText, passphrase, callback) {
+        //the following was really fucking hard to figure out, because
+        //openpgp.js doesn't support symmetric-key encrypted session key
+        //packets (tagType == 3) properly.
+        //TODO: contribute a fix, and implement it more cleanly here
+        //-see http://tools.ietf.org/html/rfc4880#section-5.3
+
+        var cipherText = openpgp_encoding_base64_decode(b64CipherText);
+        var ctLength = cipherText.length;
+
+        var sessionKey = openpgp_packet.read_packet(cipherText,0,ctLength);
+        var skLength = sessionKey.headerLength + sessionKey.packetLength;
+
+        var encryptedCompressedData = openpgp_packet.read_packet(
+            cipherText,
+            skLength,
+            ctLength - skLength);
+
+        var aesKey = sessionKey.s2k.produce_key(
+            passphrase,
+            32).substr(0,32);
+
+        var compressedData = openpgp_crypto_symmetricDecrypt(
+            9,
+            aesKey,
+            encryptedCompressedData.encryptedData,
+            false);
+
+        var compressedPacket = openpgp_packet.read_packet(
+            compressedData,
+            0,
+            compressedData.length);
+
+        var compressedBuffer = new Buffer(
+            util.hexstrdump(compressedPacket.compressedData),
+            'hex');
+
+        zlib.inflateRaw(compressedBuffer, function (err, buffer) {
+          if (err) { console.log(err); }
+          else {
+            var data = buffer.toString();
+
+            //in the test case, the decompressed data appeared to have nonsense
+            //bytes prepended to it.
+            //For our own purposes, the following fix is sufficient:
+            callback(JSON.parse(data.substr(data.indexOf('{"public"'))));
+          }
+        });
+      }
+
+      //var cipherText = new Buffer(b64Keyring,'base64').toString('utf8');
+      var passphrase = Parley.currentUser.get('passwords').local;
+
+      var jsonHandler = function(keyObj) {
+        try {
+          openpgp.keyring.importPrivateKey(keyObj['private'],Parley.currentUser.get('passwords').local);
+          openpgp.keyring.importPublicKey(keyObj['public']);
+          //add fingerprints to imported keys, as well as any other expected attributes
+          _.each(openpgp.keyring.publicKeys, function (key) {
+            key.fingerprint = key.obj.getFingerprint();
+            key.keyId = key.keyid = key.obj.getKeyId();
+            key.uids = _.map(key.obj.userIds, function(uid) { return uid.text });
+          });
+          cb();
+        } catch (e) {
+          console.log('Caught possibly harmless error: '+e.message);
+        }
+      }
+
+      //have to do this in a very convoluted fashion
+      //because who knows what will cause an error and what won't
+      try {
+        //try current decryption method (from node.js crypto
+        //module, using OpenSSL)
+        var key = new Buffer(passphrase,'hex');
+        var decipher = crypto.createDecipher('aes256',key);
+        var json = JSON.parse(decipher.update(b64Keyring, 'base64', 'utf8') + decipher.final('utf8'));
+        jsonHandler(json);
+      } catch (e) {
+        console.log('Possibly harmless: '+e.message);
+      }
+
+      //try old GPG decryption
+      try {
+        oldGPG(b64Keyring, passphrase, jsonHandler);
+      } catch (e) {
+        console.log('Possibly harmless: '+e.message);
+      }
+
+      //try old "pure python AES"
+      try {
+        oldAES(b64Keyring, passphrase, jsonHandler);
+      } catch (e) {
+        console.log('Possibly harmless: '+e.message);
+      }
+    },
+    'getEncryptedKeyring': function() {
+      var publicKeys = _.pluck(openpgp.keyring.publicKeys, 'armored');
+      var privateKeys = _.pluck(openpgp.keyring.privateKeys, 'armored');
+
+      var symmetricKey = new Buffer(Parley.currentUser.get('passwords').local,'hex');
+
+      var data = JSON.stringify({'public':publicKeys,'private':privateKeys});
+
+      var cipher = crypto.createCipher('aes256',symmetricKey);
+      return cipher.update(data, 'utf8', 'base64') + cipher.final('base64');
+    },
+    'getPublicKey': function() {
+      var secretKey = openpgp.keyring.getPrivateKeyForAddress(
+          Parley.currentUser.get('email'));
+      return secretKey[0].obj.extractPublicKey();
+    },
+    'listKeys': function() {
+      return openpgp.keyring.publicKeys;
+    },
+    'fetchKey': function(email, callback) {
+      //search for keys, import first match, and send key fingerprint to callback
+      HKPrequest('index','<'+email+'>',function (res1) {
+        res1.setEncoding('utf8');
+        res1.on('data', function (index) {
+          try {
+            //parse index to get first keyId
+            var firstLine = index.split('\n')[1];
+            var keyId = '0x'+firstLine.split(':')[1];
+            HKPrequest('get',keyId, function (res2) {
+              res2.setEncoding('utf8');
+              res2.on('data', function(chunk) {
+                try {
+                  //because pgp.mit.edu isn't running the latest SKS,
+                  //it doesn't send machine readable keys properly,
+                  //so we might have to parse some HTML here :(
+                  if (chunk.indexOf('<pre>') != -1) {
+                    chunk = chunk.split('<pre>')[1];
+                    chunk = chunk.split('</pre>')[0];
+                  }
+
+                  var key = Parley.PGP.importKey(chunk);
+                  callback(key.fingerprint);
+                } catch (e) {
+                  console.log('Error importing fetched key: '+e.message);
+                }
+              });
+            });
+          } catch (e) {
+            console.log('Error fetching key list: '+e.message);
+          }
+        });
+      });
+    },
+    'importKey':function(key) {
+      openpgp.keyring.importPublicKey(key);
+      returnObj = _.last(openpgp.keyring.publicKeys);
+      returnObj.fingerprint = returnObj.obj.getFingerprint();
+      returnObj.keyId = returnObj.keyid = returnObj.obj.getKeyId();
+      returnObj.uids = _.map(returnObj.obj.userIds, function(uid) { return uid.text });
+      returnObj.fingerprints = [returnObj.fingerprint];
+
+      //de-dupe keyring
+      _.uniq(openpgp.keyring.publicKeys, function (key) { return key.keyId });
+      _.uniq(openpgp.keyring.privateKeys, function (key) { return key.keyId });
+
+      return returnObj;
+    },
+    'revokeKey': function() {
+      //generate revocation signature:
+      var Sig = new openpgp_packet_signature();
+      var email = Parley.currentUser.get('email');
+      var toRevoke = openpgp.keyring.getPublicKeyForAddress(email)[0].obj.data;
+      var privateKey = openpgp.keyring.getPrivateKeyForAddress(email)[0].obj;
+      sig = Sig.write_message_signature(32,toRevoke,privateKey);
+      
+      var revokedKey = openpgp_encoding_armor(4,toRevoke+sig);
+
+      HKPsubmit(revokedKey,console.log);
+      return revokedKey;
+    },
+    'changeName': function(newName) {
+      var email = Parley.currentUser.get('email');
+      var privKey = openpgp.keyring.getPrivateKeyForAddress(email)[0];
+      var pubKey = openpgp.keyring.getPublicKeyForAddress(email)[0];
+      var publicKeyString = privKey.obj.privateKeyPacket.publicKey.data;
+      var privateKeyString = privKey.obj.data;
+
+      var userId = newName + ' (Generated by Parley) <'+email+'>';
+
+      //the following bit is borrowed from openpgp.generate_key_pair
+      var hashData = String.fromCharCode(0x99)+ String.fromCharCode(((publicKeyString.length) >> 8) & 0xFF) 
+          + String.fromCharCode((publicKeyString.length) & 0xFF) +publicKeyString+String.fromCharCode(0xB4) +
+          String.fromCharCode((userId.length) >> 24) +String.fromCharCode(((userId.length) >> 16) & 0xFF) 
+          + String.fromCharCode(((userId.length) >> 8) & 0xFF) + String.fromCharCode((userId.length) & 0xFF) + userId
+
+      var signature = new openpgp_packet_signature();
+      signature = signature.write_message_signature(16,hashData, privKey.obj);
+
+      var userIdString = (new openpgp_packet_userid()).write_packet(userId);
+
+      pubKey.armored = openpgp_encoding_armor(4, pubKey.obj.data + userIdString + signature.openpgp );
+
+      privateKeyString += userIdString + signature.openpgp;
+
+      privKey.armored = openpgp_encoding_armor(5,privateKeyString);
+
+      privKey.obj = openpgp.read_privateKey(privKey.armored)[0];
+      pubKey.obj = openpgp.read_publicKey(pubKey.armored)[0];
+      pubKey.uids.push(userId);
+
+      if (Parley.currentUser.get('publish')) HKPsubmit(pubKey.armored,console.log);
+
+      var success = 'success', error = 'none';
+      //this weird return format is for backwards compatibility.
+      //if/when it can be improved, it should
+      return [success, error];
+    },
+    'changePass': function(oldPass,newPass) {
+      //TODO: FIX !!!
+      //we want to replace the MPI with a new one, encrypted using
+      //the new passphrase, then rebuild and rearmor the key
+      var email = Parley.currentUser.get('email');
+      var privateKey = openpgp.keyring.getPrivateKeyForAddress(email)[0];
+
+      privateKey.obj.privateKeyPacket.decryptSecretMPIs(oldPass);
+      var clearTextMPIs = privateKey.obj.privateKeyPacket.secMPIs.join('');
+
+      var keyData = privateKey.obj.data;
+      var pos = keyData.indexOf(privateKey.obj.privateKeyPacket.IV)
+          - 8 /* salt length */ - 1 /* count octet */;
+      var preAmble = keyData.substr(0,pos); //includes the key header, public key, etc
+
+      var UIDtext = privateKey.obj.userIds[0].text;
+      var UID = (new openpgp_packet_userid).write_packet(UIDtext);
+
+      var hashData = String.fromCharCode(0x99)+ String.fromCharCode(((publicKeyString.length) >> 8) & 0xFF)
+          + String.fromCharCode((publicKeyString.length) & 0xFF) +publicKeyString+String.fromCharCode(0xB4) +
+          String.fromCharCode((UIDtext.length) >> 24) +String.fromCharCode(((UIDtext.length) >> 16) & 0xFF)
+          + String.fromCharCode(((UIDtext.length) >> 8) & 0xFF) + String.fromCharCode((UIDtext.length) & 0xFF) + UIDtext;
+      var signature = new openpgp_packet_signature();
+      signature = signature.write_message_signature(16,hashData, privKey.obj);
+      var postAmble = UID + signature.openpgp;
+
+      var oldSalt = privateKey.obj.data.substr(pos,8);
+      var newSalt = openpgp_crypto_getRandomBytes(8); 
+      var s2kHash = privateKey.obj.data.substr(pos-1,1);
+      var symmetricAlgo = privateKey.obj.data.substr(pos-3,1);
+      var sha1Hash = str_sha1(clearTextMPIs);
+      var s2k = new openpgp_type_s2k();
+      var hashKey = s2k.write(3, s2kHash, newPass, newSalt, 96);
+
+      var newAmble = newSalt + String.fromCharCode(96);
+
+      switch (symmetricAlgo) {
+        case 3:
+          IVLength = 8;
+          IV = openpgp_crypto_getRandomBytes(this.IVLength);
+          ciphertextMPIs = normal_cfb_encrypt(function(block, key) {
+            var cast5 = new openpgp_symenc_cast5();
+            cast5.setKey(key);
+            return cast5.encrypt(util.str2bin(block)); 
+          }, IVLength, util.str2bin(hashKey.substring(0,16)), cleartextMPIs + sha1Hash, IV);
+          newAmble += IV + ciphertextMPIs;
+          break;
+        case 7:
+        case 8:
+        case 9:
+          IVLength = 16;
+          IV = openpgp_crypto_getRandomBytes(IVLength);
+          ciphertextMPIs = normal_cfb_encrypt(AESencrypt,
+ 	      IVLength, hashKey, cleartextMPIs + sha1Hash, IV);
+          newAmble += IV + ciphertextMPIs;
+	  break;
+      }
+      var newKey = preAmble + newAmble + postAmble;
+      var header = openpgp_packet.write_packet_header(5,newKey.length);
+      privateKey.armored = openpgp_encoding_armor(5,header+newKey);
+      privateKey.obj = openpgp.read_privateKey(privateKey.armored)[0];
+
+      var success = 'success', error = 'none';
+      //this weird return format is for backwards compatibility.
+      //if/when it can be improved, it should
+      return [success, error];
+    },
+    'encryptAndSign': function(data, recipients, signer, passphrase) {
+      console.log(recipients);
+      var privateKey = openpgp.keyring.getPrivateKeyForKeyId(
+          signer.substr(signer.length-8))[0].key;
+      var publicKeys = _.map(recipients, function(i){
+        openpgp.keyring.getPublicKeysForKeyId(
+          i.substr(i.length-8));
+      })[0];
+      var encrypted = openpgp.write_signed_and_encrypted_message(privateKey,publicKeys,data);
+      return encrypted;
+    },
+    'decryptAndVerify': function(data, passphrase, sender_id) {
+      var message = openpgp.read_message(data);
+      return message;
+    },
+    'ksUtil': { 'get': HKPrequest, 'post': HKPsubmit }
+  }
+
+  /**
+  Wrapping encodeURIComponent in case we accidentally call it twice.
+  Ideally this doesn't exist, but for now, until we get tidier, voila.
+
+  If a string is NOT encoded OR does not contain an @, it will be encoded
+  **/
+  Parley.encodeEmail = function (email) {
+    if (email)
+      return (!~email.indexOf('%40') ? email : encodeURIComponent(email));
+    return '';
+  }
 
     Parley.localUsers = function () {
       return window.localStorage['parley:local_users'] ? JSON.parse(window.localStorage['parley:local_users']) : [];
@@ -100,35 +414,43 @@ are massaged to fit. The arguments to finished on ajax error look like:
     }
   }
   Parley.installed = function(){
-      result = window.PYinstalled(
-          window.Ti.Filesystem.getResourcesDirectory().toString(),
-          window.Ti.Filesystem.getApplicationDataDirectory().toString(),
-          window.Ti.Filesystem.getUserDirectory().toString()
-      );
-      return result
+      //legacy function; deprecated since install process is no longer
+      //a thing
+      //(make sure all calls to it are gone before it can be removed)
+      return true;
   }
   Parley.install = function(finished){
-      window.PYinstall(
-          window.Ti.Filesystem.getResourcesDirectory().toString(),
-          window.Ti.Filesystem.getApplicationDataDirectory().toString(),
-          window.Ti.Filesystem.getUserDirectory().toString()
-      );
-      finished();
+      //also legacy, also deprecated (see above)
+      _.delay(finished,1000);
   }
 
   /* Sign Parley API request--identical to Amazon API signing method,
   but timestamped and using password hash as the secret key. */
   Parley.signAPIRequest = function (url, method, data) {
-    //cast all data values as strings, because tide's KObject transfer layer
-    //was changing ints to floats and breaking the signatures
+    //temporarily disable post request (so as not to fuck up server
+    //with dev branch)
+    if (method.toLowerCase() != 'get') return ''; //TODO: remove this line for prod, and make server allow CORS
     for (var key in data) {
       data[key] = ''+data[key];
     }
-    return window.PYsignAPIRequest(url, method, data);
+    var valuePairs = _.pairs(data);
+    var sorted = _.sortBy(valuePairs,function(i){return i[0]});
+    var urlComponents = _.map(sorted,function(i){
+      return encodeURIComponent(i[0]) + '=' + encodeURIComponent(i[1]);
+    });
+    return crypto.createHmac(
+        'SHA256',
+        Parley.currentUser.get('passwords').remote)
+      .update(method+'|'+url+'?'+urlComponents.join('&'))
+      .digest('base64')
+      .replace(/\+/g,'-')
+      .replace(/\//g,'_')
+      .replace(/=+$/g,'');
   }
 
   Parley.pbkdf2 = function (data) {
-    return window.PYpbkdf2(data);
+    var salt = Parley.currentUser.get('email') + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db';
+    return crypto.pbkdf2Sync(data, salt.toLowerCase(), 2048, 32).toString('hex');
   }
   
   /* Check if a user is already registered with Parley.
@@ -165,7 +487,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
         'p':Parley.currentUser.get('passwords').remote
       },
       success: function() {
-        window.PYgenKey(sendKey); //this is super slow
+        Parley.PGP.genKey(sendKey);
         Parley.storeKeyring(finished);
       },
       error: function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
@@ -195,7 +517,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
       //make sure email is available in list of local users
       var localUsers = Parley.localUsers();
-      var storedUser = _(localUsers).where({'email':email})[0];
+      var storedUser = _(localUsers).findWhere({'email':email});
       var currentUser = rememberMe ? Parley.currentUser.toJSON() : {'email': email};
       if (storedUser) {
         storedUser = currentUser;
@@ -238,7 +560,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       data:data,
       headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time':data.time},
       success:function(a,b,c) {
-        a.revoked = window.PYrevokeKey();
+        a.revoked = Parley.PGP.revokeKey();
         if (!a.revoked) {
           a.error = 'Failed to revoke key';
         }
@@ -267,11 +589,16 @@ are massaged to fit. The arguments to finished on ajax error look like:
         data:{'time':time,'sig':sig},
         success:function(data, textStatus, jqXHR) {
           if (data.keyring) {
-            window.PYimportEncryptedKeyring(data.keyring);
+            Parley.PGP.importEncryptedKeyring(
+              data.keyring,
+              function() {
+                finished(data,textStatus,jqXHR);
+              }
+            );
           } else {
             data.error = 'Failed to authenticate. Returning public user info.';
+            finished(data, textStatus, jqXHR);
           }
-          finished(data, textStatus, jqXHR);
         },
         error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
         dataType:'json'
@@ -293,8 +620,8 @@ are massaged to fit. The arguments to finished on ajax error look like:
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       data.time = Math.floor((new Date())/1000);
       if (data.name) {
-        window.PYchangeName(data.name);
-        data.keyring = window.PYgetEncryptedKeyring();
+        Parley.PGP.changeName(data.name);
+        data.keyring = Parley.PGP.getEncryptedKeyring();
       }
       var sig = Parley.signAPIRequest(url,'POST',data);
       data.sig = sig;
@@ -314,9 +641,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Accepts finished callback. */
   Parley.storeKeyring = _.debounce(function(finished) {
     console.log('Storing keyring');
-    var keyring = window.PYgetEncryptedKeyring(),
+    var keyring = Parley.PGP.getEncryptedKeyring(),
         finished = finished || function () {};
-    Parley.saveUser({'keyring':keyring, 'public_key':window.PYgetPublicKey()}, finished);
+    Parley.saveUser({'keyring':keyring, 'public_key':Parley.PGP.getPublicKey()}, finished);
   }, 1000*3);
   
   /* Requests the public key corresponding to an email address from public keyservers.
@@ -326,13 +653,9 @@ are massaged to fit. The arguments to finished on ajax error look like:
   //be used in place of Contact objects (ie. the encrypt and decrypt functions)
   //it is probably better to create Contact objects using this function first
   //and then pass the entire object to encrypt/decrypt/etc. (See Parley.AFIS)
-  Parley.requestPublicKey = function(email) {
-    return window.PYfetchKey(email);
-  }
+  Parley.requestPublicKey = Parley.PGP.fetchKey;
 
-  Parley.importKey = Parley.importPublicKey = Parley.importSecretKey = function(key) {
-    return window.PYimportKey(key);
-  }
+  Parley.importKey = Parley.importPublicKey = Parley.importSecretKey = Parley.PGP.importKey;
 
   Parley.changePass = function(oldPass, newPass, finished) {
     if (Parley.pbkdf2(oldPass) == Parley.currentUser.get('passwords').local) { //this is extremely superficial (because PWs are already in memory) but hopefully will at least reduce the likelihood of situations like "my little brother saw Parley open and decided to change my password"
@@ -341,13 +664,13 @@ are massaged to fit. The arguments to finished on ajax error look like:
       oldRemote = passwords.remote;
       passwords.local = newLocal = Parley.pbkdf2(newPass);
       passwords.remote = newRemote = Parley.pbkdf2(newLocal);
-      window.PYchangePass(newLocal); //change keyring passphrase
+      Parley.PGP.changePass(oldLocal,newLocal); //change keyring passphrase
 
       //update passwords on server along with keyring
       var email = Parley.currentUser.get('email');
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
-      var keyring = window.PYgetEncryptedKeyring();
-      var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':window.PYgetPublicKey(),'secret':newRemote};
+      var keyring = Parley.PGP.getEncryptedKeyring();
+      var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':Parley.PGP.getPublicKey(),'secret':newRemote};
 
       //reset to old passwords temporarily for signing API request
       //(because the server will validate agains the old secret)
@@ -407,9 +730,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
 
   //This function could be used to build Parley.Contacts from a keyring
   //after importing it or adding a new key.
-  Parley.listKeys = function() {
-    return window.PYlistKeys();
-  }
+  Parley.listKeys = Parley.PGP.listKeys;
 
   /*This function returns key meta data belonging to a given fingerprint.
     Could be used in tandem with requestPublicKey to create a new Contact
@@ -440,7 +761,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   */
   Parley.AFIS = function(fingerprint) {
     var keys = Parley.listKeys();
-    return _(keys).where({'fingerprint':fingerprint})[0];
+    return _(keys).findWhere({'fingerprint':fingerprint});
   }
 
   //sort of a "reverse AFIS", if you will:
@@ -465,6 +786,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   Accepts clearTextMessage as a String and recipients as an array of Contacts.
   Also takes finished callback. */
   Parley.encryptAndSend = function(clearTextSubject, clearTextMessage, recipients, finished) {
+    //TODO:de-synchronize calls to requestPublicKey!!!
     var recipientKeys = _(recipients).map(function(recipient) {
       if (_.isString(recipient)) {
         return Parley.requestPublicKey(recipient);
@@ -480,7 +802,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
       }
     });
 
-    var messageText = window.PYencryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
+    var messageText = Parley.PGP.encryptAndSign(clearTextMessage, recipientKeys, Parley.currentUser.get('fingerprint'), Parley.currentUser.get('passwords').local);
 
     var message = {
       'from':null,
@@ -512,6 +834,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
   */
   Parley.decryptAndVerify = function(encryptedMessage, sender) {
 
+    //TODO:desynchronize calls to requestPublicKey!!
     var keyid, email;
     if (_.isString(sender)) {
       email = sender;
@@ -524,7 +847,7 @@ are massaged to fit. The arguments to finished on ajax error look like:
     } else {
       throw "Error: Sender is illegible."
     }
-    return window.PYdecryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
+    return Parley.PGP.decryptAndVerify(encryptedMessage, Parley.currentUser.get('passwords').local, keyid);
   }
 
   Parley.quote = function(message) {

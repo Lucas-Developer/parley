@@ -427,22 +427,6 @@
             //this.dialog('show');
         },
 
-        /**
-        This function controls the dialog boxes.
-        The syntax is like:
-
-            Parley.dialog("(show|hide) [dialog slug] [page name]", data);
-            
-        If you omit the first word, it assumes 'show'
-            Parley.dialog("[dialog slug]", data);
-
-        If you pass it 'info' for the dialog slug, it will create a brand new
-        separate dialog with [page name] as the slug. Use this for "loading" windows
-        or modal dialogs.
-        Make sure you pass a button:
-            button: [{id:'buttonId',text:'click me',handler:function(){}}, etc.]
-        as members of 'data'.
-        **/
 		addContact: function (contact) {
 			var view = new ContactView({model: contact});
 			this.contactsList.append(view.render().el);
