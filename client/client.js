@@ -28,18 +28,15 @@
                 // Any pending user intialization stuff here.
             } else {
                 // Any normal contact (not current user, not pending user) initialization stuff here.
-                Parley.vent.trigger('contact:userinfo', {
-                    contact: this,
-                    callback: function (contact) {
-                        if (contact && !contact.error) {
-                            var data = contact.toJSON && contact.toJSON();
-                            console.log('Contact initialized: ' + data.email);
-                            Parley.contacts.add(contact, { merge: true });
-                            Parley.storeKeyring();
-                        } else {
-                            // Didn't return a proper contact object
-                            console.log(contact);
-                        }
+                Parley.getUserInfo(this, function (contact) {
+                    if (contact && !contact.error) {
+                        var data = contact.toJSON && contact.toJSON();
+                        console.log('Contact initialized: ' + data.email);
+                        Parley.contacts.add(contact, { merge: true });
+                        Parley.storeKeyring();
+                    } else {
+                        // Didn't return a proper contact object
+                        console.log(contact.error);
                     }
                 });
             }
@@ -500,7 +497,7 @@
                 data.buttons = _(data.buttons).map(function (ele) {
                     if (_.isString(ele) && ele in _buttons) return _buttons[ele];
                     else return ele;
-                });
+                }, this));
             }
 
             if (data && data.image in _images) data.image = _images[data.image];
@@ -543,7 +540,7 @@
                         var slug = slug || _a[0],
                             page = page || _a[1];
                         if (slug == 'info') {
-                            if (page in tempDialogs) { // Overriden
+                            if (page in tempDialogs) {
                                 var dialog = tempDialogs[page];
                                 dialog.html(blankTemplate(data));
                             } else {

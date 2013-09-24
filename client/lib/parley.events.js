@@ -25,7 +25,7 @@
 
         userinfo = Parley.AFIS(fingerprint);
 
-        if (!_.has(userinfo, 'uids')) {
+        if (userinfo && !userinfo.uids) {
             callback({error: 'User not found'});
         } else {
             var parsed = Parley.parseUID(userinfo.uids[0]);
@@ -67,13 +67,8 @@
 
             contact.set({email:email});
         } else {
-<<<<<<< HEAD:client/lib/parley.events.js
             var email = contact.get('email') || Parley.parseUID(contact.get('uids')[0]).email,
                 fingerprint = contact.get('fingerprint');
-=======
-            email = contact.get('email'),
-            fingerprint = contact.get('fingerprint');
->>>>>>> pure_js:client/lib/parley.events.js
         }
 
         if (!email) {
@@ -87,48 +82,6 @@
                 Parley.getAFISInfo(contact, fingerprint, callback);
             });
         }
-
-/*
-        var planA = function(data) {
-            console.log("A");
-            if (!data.public_key) {
-                planB();
-            } else {
-                var key = Parley.importKey(data.public_key);
-                var fingerprint = key.fingerprints[0];
-                contact.set( _.extend(data, Parley.AFIS(fingerprint)) );
-                callback(contact);
-            }
-        }
-        var planB = function(data, textStatus) {
-            console.log("B");
-
-            fingerprint = fingerprint || Parley.requestPublicKey(email);
-<<<<<<< HEAD:client/lib/parley.events.js
-            var userinfo = Parley.AFIS(fingerprint) || contact.attributes;
-            userinfo = _.isArray(userinfo) ? userinfo[0] : userinfo;
-=======
-
-            var userinfo = Parley.AFIS(fingerprint);
->>>>>>> pure_js:client/lib/parley.events.js
-
-            if (userinfo && !userinfo.uids) {
-                callback({error: 'User not found'});
-            } else {
-                var parsed = Parley.parseUID(userinfo.uids[0]);
-                userinfo.name = parsed.name;
-                userinfo.email = parsed.email;
-                contact.set(userinfo);
-                callback(contact);
-            }
-        }
-
-        if (email) {
-            return Parley.requestUser(email).success(planA).error(planB);
-        } else {
-            return planB();
-        }
-*/
     }
 
     /**
@@ -282,12 +235,10 @@
                 Parley.dialog('hide info login-wait');
 
                 Parley.app.render();
-<<<<<<< HEAD:client/lib/parley.events.js
-=======
-
->>>>>>> pure_js:client/lib/parley.events.js
             } else {
-                console.log('Login error:', data.error);
+                console.log('Login error:', data ? data.error : '');
+
+                Parley.currentUser = undefined;
 
                 Parley.dialog('hide info login-wait');
                 Parley.dialog('info login-error', {
@@ -507,7 +458,7 @@
             var dfd = $.Deferred();
 
             Parley.invite(ele, function (recipient) {
-                if (!recipient.error)
+                if (recipient && !recipient.error)
                     dfd.resolve();
             });
 
