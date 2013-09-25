@@ -5,6 +5,7 @@ crypto stuff and calls to PGP keyservers.
 
 import gnupg
 import pbkdf2, aes
+import fast_pbkdf2 #we need both for now
 import base64, hmac, hashlib
 from urllib import urlencode, quote_plus
 import os, platform, subprocess, shutil
@@ -159,7 +160,7 @@ window.PYsignAPIRequest = PYsignAPIRequest
 
 def PYpbkdf2(data):
   salt = window.Parley.currentUser.attributes.email
-  return pbkdf2.pbkdf2_hex(data, salt.lower(), 100000, 32, hashlib.sha256)
+  return fast_pbkdf2._pbkdf2(data, salt.lower(),100000).encode('hex')
 
 window.PYpbkdf2 = PYpbkdf2
 
