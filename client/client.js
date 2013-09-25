@@ -497,7 +497,7 @@
                 data.buttons = _(data.buttons).map(function (ele) {
                     if (_.isString(ele) && ele in _buttons) return _buttons[ele];
                     else return ele;
-                }, this));
+                });
             }
 
             if (data && data.image in _images) data.image = _images[data.image];

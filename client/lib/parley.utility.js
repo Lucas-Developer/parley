@@ -460,8 +460,8 @@ ne
     return $.ajax({
       type:'GET',
       url:Parley.BASE_URL+'/u/'+Parley.encodeEmail(email),
-      success: finished,
-      error: finished ? function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)} : undefined,
+      success:finished,
+      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
       dataType:'json'
     });
   }
@@ -503,16 +503,6 @@ ne
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
     var modifiedCallback = function(a,b,c) {
-      if (data.error) {
-        //try old hash (and update hash on success)
-        passwords.local = Parley.PYoldPbkdf2(clearTextPassword);
-        passwords.remote = Parley.PYoldPbkdf2(passwords.local);
-        requestKeyring(function(a,b,c){
-          if (a.keyring) {
-            Parley.updatePassHash(clearTextPassword, finished);
-          }
-        });
-      }
       finished(a,b,c);
 
       //make sure email is available in list of local users
@@ -532,7 +522,7 @@ ne
   Parley.updateUser = function (data, finished) {
     data = data || {};
 
-    _(data).each(function (v,k) { Parley.currentUser.set(k,v); });
+    _.each(data, function (v,k) { Parley.currentUser.set(k,v); });
 
     var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(Parley.currentUser.get('email'));
     data.time = Math.floor((new Date())/1000);
@@ -581,7 +571,6 @@ ne
       var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
       var time = Math.floor((new Date())/1000);
       var sig = Parley.signAPIRequest(url,'GET',{'time':time});
-
       $.ajax({
         type:'GET',
         url:url,
@@ -691,40 +680,6 @@ ne
         dataType:'json'
       });
     }
-  }
-
-  Parley.updatePassHash = function(clearTextPassword, finished) {
-    var oldLocal, newLocal, oldRemote, newRemote, passwords = Parley.currentUser.get('passwords');
-    oldLocal = passwords.local;
-    oldRemote = passwords.remote;
-    passwords.local = newLocal = Parley.pbkdf2(clearTextPassword);
-    passwords.remote = newRemote = Parley.pbkdf2(newLocal);
-    window.PYchangePass(newLocal); //change keyring passphrase
-
-    //update passwords on server along with keyring
-    var email = Parley.currentUser.get('email');
-    var url = Parley.BASE_URL+'/u/'+Parley.encodeEmail(email);
-    var keyring = window.PYgetEncryptedKeyring();
-    var data = {'time': Math.floor((new Date())/1000), 'keyring': keyring, 'public_key':window.PYgetPublicKey(),'secret':newRemote};
-
-    //reset to old passwords temporarily for signing API request
-    //(because the server will validate agains the old secret)
-    passwords.local = oldLocal;
-    passwords.remote = oldRemote;
-    var sig = Parley.signAPIRequest(url,'POST',data);
-    passwords.local = newLocal;
-    passwords.remote = newRemote;
-    data.sig = sig;
-
-    $.ajax({
-      type:'POST',
-      url:url,
-      headers:{'Authorization' : 'Parley '+Parley.currentUser.get('email')+':'+data.sig, 'Sig-Time': data.time},
-      data:data,
-      success: finished,
-      error:function(jqXHR,textStatus,errorString){finished({'error':errorString},textStatus,jqXHR)},
-      dataType:'json'
-    });
   }
 
 
@@ -974,7 +929,7 @@ ne
       success:function (a,b,c) {
         if (a.messages) {
           //add messages to localStorage
-          ls = _( ls.concat( _(a.messages).clone() ) ).uniq(function (i) { return i.message_id });
+          ls = _.uniq(ls.concat(_.clone(a.messages)),function (i) {return i.message_id});
           window.localStorage['parley:messages:'+Parley.currentUser.get('email')] = JSON.stringify(ls);
         }
         finished(a,b,c);
@@ -1006,17 +961,29 @@ ne
     });
   }
 
+    // This function processes all of [Parley.alarms] (in parley.config.js) every [Parley.timerDelay] seconds.
+    Parley.timer = function () {
+        Parley.timerDelay = Parley.timerDelay || 300000;
+
+        if (!Parley.pauseTimer)
+            _.each(Parley.alarms, function (alarm) {
+                if (alarm.when()) alarm.todo();
+            });
+
+        window.setTimeout(Parley.timer, Parley.timerDelay);
+    }
+    
     Parley.falseIsFalse = function (data) {
         console.log('\'false\' is false');
         
         var parsed_data = {};
 
-        _(data).each(function (v,k) {
+        _.each(data, function (v,k) {
             if (v == 'false')
                 v = false;
 
             if (k=='meta')
-                _(JSON.parse(v)).each(function (v,k) {
+                _.each(JSON.parse(v), function (v,k) {
                     if (v == 'false')
                         v = false;
                     parsed_data[k] = v;
@@ -1028,12 +995,11 @@ ne
         return parsed_data;
     };
 
-    // Display errors in a form _fname_, according to an object _errors_ = { [input name] : [error msg], ... }
     Parley.formErrors = function (fname, errors) {
         if (!_.isObject(errors) || !document.forms[fname]) return false;
 
         var form = $(document.forms[fname]), err, errSpan;
-        _(form.find('input')).each(function (v) {
+        _.each(form.find('input'), function (v) {
             errSpan = $(v).parents('label').find('.error');
             if (err = errors[v.name]) {
                 errSpan.text(err);

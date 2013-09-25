@@ -62,10 +62,7 @@
         if (typeof contact == 'string') {
             email = contact;
 
-            // Instantiated without arguments so as not to trigger a certain event
-            contact = Parley.contacts.findWhere({email: email}) || new Parley.Contact({pending:true});
-
-            contact.set({email:email});
+            contact = Parley.contacts.findWhere({email: email}) || new Parley.Contact({pending:true, email:email});
         } else {
             var email = contact.get('email') || Parley.parseUID(contact.get('uids')[0]).email,
                 fingerprint = contact.get('fingerprint');
@@ -83,20 +80,6 @@
             });
         }
     }
-
-    /**
-    Gets info on a particular contact.
-
-    @event contact:userinfo
-    @param {Object} contact The contact on whom to get information.
-    @param {Function} callback
-    **/
-    Parley.vent.on('contact:userinfo', function (data) {
-        console.log('VENT: contact:userinfo');
-        console.log('Checking user: ' + JSON.stringify(data.contact));
-
-        contact = Parley.getUserInfo(data.contact, data.callback);
-    });
 
     Parley.vent.on('contact:fetch', function (callback) {
         console.log('contact:fetch');
