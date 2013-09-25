@@ -181,17 +181,20 @@ are massaged to fit. The arguments to finished on ajax error look like:
     passwords.remote = Parley.pbkdf2(passwords.local);
     Parley.currentUser.set('passwords', passwords);
     var modifiedCallback = function(a,b,c) {
-      if (data.error) {
+      if (a.error) {
         //try old hash (and update hash on success)
-        passwords.local = Parley.PYoldPbkdf2(clearTextPassword);
-        passwords.remote = Parley.PYoldPbkdf2(passwords.local);
-        requestKeyring(function(a,b,c){
+        passwords.local = window.PYoldPbkdf2(clearTextPassword);
+        passwords.remote = window.PYoldPbkdf2(passwords.local);
+        Parley.requestKeyring(function(a,b,c){
           if (a.keyring) {
             Parley.updatePassHash(clearTextPassword, finished);
+          } else {
+            finished(a,b,c);
           }
         });
+      } else {
+        finished(a,b,c);
       }
-      finished(a,b,c);
 
       //make sure email is available in list of local users
       var localUsers = Parley.localUsers();

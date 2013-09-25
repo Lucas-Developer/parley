@@ -170,7 +170,7 @@ def PYoldPbkdf2(data):
   salt = window.Parley.currentUser.attributes.email + '10620cd1fe3b07d0a0c067934c1496593e75994a26d6441b835635d98fda90db'
   return pbkdf2.pbkdf2_hex(data, salt.lower(), 2048, 32)
 
-window.PYpbkdf2 = PYpbkdf2
+window.PYoldPbkdf2 = PYoldPbkdf2
 
 
 def PYfetchKey(email):
